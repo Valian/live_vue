@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "types": [
+            "node"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "$lib": [
+                "vue"
+            ],
+            "$lib/*": [
+                "vue/*"
+            ],
+            "vue": [
+                "./node_modules/vue"
+            ],
+            "vue/*": [
+                "./node_modules/vue/*"
+            ],
+        }
+    }
+}
