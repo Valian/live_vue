@@ -4,8 +4,8 @@ defmodule LiveVue.SSR.ViteJS do
 
   def render(name, props, slots) do
     data = Jason.encode!(%{name: name, props: props, slots: slots})
-    url = ~c"http://127.0.0.1:5173/ssr_render"
-    params = {url, [], ~c"application/json", data}
+    url = vite_path("/ssr_render")
+    params = {String.to_charlist(url), [], ~c"application/json", data}
 
     case :httpc.request(:post, params, [], []) do
       {:ok, {{_, 200, _}, _headers, body}} ->
@@ -25,6 +25,25 @@ defmodule LiveVue.SSR.ViteJS do
 
       {:error, {:failed_connect, [{:to_address, {url, port}}, {_, _, code}]}} ->
         {:error, "Unable to connect to Vite #{url}:#{port}: #{code}"}
+    end
+  end
+
+  def vite_path(url) do
+    case Application.get_env(:live_vue, :vite_host) do
+      nil ->
+        message = """
+        Vite.js host is not configured. Please add the following to config/dev.ex
+
+        config :live_vue, vite_host: "http://localhost:5173"
+
+        and ensure vite.js is running
+        """
+
+        raise %LiveVue.SSR.NotConfigured{message: message}
+
+      path ->
+        # we get rid of assets prefix since for vite /assets is root
+        Path.join(path, url)
     end
   end
 end

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../assets/js/live_vue/server.js"],
+  "sourcesContent": ["// imported only in SSR, won't work in browser because of vue/server-renderer assuming node\nimport { createSSRApp, h } from \"vue\";\nimport { renderToString } from \"vue/server-renderer\";\n\nfunction getSlots(slots) {\n    const slotFunctions = {}\n    for (const slotName in slots) {\n        slotFunctions[slotName] = () => h('div', {innerHTML: slots[slotName]})\n    }\n    return slotFunctions\n}\n\nexport function getRender(components) {\n    return async function render(name, props, slots) {\n        const component = components[name]\n\n        if (!component) {\n            throw new Error(`Component ${componentName} not found`)\n        }\n\n        const app = createSSRApp({ render: () => h(component, props, getSlots(slots)) })\n        return await renderToString(app, {});\n    }\n}"],
+  "mappings": ";AACA,SAAS,cAAc,SAAS;AAChC,SAAS,sBAAsB;AAE/B,SAAS,SAAS,OAAO;AACrB,QAAM,gBAAgB,CAAC;AACvB,aAAW,YAAY,OAAO;AAC1B,kBAAc,QAAQ,IAAI,MAAM,EAAE,OAAO,EAAC,WAAW,MAAM,QAAQ,EAAC,CAAC;AAAA,EACzE;AACA,SAAO;AACX;AAEO,SAAS,UAAU,YAAY;AAClC,SAAO,eAAe,OAAO,MAAM,OAAO,OAAO;AAC7C,UAAM,YAAY,WAAW,IAAI;AAEjC,QAAI,CAAC,WAAW;AACZ,YAAM,IAAI,MAAM,aAAa,yBAAyB;AAAA,IAC1D;AAEA,UAAM,MAAM,aAAa,EAAE,QAAQ,MAAM,EAAE,WAAW,OAAO,SAAS,KAAK,CAAC,EAAE,CAAC;AAC/E,WAAO,MAAM,eAAe,KAAK,CAAC,CAAC;AAAA,EACvC;AACJ;",
+  "names": []
+}

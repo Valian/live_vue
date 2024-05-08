@@ -1,18 +1,22 @@
 
 const bodyParser = require('body-parser')
 
-function liveVueSSRPlugin(opts = {}) {
+function liveVuePlugin(opts = {}) {
     const jsonMiddleware = bodyParser.json()
     return {
-        name: 'live-vue-ssr',
+        name: 'live-vue',
+        handleHotUpdate(payload) {
+            // updates to these files will be handled by Phoenix reloader, not vite
+            if(payload.file.match(/\.(heex|ex)$/)) return []
+        },
         configureServer(server) {
-            console.log("Configure server")
             // Terminate the watcher when Phoenix quits
             // configureServer is only called in dev, so it's safe to use here
             process.stdin.on("close", () => process.exit(0));
             process.stdin.resume();
-
-            const path = opts.path || "/ssr_render"
+            
+            // setup SSR endpoint /ssr_render
+            const path = opts.path || "/ssr_render" 
             const entrypoint = opts.entrypoint || './js/server.js'
             server.middlewares.use(function fooMiddleware(req, res, next) {
             if (req.method == "POST" &&req.url.split("?", 1)[0] === path) {
@@ -27,8 +31,7 @@ function liveVueSSRPlugin(opts = {}) {
                         res.setHeader('Content-Type', 'application/json');
                         res.end(JSON.stringify({ error: e }));
                     }
-                    }
-                );
+                });
             } else {
                 next();
             }
@@ -37,4 +40,4 @@ function liveVueSSRPlugin(opts = {}) {
     }
 }
 
-module.exports = liveVueSSRPlugin
+module.exports = liveVuePlugin

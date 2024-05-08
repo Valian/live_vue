@@ -50,8 +50,15 @@ defmodule LiveVue.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
+    conditionals =
+      case Application.get_env(:live_vue, :ssr_module) do
+        # Needed to use :httpc.request
+        LiveVue.SSR.ViteJS -> [:inets]
+        _ -> []
+      end
+
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger] ++ conditionals
     ]
   end
 

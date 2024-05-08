@@ -2,7 +2,7 @@ import path from 'path'
 import { defineConfig } from 'vite'
 
 import vue from '@vitejs/plugin-vue'
-import liveVueSSRPlugin from "live_vue/vitePlugin"
+import liveVuePlugin from "live_vue/vitePlugin"
 
 // https://vitejs.dev/config/
 export default defineConfig(({command}) => {
@@ -10,7 +10,7 @@ export default defineConfig(({command}) => {
 
   return {
     publicDir: "static",
-    plugins: [vue(), liveVueSSRPlugin()],
+    plugins: [vue(), liveVuePlugin()],
     ssr: {
       // we need it, because in SSR build we want no external
       // and in dev, we want external for fast updates

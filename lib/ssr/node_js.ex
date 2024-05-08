@@ -3,8 +3,10 @@ defmodule LiveVue.SSR.NodeJS do
   @behaviour LiveVue.SSR
 
   def render(name, props, slots) do
+    filename = Application.get_env(:live_vue, :ssr_filepath, "./vue/server.mjs")
+
     try do
-      NodeJS.call!({filename(), "render"}, [name, props, slots],
+      NodeJS.call!({filename, "render"}, [name, props, slots],
         binary: true,
         esm: true
       )
@@ -19,15 +21,8 @@ defmodule LiveVue.SSR.NodeJS do
     end
   end
 
-  def filename() do
-    case Application.get_env(:live_vue, :ssr_autoreload, false) do
-      true -> "server.js?q=#{System.unique_integer()}"
-      _ -> "server.js"
-    end
-  end
-
   def server_path() do
     {:ok, path} = :application.get_application()
-    Application.app_dir(path, "/priv/vue")
+    Application.app_dir(path, "/priv")
   end
 end

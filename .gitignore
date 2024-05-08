@@ -27,6 +27,3 @@ live_vue-*.tar
 
 # NPM dependencies
 node_modules/
-
-# Build files
-priv/static/
