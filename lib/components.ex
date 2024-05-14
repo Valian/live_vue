@@ -6,9 +6,16 @@ defmodule LiveVue.Components do
   @doc """
   Generates functions local to your current module that can be used to render Vue components.
   TODO: This could perhaps be optimized to only read the files once per compilation.
+
+  ## Examples
+
+  ```elixir
+  use LiveVue.Components, vue_root: "./assets/vue/*.vue"
+  ```
   """
-  defmacro __using__(_opts) do
-    "./assets/vue/*.vue"
+  defmacro __using__(opts) do
+    opts
+    |> Keyword.get(:vue_root, "./assets/vue/*.vue")
     |> Path.wildcard()
     |> Enum.map(&Path.basename(&1, ".vue"))
     |> Enum.map(&name_to_function/1)

@@ -5,6 +5,8 @@ defmodule LiveVue.SSR.NotConfigured do
 end
 
 defmodule LiveVue.SSR do
+  require Logger
+
   @moduledoc """
   A behaviour for rendering Vue components server-side.
 
@@ -40,8 +42,16 @@ defmodule LiveVue.SSR do
 
   @spec render(component_name, props, slots) :: render_response | no_return
   def render(name, props, slots) do
-    mod = Application.get_env(:live_vue, :ssr_module, LiveVue.SSR.NodeJS)
+    case Application.get_env(:live_vue, :ssr_module, nil) do
+      nil ->
+        ""
 
-    mod.render(name, props, slots)
+      mod ->
+        meta = %{component: name, props: props, slots: slots}
+
+        :telemetry.span([:live_vue, :ssr], meta, fn ->
+          {mod.render(name, props, slots), meta}
+        end)
+    end
   end
 end

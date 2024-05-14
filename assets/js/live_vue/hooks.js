@@ -63,7 +63,7 @@ export function getHooks(components) {
 
             el._props = reactive(getProps(el, liveSocket))
             el._slots = reactive(getSlots(el))
-
+            
             el._instance = makeApp({ render: () => h(component, el._props, el._slots) })
             el._instance.provide(liveInjectKey, this)
             el._instance.mount(el)

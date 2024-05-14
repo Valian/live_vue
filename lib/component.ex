@@ -13,7 +13,8 @@ defmodule LiveVue do
       import LiveVue
 
       def __global__?(_name) do
-        # To hide warnings regarding props and handlers not defined in @rest attribute
+        # To hide warnings regarding props and handlers
+        # not defined in @rest attribute
         true
       end
     end
@@ -38,7 +39,7 @@ defmodule LiveVue do
   attr(
     :"v-ssr",
     :boolean,
-    default: true,
+    default: Application.compile_env(:live_vue, :ssr, true),
     doc: "Whether to render the component on the server",
     examples: [true, false]
   )
@@ -131,23 +132,14 @@ defmodule LiveVue do
     try do
       name = assigns[:"v-component"]
 
-      start = System.monotonic_time()
+      case SSR.render(name, assigns.props, assigns.slots) do
+        {:error, message} ->
+          Logger.error("Vue SSR error: #{message}")
+          ""
 
-      result =
-        case SSR.render(name, assigns.props, assigns.slots) do
-          {:error, message} ->
-            Logger.error("Vue SSR error: #{message}")
-            ""
-
-          body ->
-            body
-        end
-
-      end_time = System.monotonic_time()
-      execution_time_ms = System.convert_time_unit(end_time - start, :native, :microsecond)
-      Logger.debug("Vue SSR for #{name} took #{execution_time_ms}μs")
-
-      result
+        body ->
+          body
+      end
     rescue
       SSR.NotConfigured ->
         nil
