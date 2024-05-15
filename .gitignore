@@ -27,3 +27,6 @@ live_vue-*.tar
 
 # NPM dependencies
 node_modules/
+
+.DS_Store
+*.code-workspace

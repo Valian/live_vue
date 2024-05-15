@@ -36,7 +36,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
 ## Example
 
-You can use Vue components in the same way as you'd use functional LiveView components. You can even handle Vue events with `JS` hooks! All the `phx-click`, `phx-change` attributes works as well.
+You can use Vue components in the same way as you'd use functional LiveView components. You can even handle Vue events with `JS` hooks! All the `phx-click`, `phx-change` attributes works inside Vue components as well.
 
 ```vue
 <script setup lang="ts">
