@@ -7,7 +7,7 @@
 
 Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
-![logo](https://github.com/Valian/live_vue/blob/master/logo.png?raw=true)
+![logo](https://github.com/Valian/live_vue/blob/main/logo.png?raw=true)
 
 [Features](#features) •
 [Resources](#resources) •
@@ -36,7 +36,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
 ## Example
 
-You can use Vue components in the same way as you'd use functional LiveView components. You can even handle Vue events with `JS` hooks! All the `phx-click`, `phx-change` attributes works inside Vue components as well.
+After installation, you can use Vue components in the same way as you'd use functional LiveView components. You can even handle Vue events with `JS` hooks! All the `phx-click`, `phx-change` attributes works inside Vue components as well.
 
 ```vue
 <script setup lang="ts">
@@ -50,9 +50,12 @@ const diff = ref<string>("1")
     Current count
     <div class="text-2xl text-bold">{{ props.count }}</div>
     <label class="block mt-8">Diff: </label>
-    <input v-model="diff" class="mt-4" type="range" min="1" max="10" />
+    <input v-model="diff" class="my-4" type="range" min="1" max="10" />
 
-    <button @click="emit('inc', {value: parseInt(diff)})" class="mt-4 bg-black text-white rounded p-2 block">
+    <button
+        @click="emit('inc', {value: parseInt(diff)})"
+        class="bg-black text-white rounded p-2"
+    >
         Increase counter by {{ diff }}
     </button>
 </template>
@@ -88,13 +91,13 @@ end
 
 This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork fo LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
 
-## Demo
-
-TODO
-
 ## Why?
 
-Phoenix Live View makes it possible to create rich, interactive web apps without writing JS. But once you'll need to do anything even slightly complex on the client-side, you'll end up writing lots of imperative, hard-to-maintain hooks. LiveVue allows to create hybrid apps, where part of the session state is on the server and part on the client.
+Phoenix Live View makes it possible to create rich, interactive web apps without writing JS.
+
+But once you'll need to do anything even slightly complex on the client-side, you'll end up writing lots of imperative, hard-to-maintain hooks.
+
+LiveVue allows to create hybrid apps, where part of the session state is on the server and part on the client.
 
 ### Reasons why you'd like to use LiveVue
 
@@ -326,11 +329,13 @@ Vue components need to go into the assets/vue directory.
 
 To render vue component from HEEX, you have to use `<.vue>` function with these attributes:
 
--   `v-component`: Specify the Vue component. The name must match key defined in `components` passed to `getHooks` function in `app.js`. By default, it's a path from `assets/vue` without extension. Example: `Counter` -> `assets/vue/Counter.vue`, `helpers/modal` -> `assets/vue/helpers/modal.vue`.
--   `v-socket`: LiveVue socket. Used to determine if SSR is needed or not, so it should be always included in LiveViews.
--   `v-ssr`: Specify if SSR should be used or not. Defaults to `Application.compile_env(:live_vue, :ssr, true)`. To make it work, `:live_vue, :ssr_module` also has to be specified.
--   `v-on:event={@handler}`: Handle component event by invoking JS hook. @handler has to come from `JS` module. Example: `v-on:toggle={JS.toggle()}`
--   `prop={@value}`: All other attributes will be passed to vue component as props. Values have to be serializable to JSON, so structures have to implement `Jason.Encoder` protocol.
+| Attribute             | Example                                                   | Required        | Description                                                                                                                                                      |
+| --------------------- | --------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v-component           | `v-component="Counter"`<br>`v-component="helpers/modal"`  | yes             | Name of the component to render. Must match key defined in `components` passed to `getHooks`, by default it's a path from `assets/vue` without extension         |
+| v-socket              | `v-socket={@socket}`                                      | Yes in LiveView | Used to determine if SSR is needed. Should be always included in LiveViews                                                                                       |
+| v-ssr                 | `v-ssr={true}`                                            | no              | Defaults to `Application.get_env(:live_vue, :ssr, true)`                                                                                                         |
+| v-on:event={@handler} | `v-on:close={JS.toggle()}`                                | no              | Handle component event by invoking JS hook. @handler has to come from `JS` module. See Usage section for more.                                                   |
+| prop={@value}         | `name="liveVue"`<br>`count={@count}`<br>`{%{count: 123}}` | no              | All other attributes will be passed to vue component as props. Values have to be serializable to JSON, so structures have to implement `Jason.Encoder` protocol. |
 
 ### Shortcut
 
@@ -421,8 +426,204 @@ In production it's recommended to use `config :live_vue, ssr_module: LiveVue.SSR
 
 ### Handling custom Phoenix events client side
 
-TODO
+You can use function `useLiveVue` to access root phoenix element where Vue component was routed.
+
+API of that object is described in [Phoenix docs](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook).
+
+Example
+
+```vue
+<script>
+import {useLiveVue} from "live_vue"
+
+const hook = useLiveVue()
+
+hook.pushEvent("hello", {value: "from Vue"})
+</script>
+```
 
 ### Using ~V sigil to inline Vue components
 
-TODO
+We can go one step further and use LiveVue as an alternative to the standard LiveView DSL. This idea is taken from `LiveSvelte`.
+
+Take a look at the following example:
+
+```elixir
+defmodule ExampleWeb.LiveSigil do
+  use ExampleWeb, :live_view
+
+  def render(assigns) do
+    ~V"""
+    <script setup lang="ts">
+    import {ref} from "vue"
+    const props = defineProps<{count: number}>()
+    const diff = ref<number>(1)
+    </script>
+
+    <template>
+      Current count
+      <div class="text-2xl text-bold">{{ props.count }}</div>
+      <label class="block mt-8">Diff: </label>
+      <input v-model="diff" class="mt-4" type="range" min="1" max="10">
+
+      <button
+        phx-click="inc"
+        :phx-value-diff="diff"
+        class="mt-4 bg-black text-white rounded p-2 block">
+        Increase counter {{ diff }}
+      </button>
+    """
+  end
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, count: 0)}
+  end
+
+  def handle_event("inc", %{"diff" => diff}, socket) do
+    {:noreply, update(socket, :count, &(&1 + String.to_integer(diff)))}
+  end
+end
+```
+
+Use the `~V` sigil instead of `~H` and your LiveView will be Vue instead of an HEEx template.
+
+## LiveVue Development
+
+### Local Setup
+
+#### Example Project
+
+You can use `/example_project` as a way to test `live_vue` locally.
+
+#### Custom Project
+
+You can also use your own project.
+
+Clone `live_vue` to the parent directory of the project you want to test it in.
+
+Inside `mix.exs`
+
+```elixir
+{:live_vue, path: "../live_vue"},
+```
+
+Inside `assets/package.json`
+
+```javascript
+"live_vue": "file:../../live_vue",
+```
+
+### Building Static Files
+
+Make the changes in `/assets/js` and run:
+
+```bash
+mix assets.build
+```
+
+Or run the watcher:
+
+```bash
+mix assets.build --watch
+```
+
+### Releasing
+
+-   Update the version in `README.md`
+-   Update the version in `package.json`
+-   Update the version in `mix.exs`
+-   Update the changelog
+
+Run:
+
+```bash
+mix hex.publish
+```
+
+## Deployment
+
+Deploying a LiveVue app is the same as deploying a regular Phoenix app, except that you will need to ensure that `nodejs` (version 19 or later) is installed in your production environment.
+
+The below guide shows how to deploy a LiveVue app to [Fly.io](https://fly.io/), but similar steps can be taken to deploy to other hosting providers.
+You can find more information on how to deploy a Phoenix app [here](https://hexdocs.pm/phoenix/deployment.html).
+
+### Deploying on Fly.io
+
+The following steps are needed to deploy to Fly.io. This guide assumes that you'll be using Fly Postgres as your database. Further guidance on how to deploy to Fly.io can be found [here](https://fly.io/docs/elixir/getting-started/).
+
+1. Generate a `Dockerfile`:
+
+```bash
+mix phx.gen.release --docker
+```
+
+2. Modify the generated `Dockerfile` to install `curl`, which is used to install `nodejs` (version 19 or greater), and also add a step to install our `npm` dependencies:
+
+```diff
+# ./Dockerfile
+
+...
+
+# install build dependencies
+- RUN apt-get update -y && apt-get install -y build-essential git \
++ RUN apt-get update -y && apt-get install -y build-essential git curl \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
++ # install nodejs for build stage
++ RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
+
+...
+
+COPY assets assets
+
++ # install all npm packages in assets directory
++ WORKDIR /app/assets
++ RUN npm install
+
++ # change back to build dir
++ WORKDIR /app
+
+...
+
+# start a new build stage so that the final image will only contain
+# the compiled release and other runtime necessities
+FROM ${RUNNER_IMAGE}
+
+RUN apt-get update -y && \
+-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
++  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl \
+   && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
++ # install nodejs for production environment
++ RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
+
+...
+```
+
+Note: `nodejs` is installed BOTH in the build stage and in the final image. This is because we need `nodejs` to install our `npm` dependencies and also need it when running our app.
+
+3. Launch your app with the Fly.io CLI:
+
+```bash
+fly launch
+```
+
+4. When prompted to tweak settings, choose `y`:
+
+```bash
+? Do you want to tweak these settings before proceeding? (y/N) y
+```
+
+This will launch a new window where you can tweak your launch settings. In the database section, choose `Fly Postgres` and enter a name for your database. You may also want to change your database to the development configuration to avoid extra costs. You can leave the rest of the settings as-is unless you want to change them.
+
+Deployment will continue once you hit confirm.
+
+5. Once the deployment completes, run the following command to see your deployed app!
+
+```bash
+fly apps open
+```
+
+## Credits
+
+[LiveSvelte](https://github.com/woutdp/live_svelte)

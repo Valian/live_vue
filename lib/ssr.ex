@@ -13,6 +13,8 @@ defmodule LiveVue.SSR do
   To define a custom renderer, change the application config in `config.exs`:
 
       config :live_vue, ssr_module: MyCustomSSRModule
+
+  Exposes a telemetry span for each render under key `[:live_vue, :ssr]`
   """
 
   @type component_name :: String.t()
@@ -20,23 +22,10 @@ defmodule LiveVue.SSR do
   @type slots :: %{optional(String.t() | atom) => any}
 
   @typedoc """
-  A render response which should take the shape:
-      %{
-        "css" => %{
-          "code" => String.t | nil,
-          "map" => String.t | nil
-        },
-        "head" => String.t,
-        "html" => String.t
+  A render response which should be a rendered HTML string.
       }
   """
-  @type render_response :: %{
-          required(String.t()) =>
-            %{
-              required(String.t()) => String.t() | nil
-            }
-            | String.t()
-        }
+  @type render_response :: String.t()
 
   @callback render(component_name, props, slots) :: render_response | no_return
 

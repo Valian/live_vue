@@ -68,6 +68,7 @@ defmodule LiveVue.MixProject do
       {:jason, "~> 1.2"},
       # I'm using my fork because it supports loading ESM modules
       # Vite doesn't support CJS anymore for SSR build
+      # see PR https://github.com/revelrylabs/elixir-nodejs/pull/84
       {:nodejs, github: "Valian/elixir-nodejs"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},

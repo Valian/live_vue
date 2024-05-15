@@ -1,5 +1,12 @@
 defmodule LiveVue.SSR.NodeJS do
-  @moduledoc false
+  @moduledoc """
+  Implements SSR by using `NodeJS` package.
+
+  Under the hood, it invokes "render" function exposed by `server.mjs` file.
+  You can see how `server.mjs` is created by looking at `assets.deploy` command
+  and `package.json` build-server script.
+  """
+
   @behaviour LiveVue.SSR
 
   def render(name, props, slots) do
