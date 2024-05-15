@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2024-05-15
 
-### Start of the project
+### Initial release
 
 -   Start of the project
 -   End-To-End Reactivity with LiveView
