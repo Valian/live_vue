@@ -225,7 +225,6 @@ module.exports = {
 and lastly let's add helpful scripts to package.json
 
 ```json
-// package.json
 {
     "private": true,
     "type": "module",
@@ -233,12 +232,6 @@ and lastly let's add helpful scripts to package.json
         "dev": "vite --host -l warn",
         "build": "vue-tsc && vite build",
         "build-server": "vue-tsc && vite build --ssr js/server.js --out-dir ../priv/vue --minify esbuild && mv ../priv/vue/server.js ../priv/vue/server.mjs"
-    },
-    "devDependencies": {
-        // ...
-    },
-    "dependencies": {
-        // ...
     }
 }
 ```

@@ -69,8 +69,7 @@ defmodule LiveVue.MixProject do
       # Right now it won't work, it require my fork of elixir-nodejs
       # Vite doesn't support CJS anymore for SSR build
       # see PR https://github.com/revelrylabs/elixir-nodejs/pull/84
-      # in the meantime I'm trying to become
-      # a maintainer of elixir-nodejs
+      # in the meantime I'm trying to become a maintainer of elixir-nodejs
       {:nodejs, "~> 2.0"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
