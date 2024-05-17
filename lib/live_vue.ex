@@ -1,4 +1,8 @@
 defmodule LiveVue do
+  @moduledoc """
+  See README.md for installation instructions and usage.
+  """
+
   use Phoenix.Component
   import Phoenix.HTML
 

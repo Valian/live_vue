@@ -1,4 +1,8 @@
 defmodule LiveVue.Reload do
+  @moduledoc """
+  Utilities for easier integration with Vite in development
+  """
+
   use Phoenix.Component
 
   attr :assets, :list, required: true

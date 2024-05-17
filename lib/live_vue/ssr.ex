@@ -23,7 +23,6 @@ defmodule LiveVue.SSR do
 
   @typedoc """
   A render response which should be a rendered HTML string.
-      }
   """
   @type render_response :: String.t()
 
