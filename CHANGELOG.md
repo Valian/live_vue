@@ -9,11 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.0 - 2024-05-17
 
-## CHANGED
+### CHANGED
 
 -   removed esbuild from live_vue, `package.json` points directly to `assets/js/live_vue`
 -   added support to lazy loading components. See more in README. To migrate, ensure all steps from installation are up-to-date.
-
 
 ## 0.2.0 - 2024-05-17
 
@@ -29,7 +28,6 @@ QoL release
 
 -   Adjusted files hierarchy to match module names
 -   Publishing with expublish
-
 
 ## [0.1.0] - 2024-05-15
 

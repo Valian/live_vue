@@ -2,6 +2,7 @@
 import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { basename } from "path";
+import { normalizeComponents, getComponent } from "./components";
 
 function getSlots(slots) {
     const slotFunctions = {}
@@ -24,18 +25,10 @@ export function loadManifest(path) {
 
 
 export function getRender(components, manifest = {}) {
+    components = normalizeComponents(components)
+
     return async function render(name, props, slots) {
-        let component = components[name]
-
-        if (!component) {
-            throw new Error(`Component ${name} not found`)
-        }
-
-        if (typeof component === "function") {
-            // it's an async component, let's try to load it
-            component = await component()
-        }
-
+        const component = await getComponent(components, name)
         const app = createSSRApp({ render: () => h(component, props, getSlots(slots)) })
     
         // passing SSR context object which will be available via useSSRContext()

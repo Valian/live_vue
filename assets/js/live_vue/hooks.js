@@ -1,5 +1,6 @@
 import { createApp, createSSRApp, reactive, h } from 'vue'
 import { liveInjectKey } from "./use"
+import { normalizeComponents, getComponent } from './components';
 
 
 function mapValues(object, cb) {
@@ -49,20 +50,12 @@ function getProps(el, liveSocket) {
 }
 
 export function getHooks(components) {
+    components = normalizeComponents(components)
+
     const VueHook = {
         async mount(el, liveSocket) {
             const componentName = el.getAttribute("data-name")
-            let component = components[componentName]
-            
-            if (!component) {
-                console.error(`Component ${componentName} not found`)
-                return
-            }
-
-            if (typeof component === "function") {
-                // it's an async component, let's try to load it
-                component = await component()
-            }
+            const component = await getComponent(components, componentName)
 
             const makeApp = el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
 

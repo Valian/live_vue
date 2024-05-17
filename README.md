@@ -516,7 +516,7 @@ import component2 from "./Component2.vue"
 const entryComponents = {
     Component1: component1,
     Component2: component2,
-    Component3Lazy: () => import("./Component3.vue").then(m => m.default),
+    Component3Lazy: () => import("./Component3.vue"),
 }
 
 // in app.js
