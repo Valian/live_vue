@@ -28,7 +28,10 @@ defmodule LiveVue.MixProject do
         source_url: @repo_url,
         homepage_url: @repo_url,
         main: "readme",
-        extras: ["README.md"],
+        extras: [
+          "README.md",
+          "CHANGELOG.md": [title: "Changelog"]
+        ],
         links: %{
           "GitHub" => @repo_url
         }
@@ -76,7 +79,8 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:esbuild, "~> 0.5", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:expublish, "~> 2.5", only: [:dev], runtime: false}
     ]
   end
 
