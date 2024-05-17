@@ -22,9 +22,14 @@ defmodule LiveVue.SSR do
   @type slots :: %{optional(String.t() | atom) => any}
 
   @typedoc """
-  A render response which should be a rendered HTML string.
+  A render response which should have shape
+
+  %{
+    html: string,
+    preloadLinks: string
+  }
   """
-  @type render_response :: String.t()
+  @type render_response :: %{optional(String.t() | atom) => any}
 
   @callback render(component_name, props, slots) :: render_response | no_return
 
@@ -32,14 +37,22 @@ defmodule LiveVue.SSR do
   def render(name, props, slots) do
     case Application.get_env(:live_vue, :ssr_module, nil) do
       nil ->
-        ""
+        %{preloadLinks: "", html: ""}
 
       mod ->
         meta = %{component: name, props: props, slots: slots}
 
-        :telemetry.span([:live_vue, :ssr], meta, fn ->
-          {mod.render(name, props, slots), meta}
-        end)
+        body =
+          :telemetry.span([:live_vue, :ssr], meta, fn ->
+            {mod.render(name, props, slots), meta}
+          end)
+
+        with body when is_binary(body) <- body do
+          case String.split(body, "<!-- preload -->", parts: 2) do
+            [links, html] -> %{preloadLinks: links, html: html}
+            [body] -> %{preloadLinks: "", html: body}
+          end
+        end
     end
   end
 end

@@ -28,6 +28,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
 -   ⚡ **End-To-End Reactivity** with LiveView
 -   🔋 **Server-Side Rendered** (SSR) Vue
+-   🐌 **Lazy-loading** Vue Components
 -   🪄 **Sigil** as an [Alternative LiveView DSL](#livevue-as-an-alternative-liveview-dsl)
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
@@ -502,6 +503,25 @@ end
 ```
 
 Use the `~V` sigil instead of `~H` and your LiveView will be Vue instead of an HEEx template.
+
+### Lazy loading Vue Components
+
+Lazy loading Vue components is fully supported. You just need to return function returning promise in `components` passed to `getHooks(components)`.
+
+It can be done by using `eager: false` in `import.meta.glob('./yourdir/*.vue', { eager: false, import: 'default' })` or by explicitly constructing components object. If SSR is enabled, all related JS and CSS files will be preloaded in HTML.
+
+```javascript
+import component1 from "./Component1.vue"
+import component2 from "./Component2.vue"
+const entryComponents = {
+    Component1: component1,
+    Component2: component2,
+    Component3Lazy: () => import("./Component3.vue").then(m => m.default),
+}
+
+// in app.js
+const hooks = getHooks(entryComponents)
+```
 
 ## LiveVue Development
 

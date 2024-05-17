@@ -9,6 +9,7 @@ export default defineConfig(({command}) => {
   const isDev = command !== "build";
 
   return {
+    base: isDev ? undefined : "/assets",
     publicDir: "static",
     plugins: [vue(), liveVuePlugin()],
     ssr: {
@@ -23,6 +24,7 @@ export default defineConfig(({command}) => {
       }
     },
     build: {
+      modulePreload: { polyfill: false },
       commonjsOptions: { transformMixedEsModules: true },
       target: "es2020",
       outDir: "../priv/static/assets", // emit assets to priv/static/assets
@@ -32,7 +34,6 @@ export default defineConfig(({command}) => {
       rollupOptions: {
         input: {
           app: path.resolve(__dirname, './js/app.js'),
-          'app.css': path.resolve(__dirname, './css/app.css')
         },
         output: {
           // remove hashes to match phoenix way of handling asssets

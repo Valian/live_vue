@@ -1,4 +1,4 @@
-import { createApp, createSSRApp, reactive, h, ref, computed } from 'vue'
+import { createApp, createSSRApp, reactive, h } from 'vue'
 import { liveInjectKey } from "./use"
 
 
@@ -50,13 +50,18 @@ function getProps(el, liveSocket) {
 
 export function getHooks(components) {
     const VueHook = {
-        mount(el, liveSocket) {
+        async mount(el, liveSocket) {
             const componentName = el.getAttribute("data-name")
-            const component = components[componentName]
+            let component = components[componentName]
             
             if (!component) {
                 console.error(`Component ${componentName} not found`)
                 return
+            }
+
+            if (typeof component === "function") {
+                // it's an async component, let's try to load it
+                component = await component()
             }
 
             const makeApp = el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
@@ -76,7 +81,10 @@ export function getHooks(components) {
             Object.assign(this.el._slots, getSlots(this.el))
         },
         destroyed() {
-            window.addEventListener("phx:page-loading-stop", () => this.el._instance.unmount(), {once: true})
+            const instance = this.el._instance
+            if (instance) {
+                window.addEventListener("phx:page-loading-stop", () => instance.unmount(), {once: true})
+            }
         },
     }
 

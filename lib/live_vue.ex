@@ -33,6 +33,15 @@ defmodule LiveVue do
   )
 
   attr(
+    :id,
+    :string,
+    default: nil,
+    doc:
+      "Explicit id of a wrapper component. If not provided, a random one will be generated. Useful to keep ID consistent in development.",
+    examples: ["vue-1"]
+  )
+
+  attr(
     :class,
     :string,
     default: nil,
@@ -74,7 +83,8 @@ defmodule LiveVue do
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, if(slots_changed?, do: Slots.rendered_slot_map(slots), else: %{}))
 
-    assigns = Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns), else: ""))
+    assigns =
+      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns), else: nil))
 
     computed_changed =
       %{
@@ -93,8 +103,9 @@ defmodule LiveVue do
     # optimizing diffs by using string interpolation
     # https://elixirforum.com/t/heex-attribute-value-in-quotes-send-less-data-than-values-in-braces/63274
     ~H"""
+    <%= raw(@ssr_render[:preloadLinks]) %>
     <div
-      id={id(@__component_name)}
+      id={@id || id(@__component_name)}
       data-name={@__component_name}
       data-props={"#{json(@props)}"}
       data-ssr={@ssr_render != nil}
@@ -104,7 +115,7 @@ defmodule LiveVue do
       phx-hook="VueHook"
       class={@class}
     >
-      <%= raw(@ssr_render) %>
+      <%= raw(@ssr_render[:html]) %>
     </div>
     """
   end
@@ -139,10 +150,10 @@ defmodule LiveVue do
       case SSR.render(name, assigns.props, assigns.slots) do
         {:error, message} ->
           Logger.error("Vue SSR error: #{message}")
-          ""
+          nil
 
-        body ->
-          body
+        %{preloadLinks: links, html: html} ->
+          %{preloadLinks: links, html: html}
       end
     rescue
       SSR.NotConfigured ->
@@ -152,7 +163,13 @@ defmodule LiveVue do
 
   defp json(data), do: Jason.encode!(data, escape: :html_safe)
 
-  defp id(name), do: "#{name}-#{System.unique_integer([:positive])}"
+  defp id(name) do
+    # a small trick to avoid collisions of IDs but keep them consistent across dead and live render
+    # id(name) is called only once during the whole LiveView lifecycle because it's not using any assigns
+    number = Process.get(:live_vue_counter, 1)
+    Process.put(:live_vue_counter, number + 1)
+    "#{name}-#{number}"
+  end
 
   @doc false
   def get_socket(assigns) do

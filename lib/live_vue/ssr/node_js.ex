@@ -2,15 +2,15 @@ defmodule LiveVue.SSR.NodeJS do
   @moduledoc """
   Implements SSR by using `NodeJS` package.
 
-  Under the hood, it invokes "render" function exposed by `server.mjs` file.
-  You can see how `server.mjs` is created by looking at `assets.deploy` command
+  Under the hood, it invokes "render" function exposed by `server.js` file.
+  You can see how `server.js` is created by looking at `assets.deploy` command
   and `package.json` build-server script.
   """
 
   @behaviour LiveVue.SSR
 
   def render(name, props, slots) do
-    filename = Application.get_env(:live_vue, :ssr_filepath, "./vue/server.mjs")
+    filename = Application.get_env(:live_vue, :ssr_filepath, "./vue/server.js")
 
     try do
       NodeJS.call!({filename, "render"}, [name, props, slots],

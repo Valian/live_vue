@@ -23,7 +23,7 @@ defmodule LiveVue.SSR.ViteJS do
 
     case :httpc.request(:post, params, [], []) do
       {:ok, {{_, 200, _}, _headers, body}} ->
-        body
+        :erlang.list_to_binary(body)
 
       {:ok, {{_, 500, _}, _headers, body}} ->
         case Jason.decode(body) do
