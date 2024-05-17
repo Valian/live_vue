@@ -10,7 +10,7 @@ defmodule LiveVue.MixProject do
       version: @version,
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
-      aliases: aliases(),
+      aliases: [],
       deps: deps(),
       preferred_cli_env: [
         "test.watch": :test
@@ -77,25 +77,9 @@ defmodule LiveVue.MixProject do
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:esbuild, "~> 0.5", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false}
-    ]
-  end
-
-  defp aliases do
-    [
-      "assets.build": [
-        "esbuild module",
-        "esbuild server",
-        "esbuild vite"
-      ],
-      "assets.watch": [
-        "esbuild module --watch",
-        "esbuild server --watch",
-        "esbuild vite --watch"
-      ]
     ]
   end
 end

@@ -1,6 +1,6 @@
-[![GitHub](https://img.shields.io/github/stars/Valian/live_vue?style=social)](https://github.com/Valian/live_vue)
 [![Hex.pm](https://img.shields.io/hexpm/v/live_vue.svg)](https://hex.pm/packages/live_vue)
 [![Hexdocs.pm](https://img.shields.io/badge/docs-hexdocs.pm-purple)](https://hexdocs.pm/live_vue)
+[![GitHub](https://img.shields.io/github/stars/Valian/live_vue?style=social)](https://github.com/Valian/live_vue)
 
 # LiveVue
 
@@ -206,6 +206,7 @@ import topbar from "topbar" // instead of ../vendor/topbar
 // ...
 import {getHooks} from "live_vue"
 import components from "../vue"
+import "../css/app.css"
 
 let liveSocket = new LiveSocket("/live", Socket, {
     // ...
@@ -234,7 +235,7 @@ and lastly let's add dev and build scripts to package.json
     "scripts": {
         "dev": "vite --host -l warn",
         "build": "vue-tsc && vite build",
-        "build-server": "vue-tsc && vite build --ssr js/server.js --out-dir ../priv/vue --minify esbuild && mv ../priv/vue/server.js ../priv/vue/server.mjs"
+        "build-server": "vue-tsc && vite build --ssr js/server.js --out-dir ../priv/vue --minify esbuild --ssrManifest && echo '{\"type\": \"module\" } ' > ../priv/vue/package.json"
     }
 }
 ```
@@ -246,8 +247,8 @@ and lastly let's add dev and build scripts to package.json
 pass paths to original files in assets -->
 
 <LiveVue.Reload.vite_assets assets={["/js/app.js", "/css/app.css"]}>
-  <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
-  <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+  <link phx-track-static rel="stylesheet" href="/assets/app.css" />
+  <script type="module" phx-track-static type="text/javascript" src="/assets/app.js">
   </script>
 </LiveVue.Reload.vite_assets>
 ```
@@ -437,7 +438,7 @@ Vue SSR is compiled down into string concatenation, so it's quite fast 😉
 
 In development it's recommended to use `config :live_vue, ssr_module: LiveVue.SSR.ViteJS`. It does HTTP call to vite `/ssr_render` endpoint added by LiveVue plugin, which in turn uses vite [ssrLoadModule](https://vitejs.dev/guide/ssr) for efficient compilation.
 
-In production it's recommended to use `config :live_vue, ssr_module: LiveVue.SSR.NodeJS` which uses `NodeJS` package directly talking with a JS process with a in-memory server bundle. By default, SSR bundle is saved to `priv/vue/server.mjs`. `mjs` extension is necessary so NodeJS correctly imports that file as `ESM module`.
+In production it's recommended to use `config :live_vue, ssr_module: LiveVue.SSR.NodeJS` which uses `NodeJS` package directly talking with a JS process with a in-memory server bundle. By default, SSR bundle is saved to `priv/vue/server.js`.
 
 ### Handling custom Phoenix events client side
 
@@ -554,12 +555,13 @@ Run
 ```bash
 mix assets.build
 git add README.md priv
+git commit -m "README version bump"
 
 # to ensure everything works fine
-mix expublish.minor --dry-run --allow-untracked
+mix expublish.minor --dry-run --allow-untracked --branch=main
 
 # to publish everything
-mix expublish.minor --allow-untracked
+mix expublish.minor --allow-untracked --branch=main
 ```
 
 ## Deployment

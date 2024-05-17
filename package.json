@@ -12,9 +12,9 @@
         "prettier": "2.8.7"
     },
     "exports": {
-        "./vitePlugin": "./priv/static/vitePlugin.js",
-        "./server": "./priv/static/server.js",
-        ".": "./priv/static/live_vue.esm.js"
+        "./vitePlugin": "./assets/js/live_vue/vitePlugin.js",
+        "./server": "./assets/js/live_vue/server.js",
+        ".": "./assets/js/live_vue/index.js"
     },
     "repository": {
         "type": "git",
