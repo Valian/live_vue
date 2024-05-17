@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.2.0 - 2024-05-17
+
+QoL release
+
+### Added
+
+-   `@` added to Vite & typescript paths. To migrate, see `assets/copy/tsconfig.json` and `assets/copy/vite.config.js`
+-   Added Vite types to tsconfig.json to support special imports, eg. svg. To migrate, add `"types": ["vite/client"]`.
+-   Added possibility to colocate Vue files in `lib` directory. To migrate, copy `assets/copy/vue/index.js` to your project.
+
+### Changed
+
+-   Adjusted files hierarchy to match module names
+-   Publishing with expublish
+
+
 ## [0.1.0] - 2024-05-15
 
 ### Initial release
