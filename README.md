@@ -1,28 +1,27 @@
-<div align="center">
-
-# LiveVue
-
 [![GitHub](https://img.shields.io/github/stars/Valian/live_vue?style=social)](https://github.com/Valian/live_vue)
 [![Hex.pm](https://img.shields.io/hexpm/v/live_vue.svg)](https://hex.pm/packages/live_vue)
+
+# LiveVue
 
 Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
 ![logo](https://github.com/Valian/live_vue/blob/main/logo.png?raw=true)
-
-[Features](#features) •
-[Resources](#resources) •
-[Demo](#demo) •
-[Installation](#installation) •
-[Usage](#usage) •
-[Deployment](#deployment)
-
-</div>
 
 ## Resources
 
 -   [HexDocs](https://hexdocs.pm/live_vue)
 -   [HexPackage](https://hex.pm/packages/live_vue)
 -   [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view)
+
+## Table of content
+
+-   [Features](#features)
+-   [Resources](#resources)
+-   [Example](#example)
+-   [Installation](#installation)
+-   [Usage](#usage)
+-   [Deployment](#deployment)
+-   [FAQ](#faq)
 
 ## Features
 
@@ -91,6 +90,8 @@ end
 
 This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork fo LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
 
+You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
+
 ## Why?
 
 Phoenix Live View makes it possible to create rich, interactive web apps without writing JS.
@@ -151,9 +152,9 @@ defp html_helpers do
     use LiveVue
 
     # Generate component for each vue file, so you can omit v-component="name".
-    # Right now works only for top-level files inside `assets/vue`.
+    # Right now works only for top-level files.
     # You can configure path to your components by using optional :vue_root param
-    use LiveVue.Components, vue_root: "./assets/vue/*.vue"
+    use LiveVue.Components, vue_root: ["./assets/vue", "./lib/my_app_web"]
   end
 end
 ```
@@ -217,12 +218,13 @@ let liveSocket = new LiveSocket("/live", Socket, {
 module.exports = {
     content: [
         // ...
-        "./vue/**/*.vue", // include Vue files
+        "./vue/**/*.vue",
+        "../lib/**/*.vue", // include Vue files
     ],
 }
 ```
 
-and lastly let's add helpful scripts to package.json
+and lastly let's add dev and build scripts to package.json
 
 ```json
 {
@@ -312,27 +314,46 @@ children = [
 """
 ```
 
+12. (Optional) enable [stateful hot reload](https://twitter.com/jskalc/status/1788308446007132509) of phoenix LiveViews - it allows for stateful reload across the whole stack 🤯. Just adjust your `dev.exs` to loook like this - add `notify` section and remove `live|components` from patterns.
+
+```elixir
+# Watch static and templates for browser reloading.
+config :my_app, MyAppWeb.Endpoint,
+  live_reload: [
+    notify: [
+      live_view: [
+        ~r"lib/my_app_web/core_components.ex$",
+        ~r"lib/my_app_web/(live|components)/.*(ex|heex)$"
+      ]
+    ],
+    patterns: [
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"lib/my_app_web/controllers/.*(ex|heex)$"
+    ]
+  ]
+```
+
 Voila! Easy, isn't it? 😉
 
 ## Usage
 
-Vue components need to go into the assets/vue directory.
+By default, vue components should be placed either inside `assets/vue` directory or colocated with your Elixir files. You can configure that behaviour by changing `assets/vue/index.js` and `use LiveVue.Components, vue_root: ["your/vue/dir"]`.
 
 ### Basic usage
 
 To render vue component from HEEX, you have to use `<.vue>` function with these attributes:
 
-| Attribute             | Example                                                   | Required        | Description                                                                                                                                                      |
-| --------------------- | --------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| v-component           | `v-component="Counter"`<br>`v-component="helpers/modal"`  | yes             | Name of the component to render. Must match key defined in `components` passed to `getHooks`, by default it's a path from `assets/vue` without extension         |
-| v-socket              | `v-socket={@socket}`                                      | Yes in LiveView | Used to determine if SSR is needed. Should be always included in LiveViews                                                                                       |
-| v-ssr                 | `v-ssr={true}`                                            | no              | Defaults to `Application.get_env(:live_vue, :ssr, true)`                                                                                                         |
-| v-on:event={@handler} | `v-on:close={JS.toggle()}`                                | no              | Handle component event by invoking JS hook. @handler has to come from `JS` module. See Usage section for more.                                                   |
-| prop={@value}         | `name="liveVue"`<br>`count={@count}`<br>`{%{count: 123}}` | no              | All other attributes will be passed to vue component as props. Values have to be serializable to JSON, so structures have to implement `Jason.Encoder` protocol. |
+| Attribute             | Example                                                   | Required        | Description                                                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v-component           | `v-component="Counter"`<br>`v-component="helpers/modal"`  | yes             | Name of the component to render. Must match key defined in `components` passed to `getHooks`. By default you can use both filename or a full file path without extension, relative to `assets/vue` or `lib/my_app_web` |
+| v-socket              | `v-socket={@socket}`                                      | Yes in LiveView | Used to determine if SSR is needed. Should be always included in LiveViews                                                                                                                                             |
+| v-ssr                 | `v-ssr={true}`                                            | no              | Defaults to `Application.get_env(:live_vue, :ssr, true)`                                                                                                                                                               |
+| v-on:event={@handler} | `v-on:close={JS.toggle()}`                                | no              | Handle component event by invoking JS hook. @handler has to come from `JS` module. See Usage section for more.                                                                                                         |
+| prop={@value}         | `name="liveVue"`<br>`count={@count}`<br>`{%{count: 123}}` | no              | All other attributes will be passed to vue component as props. Values have to be serializable to JSON, so structures have to implement `Jason.Encoder` protocol.                                                       |
 
 ### Shortcut
 
-Instead of writing `<.vue v-component="Counter">` you can use shortcut `<.Counter>`. Function names are generated based on content of `assets/vue` directory.
+Instead of writing `<.vue v-component="Counter">` you can use shortcut `<.Counter>`. Function names are generated based on filenames of found `.vue` files, so `assets/vue/helpers/nested/Modal.vue` will generate helper `<.Modal>`. If there are multiple `.vue` files with equal names, use `<.vue v-component="path/to/file">`
 
 ### Passing props
 
@@ -616,6 +637,52 @@ Deployment will continue once you hit confirm.
 ```bash
 fly apps open
 ```
+
+## FAQ
+
+### Name sounds exaclty the same as LiveView
+
+Yes, I noticed it slightly too late to change. Some helpful reddit users pointed it out 😉
+
+I'd suggest refering to it as `LiveVuejs` in speech, to avoid confusion.
+
+### Differences from LiveSvelte
+
+Both `LiveVue` and `LiveSvelte `serves the same purpose and are implemented in a very similar way. Here is a list of points to consider when choosing one over another:
+
+-   Vue uses virtual DOM, Svelte doesn't. Vue bundle is slightly bigger than Svelte because of runtime.
+-   Vue performance is very similar, or even better, than Svelte. Both are fast enough that you shouldn't make your decision based on it.
+-   Vue is working on a [Vapor mode](https://github.com/vuejs/core-vapor) without virtual DOM. Once stable I'll try to support it here.
+-   Svelte reactivity is done based on the compilation step figuring out dependencies. It allows for a very concise syntax, but causes probles when you'd like to keep reactivity cross-files and [has some limitations](https://thoughtspile.github.io/2023/04/22/svelte-state/). Svelte 5 Runes will be very similar to Vue `ref`.
+-   Vue reactivity is [based on JS Proxies](https://vuejs.org/guide/extras/reactivity-in-depth.html#how-reactivity-works-in-vue). Syntax is a bit more verbose, but there are less ways to shoot yourself in a foot 😉
+-   Vue is more popular than Svelte, and has a bigger ecosystem. It might be an important thing to consider when making a decision.
+
+### Colocating Vue files alongside your LiveViews
+
+Vue files in LiveVue have similar role as HEEX templates. In many cases it makes sense to [colocate them next to your LiveViews for better DX](https://elixirforum.com/t/discussion-about-domain-orientated-folder-structures-in-phoenix/17190).
+
+You don't need to do anything to make it work, simply place your Vue files inside `lib/my_app_web` directory and reference them by their names or relative paths.
+
+### How does it work?
+
+The idea is fairly simple.
+
+1. Phoenix [renders](https://github.com/Valian/live_vue/blob/main/lib/live_vue.ex) a `div` with props, slots and handlers as `data` attributes. In live views these are kept in sync. When SSR is enabled, it also renders the component and inlines the result in the HTML.
+2. `LiveVue` [hook](https://github.com/Valian/live_vue/blob/main/assets/js/live_vue/hooks.js) `mount` callback initializes the element. It hooks up all the handlers, injects hook itself so `useLiveVue` works correctly, and mounts the Vue component.
+3. On update, Phoenix only changes data attributes. Hook updates props of the element.
+4. On destroy, Vue element is unmounted and garbage collected.
+
+One thing to keep in mind is that hooks are fired only after `app.js` is fully loaded, so it might cause some delays of the initial render of the component.
+
+### Why SSR is useful?
+
+As explained in the previous section, it takes a moment for Vue component to initialize, even if props are already inlined in the HTML.
+
+It's done only during a "dead" render, without connected socket. It's not needed when doing live navigation - in my experience when using `<.link navigate="...">` component is rendered before displaying a new page.
+
+### Component lazy loading
+
+Not yet possible. Tracked in [this issue](https://github.com/Valian/live_vue/issues/3).
 
 ## Credits
 
