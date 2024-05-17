@@ -1,5 +1,6 @@
 [![GitHub](https://img.shields.io/github/stars/Valian/live_vue?style=social)](https://github.com/Valian/live_vue)
 [![Hex.pm](https://img.shields.io/hexpm/v/live_vue.svg)](https://hex.pm/packages/live_vue)
+[![Hexdocs.pm](https://img.shields.io/badge/docs-hexdocs.pm-purple)](https://hexdocs.pm/live_vue)
 
 # LiveVue
 
@@ -119,7 +120,7 @@ LiveVue replaces `esbuild` with [Vite](https://vitejs.dev/) for both client side
 ```elixir
 defp deps do
   [
-    {:live_vue, "~> 0.1"}
+    {:live_vue, "~> 0.2"}
   ]
 end
 ```
@@ -543,15 +544,22 @@ mix assets.build --watch
 
 ### Releasing
 
--   Update the version in `README.md`
--   Update the version in `package.json`
--   Update the version in `mix.exs`
--   Update the changelog
+Release is done with `expublish` package.
 
-Run:
+-   Write version changelog in untracked `RELEASE.md` file
+-   Update version in `README.md`
+
+Run
 
 ```bash
-mix hex.publish
+mix assets.build
+git add README.md priv
+
+# to ensure everything works fine
+mix expublish.minor --dry-run --allow-untracked
+
+# to publish everything
+mix expublish.minor --allow-untracked
 ```
 
 ## Deployment
