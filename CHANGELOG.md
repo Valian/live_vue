@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.1 - 2024-05-17
+
+### Changed
+
+-   Simplified `assets/vue/index.js` file - mapping filenames to keys is done by the library. Previous version should still work.
+
+
 ## 0.3.0 - 2024-05-17
 
 ### CHANGED
