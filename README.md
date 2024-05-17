@@ -121,7 +121,7 @@ LiveVue replaces `esbuild` with [Vite](https://vitejs.dev/) for both client side
 ```elixir
 defp deps do
   [
-    {:live_vue, "~> 0.2"}
+    {:live_vue, "~> 0.3"}
   ]
 end
 ```
@@ -573,8 +573,7 @@ Release is done with `expublish` package.
 Run
 
 ```bash
-mix assets.build
-git add README.md priv
+git add README.md
 git commit -m "README version bump"
 
 # to ensure everything works fine
