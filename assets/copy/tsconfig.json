@@ -5,6 +5,9 @@
       "module": "ESNext",
       "lib": ["ES2020", "DOM", "DOM.Iterable"],
       "skipLibCheck": true,
+
+      /* Types for Vite https://vitejs.dev/guide/features#client-types */
+      "types": ["vite/client"],
   
       /* Bundler mode */
       "moduleResolution": "bundler",
@@ -18,7 +21,11 @@
       "strict": true,
       "noUnusedLocals": true,
       "noUnusedParameters": true,
-      "noFallthroughCasesInSwitch": true
+      "noFallthroughCasesInSwitch": true,
+      
+      "paths": {
+        "@/*": ["./*"]
+      }
     },
     "include": ["js/**/*.ts", "js/**/*.js", "js/**/*.tsx", "vue/**/*.vue"],
   }
