@@ -1,13 +1,45 @@
 
 const bodyParser = require('body-parser')
 
+
+function hotUpdateType(path) {
+    if (path.endsWith('css')) return 'css-update';
+    if (path.endsWith('js')) return 'js-update';
+    return null
+}
+
 function liveVuePlugin(opts = {}) {
     const jsonMiddleware = bodyParser.json()
     return {
         name: 'live-vue',
-        handleHotUpdate(payload) {
-            // updates to these files will be handled by Phoenix reloader, not vite
-            if(payload.file.match(/\.(heex|ex)$/)) return []
+        handleHotUpdate({file, modules, server, timestamp}) {
+            if(file.match(/\.(heex|ex)$/)) {
+                // if it's and .ex or .heex file, invalidate all related files so they'll be updated correctly
+                const invalidatedModules = new Set()
+                for (const mod of modules) {
+                    server.moduleGraph.invalidateModule(
+                        mod,
+                        invalidatedModules,
+                        timestamp,
+                        true
+                    )
+                }
+
+                const updates = Array.from(invalidatedModules)
+                    .filter(m => hotUpdateType(m.file))
+                    .map(m => ({
+                        type: hotUpdateType(m.file),
+                        path: m.url,
+                        acceptedPath: m.url,
+                        timestamp: timestamp,
+                    }))
+
+                // ask client to hot-reload updated modules
+                server.ws.send({ type: 'update', updates: updates });
+
+                // we handle the hot update ourselves
+                return []
+            }
         },
         configureServer(server) {
             // Terminate the watcher when Phoenix quits
