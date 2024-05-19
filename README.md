@@ -29,7 +29,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   ⚡ **End-To-End Reactivity** with LiveView
 -   🔋 **Server-Side Rendered** (SSR) Vue
 -   🐌 **Lazy-loading** Vue Components
--   🪄 **Sigil** as an [Alternative LiveView DSL](#livevue-as-an-alternative-liveview-dsl)
+-   🪄 **Sigil** as an [Alternative LiveView DSL](#using-v-sigil-to-inline-vue-components)
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
 -   🦥 **Slot Interoperability**
@@ -154,7 +154,6 @@ defp html_helpers do
     use LiveVue
 
     # Generate component for each vue file, so you can omit v-component="name".
-    # Right now works only for top-level files.
     # You can configure path to your components by using optional :vue_root param
     use LiveVue.Components, vue_root: ["./assets/vue", "./lib/my_app_web"]
   end
