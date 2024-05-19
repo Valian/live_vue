@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.2 - 2024-05-19
+
+### Fixed
+-		Hot reload of CSS when updating Elixir files
+
+
 ## 0.3.1 - 2024-05-17
 
 ### Changed
