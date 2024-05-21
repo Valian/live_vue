@@ -3,7 +3,6 @@
     "version": "0.1.0",
     "description": "E2E reactivity for Vue and LiveView",
     "license": "MIT",
-    "module": "./priv/static/live_vue.esm.js",
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
     "scripts": {
         "format": "npx prettier --write assets"
@@ -13,8 +12,8 @@
     },
     "exports": {
         "./vitePlugin": "./assets/js/live_vue/vitePlugin.js",
-        "./server": "./assets/js/live_vue/server.js",
-        ".": "./assets/js/live_vue/index.js"
+        "./server": "./assets/js/live_vue/server.mjs",
+        ".": "./assets/js/live_vue/index.mjs"
     },
     "repository": {
         "type": "git",
@@ -24,8 +23,7 @@
         "README.md",
         "LICENSE.md",
         "package.json",
-        "assets/js/live_vue/*",
-        "priv/static/*"
+        "assets/js/live_vue/*"
     ],
     "dependencies": {
         "body-parser": "^1.20.2"
