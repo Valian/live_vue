@@ -12,64 +12,61 @@ defmodule LiveVue do
 
   require Logger
 
+  @ssr_default Application.compile_env(:live_vue, :ssr, true)
+
   defmacro __using__(_opts) do
     quote do
       import LiveVue
-
-      def __global__?(_name) do
-        # To hide warnings regarding props and handlers
-        # not defined in @rest attribute
-        true
-      end
     end
   end
 
-  attr(
-    :"v-component",
-    :string,
-    required: true,
-    doc: "Name of the Vue component",
-    examples: ["YourComponent", "directory/Example"]
-  )
+  # TODO - commented out because it's impossible to make :rest accept all attrs without a warning
+  # attr(
+  #   :"v-component",
+  #   :string,
+  #   required: true,
+  #   doc: "Name of the Vue component",
+  #   examples: ["YourComponent", "directory/Example"]
+  # )
 
-  attr(
-    :id,
-    :string,
-    default: nil,
-    doc:
-      "Explicit id of a wrapper component. If not provided, a random one will be generated. Useful to keep ID consistent in development.",
-    examples: ["vue-1"]
-  )
+  # attr(
+  #   :id,
+  #   :string,
+  #   default: nil,
+  #   doc:
+  #     "Explicit id of a wrapper component. If not provided, a random one will be generated. Useful to keep ID consistent in development.",
+  #   examples: ["vue-1"]
+  # )
 
-  attr(
-    :class,
-    :string,
-    default: nil,
-    doc: "Class to apply to the Vue component",
-    examples: ["my-class", "my-class another-class"]
-  )
+  # attr(
+  #   :class,
+  #   :string,
+  #   default: nil,
+  #   doc: "Class to apply to the Vue component",
+  #   examples: ["my-class", "my-class another-class"]
+  # )
 
-  attr(
-    :"v-ssr",
-    :boolean,
-    default: Application.compile_env(:live_vue, :ssr, true),
-    doc: "Whether to render the component on the server",
-    examples: [true, false]
-  )
+  # attr(
+  #   :"v-ssr",
+  #   :boolean,
+  #   default: Application.compile_env(:live_vue, :ssr, true),
+  #   doc: "Whether to render the component on the server",
+  #   examples: [true, false]
+  # )
 
-  attr(
-    :"v-socket",
-    :map,
-    default: nil,
-    doc: "LiveView socket, should be provided when rendering inside LiveView"
-  )
+  # attr(
+  #   :"v-socket",
+  #   :map,
+  #   default: nil,
+  #   doc: "LiveView socket, should be provided when rendering inside LiveView"
+  # )
 
-  attr :rest, :global
+  # attr :rest, :global
 
   def vue(assigns) do
     init = assigns.__changed__ == nil
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
-    render_ssr? = init and dead and assigns[:"v-ssr"]
+    render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
 
     # we manually compute __changed__ for the computed props and slots so it's not sent without reason
     {props, props_changed?} = extract(assigns, :props)
@@ -78,6 +75,7 @@ defmodule LiveVue do
 
     assigns =
       assigns
+      |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, props)
       |> Map.put(:handlers, handlers)
@@ -105,7 +103,7 @@ defmodule LiveVue do
     ~H"""
     <%= raw(@ssr_render[:preloadLinks]) %>
     <div
-      id={@id || id(@__component_name)}
+      id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
       data-props={"#{json(@props)}"}
       data-ssr={@ssr_render != nil}
@@ -121,24 +119,20 @@ defmodule LiveVue do
   end
 
   defp extract(assigns, type) do
-    properties =
-      case assigns do
-        %{inner_block: block} -> Map.put(assigns.rest, :inner_block, block)
-        assigns -> assigns.rest
-      end
-
-    Enum.reduce(properties, {%{}, false}, fn {key, value}, {acc, changed} ->
+    Enum.reduce(assigns, {%{}, false}, fn {key, value}, {acc, changed} ->
       case normalize_key(key, value) do
+        ^type -> {Map.put(acc, key, value), changed || key_changed(assigns, key)}
         {^type, k} -> {Map.put(acc, k, value), changed || key_changed(assigns, key)}
         _ -> {acc, changed}
       end
     end)
   end
 
-  defp normalize_key(key, [%{__slot__: _}]), do: {:slots, key}
+  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a, do: :special
+  defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
   defp normalize_key("v-on:" <> key, _val), do: {:handlers, key}
-  defp normalize_key(key, _val), do: {:props, key}
+  defp normalize_key(_key, _val), do: :props
 
   defp key_changed(%{__changed__: nil}, _key), do: true
   defp key_changed(%{__changed__: changed}, key), do: changed[key]
