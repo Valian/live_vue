@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.3 - 2024-05-22
+
+### Fixed
+
+-   Javascript imports were mixed - vitePlugin.js was using CJS, rest was using ESM. Now it's explicit by adding ".mjs" extension.
+-   Removed `:attr` declarations for `<.vue>` component to avoid warnings related to unexpected props being passed to `:rest` attribute [#8](https://github.com/Valian/live_vue/pull/8)
+
+
 ## 0.3.2 - 2024-05-19
 
 ### Fixed
