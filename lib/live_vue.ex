@@ -135,7 +135,7 @@ defmodule LiveVue do
   defp normalize_key(_key, _val), do: :props
 
   defp key_changed(%{__changed__: nil}, _key), do: true
-  defp key_changed(%{__changed__: changed}, key), do: changed[key]
+  defp key_changed(%{__changed__: changed}, key), do: changed[key] != nil
 
   defp ssr_render(assigns) do
     try do
