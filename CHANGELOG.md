@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.4 - 2024-05-22
+
+### Fixed
+
+-   Props are correctly updated when being arrays of structs
+
+
 ## 0.3.3 - 2024-05-22
 
 ### Fixed
