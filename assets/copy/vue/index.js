@@ -1,3 +1,7 @@
+// polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
+import "vite/modulepreload-polyfill";
+
+
 // it's a way of importing multiple files in one go with Vite. 
 // we get back a map of components with their relative paths as keys.
 // we're importing from ../../lib to allow collocating Vue files with LiveView files
