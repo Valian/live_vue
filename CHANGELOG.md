@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.5 - 2024-05-24
+
+### Changed
+
+-   Removed `body-parser` dependency from `live_vue`. Should fix [#9](https://github.com/Valian/live_vue/issues/9)
+
+
 ## 0.3.4 - 2024-05-22
 
 ### Fixed
