@@ -1,7 +1,8 @@
 // imported only in SSR, won't work in browser because of vue/server-renderer assuming node
 import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
-import { basename } from "path";
+import { basename, resolve } from "path";
+import { readFileSync } from "fs";
 import { normalizeComponents, getComponent } from "./components";
 
 function getSlots(slots) {
