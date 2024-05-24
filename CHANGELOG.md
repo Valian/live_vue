@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.6 - 2024-05-24
+
+### Fixed
+
+-   Fixed missing import in loadManifest
+-   Added `import "vite/modulepreload-polyfill";` to `assets/vue/index.js`. To migrate, add that line to the top. It adds polyfill for module preload, required for some browsers. More here: https://vitejs.dev/config/build-options#build-modulepreload
+
+
 ## 0.3.5 - 2024-05-24
 
 ### Changed
