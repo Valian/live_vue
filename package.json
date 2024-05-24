@@ -24,8 +24,5 @@
         "LICENSE.md",
         "package.json",
         "assets/js/live_vue/*"
-    ],
-    "dependencies": {
-        "body-parser": "^1.20.2"
-    }
+    ]
 }
