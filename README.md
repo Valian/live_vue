@@ -181,21 +181,10 @@ npm install --save vue topbar ../deps/live_vue ../deps/phoenix ../deps/phoenix_h
 rm vendor/topbar.js
 ```
 
-Next, let's copy SSR entrypoint, vite config and typescript config from `live_vue`. If you have any of these files, they'll be skipped so you could update them on your own.
+Next, let's copy SSR entrypoint, vite config and typescript config from `live_vue`. If you have any of these files, they'll be skipped so you could update them on your own. The following is a `mix task` that will do the file changes for you.
 
 ```bash
-mkdir vue
-
-for SOURCE in $(find ../deps/live_vue/assets/copy -type f); do
-  DEST=${SOURCE#../deps/live_vue/assets/copy/}
-
-  if [ -e "$DEST" ]; then
-    echo "SKIPPED $SOURCE -> $DEST. Please update manually"
-  else
-    echo "COPIED $SOURCE -> $DEST"
-    cp $SOURCE $DEST
-  fi
-done
+mix live_vue.setup
 ```
 
 Now we just have to adjust app.js hooks and tailwind config to include `vue` files:
