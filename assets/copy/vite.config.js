@@ -24,7 +24,6 @@ export default defineConfig(({command}) => {
       }
     },
     build: {
-      modulePreload: { polyfill: false },
       commonjsOptions: { transformMixedEsModules: true },
       target: "es2020",
       outDir: "../priv/static/assets", // emit assets to priv/static/assets
