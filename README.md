@@ -96,15 +96,15 @@ You can read more about differences between Vue and Svelte [in FAQ](#differences
 
 ## Why?
 
-Phoenix Live View makes it possible to create rich, interactive web apps without writing JS 😍
+Phoenix Live View makes it possible to create rich, interactive web apps without writing JS.
 
-But once you'll need to do anything even slightly complex on the client-side, you'll end up writing lots of imperative, hard-to-maintain hooks 😢
+But once you'll need to do anything even slightly complex on the client-side, you'll end up writing lots of imperative, hard-to-maintain hooks.
 
-LiveVue allows to create hybrid apps, where part of the session state is on the server and part on the client 🤗
+LiveVue allows to create hybrid apps, where part of the session state is on the server and part on the client.
 
 ### Reasons why you'd like to use LiveVue
 
--   Your hooks are starting to look like jQuery 😅
+-   Your hooks are starting to look like jQuery
 -   You have a complex local state
 -   You'd like to use a massive Vue ecosystem
 -   You want transitions, graphs etc.
