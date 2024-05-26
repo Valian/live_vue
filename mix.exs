@@ -29,8 +29,9 @@ defmodule LiveVue.MixProject do
         homepage_url: @repo_url,
         main: "readme",
         extras: [
-          "README.md",
-          "CHANGELOG.md": [title: "Changelog"]
+          "README.md": [title: "LiveVue"],
+          "INSTALLATION.md": [title: "Installation"],
+          "CHANGELOG.md": [title: "Changelog"],
         ],
         links: %{
           "GitHub" => @repo_url
