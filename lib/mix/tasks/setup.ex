@@ -22,9 +22,7 @@ defmodule Mix.Tasks.LiveVue.Setup do
           log_info(~s/Did not copy `#{full_path}` to `#{new_path}` since file already exists/)
 
         false ->
-          log_info(~s/Copying `#{full_path}` to `#{new_path}`/)
           Mix.Generator.copy_file(full_path, new_path)
-          log_success(~s/Successfully copied `#{full_path}` to `#{new_path}`/)
       end
     end)
 
@@ -34,7 +32,4 @@ defmodule Mix.Tasks.LiveVue.Setup do
   # Copied from live_svelte logger file at https://github.com/woutdp/live_svelte/blob/master/lib/logger.ex
   @doc false
   defp log_info(status), do: Mix.shell().info([status, :reset])
-
-  @doc false
-  defp log_success(status), do: Mix.shell().info([:green, status, :reset])
 end
