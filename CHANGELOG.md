@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.7 - 2024-05-26
+
+### Changed
+
+-   Added a Mix.Task to make JS file setup more straightforward and cross-platform [#11](https://github.com/Valian/live_vue/pull/11). Contribution by @morfert 🔥
+-   Installation instruction was moved to the separate file
+-   Package.json was added to files automatically copied from live_vue when using `mix live_vue.setup`
+
+### Fixed
+
+-   Removed `build: {modulePreload: { polyfill: false }}` from vite.config.js as it made it impossible to use `vite/modulepreload-polyfill`. To migrate: please remove that line from yours vite.config.js. Fixed [#12](https://github.com/Valian/live_vue/issues/12)
+
+
 ## 0.3.6 - 2024-05-24
 
 ### Fixed
