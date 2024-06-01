@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.3.8 - 2024-06-01
+
+### Fixed
+
+-   Invalid live_vue import in copied package.json (`file:../..` -> `file:../deps/live_vue`)
+-   Changed `useLiveVue` inject key from `Symbol()` to `_live_vue` string, so it's working if Vite does a reload and Symbol is re-evaluated.
+
+### Added
+
+-   Added live_vue, phoenix, phoenix_html and phonenix_live_vue to vite `optimizeDeps.include` config options. It should pre-bundle these packages in development, making it consistent with packages imported from node_modules and improve DX.
+-   Added initial typescript definitions. Apparently it's enough to name them `<filename>.d.mts`, so I've created them both for `index.mjs` and `server.mjs`
+
+
 ## 0.3.7 - 2024-05-26
 
 ### Changed
