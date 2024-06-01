@@ -131,10 +131,16 @@ defmodule LiveVue do
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, {%{}, false}, fn {key, value}, {acc, changed} ->
-      case normalize_key(key, value) do
-        ^type -> {Map.put(acc, key, value), changed || key_changed(assigns, key)}
-        {^type, k} -> {Map.put(acc, k, value), changed || key_changed(assigns, key)}
-        _ -> {acc, changed}
+      case key_changed(assigns, key) do
+        false ->
+          {acc, changed}
+
+        true ->
+          case normalize_key(key, value) do
+            ^type -> {Map.put(acc, key, value), true}
+            {^type, k} -> {Map.put(acc, k, value), true}
+            _ -> {acc, changed}
+          end
       end
     end)
   end
