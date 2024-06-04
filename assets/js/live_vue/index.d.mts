@@ -1,3 +1,5 @@
+import {type App} from 'vue'
+
 export type Live = {
     // in case of LiveView, el is always a div
     el: HTMLDivElement
@@ -13,4 +15,4 @@ export type Live = {
 }
 
 export declare const useLiveVue: () => Live
-export declare const getHooks: (components: object) => {LiveVue: any}
+export declare const getHooks: (components: object, optionalCallback?: (app: App)=>void) => {LiveVue: any}

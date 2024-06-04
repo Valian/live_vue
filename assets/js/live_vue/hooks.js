@@ -49,7 +49,7 @@ function getProps(el, liveSocket) {
     }
 }
 
-export function getHooks(components) {
+export function getHooks(components, optionalCallback) {
     components = normalizeComponents(components)
 
     const VueHook = {
@@ -64,6 +64,14 @@ export function getHooks(components) {
             
             el._instance = makeApp({ render: () => h(component, el._props, el._slots) })
             el._instance.provide(liveInjectKey, this)
+
+            // Added an optional callback that gives access to `app` before mounting, to be able to install plugins, etc.
+            if(optionalCallback){
+                if(typeof(optionalCallback) === "function"){
+                    optionalCallback(el._instance)
+                }
+            }
+
             el._instance.mount(el)
         },
         mounted() {
