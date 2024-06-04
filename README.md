@@ -298,6 +298,28 @@ const entryComponents = {
 // in app.js
 const hooks = getHooks(entryComponents)
 ```
+### Using Vue Plugins
+
+You can use the `optionalCallback` parameter in `getHooks` to pass in a function whose first argument is the vue. The callback function can then use the [api](https://vuejs.org/api/application) to install plugins, etc.
+
+The following is an example of using [pinia](https://pinia.vuejs.org/).
+
+```javascript
+// in app.js
+// ...
+import {createPinia} from 'pinia'
+
+const pinia = createPinia()
+// ...
+let liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: {_csrf_token: csrfToken},
+  hooks: getHooks(components, (app) => {
+    app.use(pinia)
+  })
+})
+// ...
+```
 
 ## LiveVue Development
 
