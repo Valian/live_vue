@@ -31,7 +31,7 @@ defmodule LiveVue.MixProject do
         extras: [
           "README.md": [title: "LiveVue"],
           "INSTALLATION.md": [title: "Installation"],
-          "CHANGELOG.md": [title: "Changelog"],
+          "CHANGELOG.md": [title: "Changelog"]
         ],
         links: %{
           "GitHub" => @repo_url
@@ -70,11 +70,7 @@ defmodule LiveVue.MixProject do
   defp deps do
     [
       {:jason, "~> 1.2"},
-      # Right now it won't work, it require my fork of elixir-nodejs
-      # Vite doesn't support CJS anymore for SSR build
-      # see PR https://github.com/revelrylabs/elixir-nodejs/pull/84
-      # in the meantime I'm trying to become a maintainer of elixir-nodejs
-      {:nodejs, "~> 2.0"},
+      {:nodejs, "~> 3.1"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
