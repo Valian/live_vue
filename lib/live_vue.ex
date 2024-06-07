@@ -136,6 +136,14 @@ defmodule LiveVue do
           {acc, changed}
 
         true ->
+          case assigns.__changed__[key] do
+            old_val when is_map(old_val) or is_list(old_val) ->
+              IO.inspect(Jsonpatch.diff(old_val, value), label: key)
+
+            _ ->
+              nil
+          end
+
           case normalize_key(key, value) do
             ^type -> {Map.put(acc, key, value), true}
             {^type, k} -> {Map.put(acc, k, value), true}
