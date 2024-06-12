@@ -1,4 +1,4 @@
-import {type App,createSSRApp, createApp} from 'vue'
+import {type App, createSSRApp, createApp} from 'vue'
 
 export type Live = {
     // in case of LiveView, el is always a div
@@ -14,18 +14,19 @@ export type Live = {
     uploadTo(phxTarget: any, name: string, files: any): void
 }
 
-interface initializationArgs  {
+type InitializeAppFn = (args: {
     createApp: typeof createSSRApp | typeof createApp;
     component: any;
     props: any;
     slots: HTMLElement;
     plugin: {install: (app: App) => App};
     el: HTMLElement
-}
+}) => App
 
 interface Options  {
-    initializeApp? : (args: initializationArgs) => void
+    initializeApp?: InitializeAppFn
 }
 
 export declare const useLiveVue: () => Live
 export declare const getHooks: (components: object, options: Options) => {LiveVue: any}
+export declare const initializeVueApp: InitializeAppFn
