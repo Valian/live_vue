@@ -49,7 +49,20 @@ function getProps(el, liveSocket) {
     }
 }
 
-export function getHooks(components) {
+/**
+ * Initializes a Vue app with the given options and mounts it to the specified element.
+ * It's a default implementation of the `initializeApp` hook option, which can be overridden.
+ */
+export const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
+    const renderFn = () => h(component, props, slots)
+    const app = createApp({ render: renderFn });
+    app.use(plugin);
+    app.mount(el);
+    return app;
+}
+
+export function getHooks(components, options = {}) {
+    const initializeApp = options.initializeApp || initializeVueApp
     components = normalizeComponents(components)
 
     const VueHook = {
@@ -62,9 +75,19 @@ export function getHooks(components) {
             el._props = reactive(getProps(el, liveSocket))
             el._slots = reactive(getSlots(el))
             
-            el._instance = makeApp({ render: () => h(component, el._props, el._slots) })
-            el._instance.provide(liveInjectKey, this)
-            el._instance.mount(el)
+            const initializeContext = {
+                createApp: makeApp,
+                component: component,
+                props: el._props,
+                slots: el._slots,
+                plugin: { install: (app) => app.provide(liveInjectKey, this) },
+                el: el
+            }
+
+            const app = initializeApp(initializeContext)
+            if (!app) throw new Error("Custom initialize app function did not return an app")
+
+            el._instance = app
         },
         mounted() {
             this.mount(this.el, this.liveSocket)

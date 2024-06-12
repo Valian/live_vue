@@ -299,6 +299,53 @@ const entryComponents = {
 const hooks = getHooks(entryComponents)
 ```
 
+### Customize Vue app
+
+If you want to initialize Vue app in a custom way, by eg. adding plugins or directives, you should pass initialization function to `useHooks` as in the following snippet
+
+```javascript
+// in app.js
+// ...
+import {getHooks, initializeVueApp} from "live_vue"
+// import { createPinia } from "pinia"
+// const pinia = createPinia()
+
+const initializeApp = context => {
+    // initializeVueApp is a default function creating and initializing LiveVue App
+    const app = initializeVueApp(context)
+    // you can initialize additional plugins here, eg. Pinia
+    // app.use(pinia)
+    return app
+}
+
+const hooks = getHooks(components, {initializeApp})
+```
+
+You can completely change the default initialization method by not using `initializeVueApp` and rolling your own. Current implementation looks like this, feel free to adjust to your needs.
+
+```javascript
+import {h} from "vue"
+
+const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
+    const renderFn = () => h(component, props, slots)
+    const app = createApp({render: renderFn})
+    app.use(plugin)
+    app.mount(el)
+    return app
+}
+```
+
+Context object passed to `initializeApp` has following keys:
+
+| Property    | Descriptor                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createApp` | Either [`createApp()`](https://vuejs.org/api/application#createapp) or [`createSSRApp()`](https://vuejs.org/api/application#createssrapp) depending on whether or not SSR is enabled |
+| `component` | The vue compoenent that is to be rendered                                                                                                                                            |
+| `props`     | The props passed to the component                                                                                                                                                    |
+| `slots`     | The slots passed to the component                                                                                                                                                    |
+| `plugin`    | A `live_vue` plugin that makes it possible to use `useLiveVue` provider                                                                                                              |
+| `el`        | The html element in which the vue app should be mounted                                                                                                                              |
+
 ## LiveVue Development
 
 ### Local Setup
