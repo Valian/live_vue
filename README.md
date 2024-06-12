@@ -78,7 +78,7 @@ defmodule LiveVueExamplesWeb.LiveCounter do
   end
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :counter, 0)}
+    {:ok, assign(socket, :count, 0)}
   end
 
   def handle_event("inc", %{"value" => diff}, socket) do
