@@ -298,56 +298,53 @@ const entryComponents = {
 // in app.js
 const hooks = getHooks(entryComponents)
 ```
-### Custom App Initialization
 
-You can use the `options` parameter in `getHooks` to pass in a an object with the property `initializeApp`. The default shape of `initializeApp`
-can be seen below.
+### Customize Vue app
 
-```javascript
-const options = {
-  initializeApp: ({createApp, component, props, slots, plugin, el}) => {
-    return createApp({ render: () => h(component, props, slots) })
-      .use(plugin)
-      .mount(el)
-  }
-};
-```
-| Property | Descriptor |
-| -------- | ---------- |
-| `createApp` | Either [`createApp()`](https://vuejs.org/api/application#createapp) or [`createSSRApp()`](https://vuejs.org/api/application#createssrapp) depending on whether or not SSR is enabled. |
-| `component` | The vue compoenent that is to be rendered. | 
-| `props` | The props passed to the component. |
-| `slots` | The slots passed to the component. |
-| `plugin` | A default plugin that must be installed for `live_vue` to function. |
-| `el` | The html element in which the vue app shall be mounted. |
-
-For `live_vue` to function the above calls have to be made. Keep that in mind if you override `initializeApp`.
-
-The following is an example of using [pinia](https://pinia.vuejs.org/).
+If you want to initialize Vue app in a custom way, by eg. adding plugins or directives, you should pass initialization function to `useHooks` as in the following snippet
 
 ```javascript
 // in app.js
 // ...
-import {createPinia} from 'pinia'
+import {getHooks, initializeVueApp} from "live_vue"
+// import { createPinia } from "pinia"
+// const pinia = createPinia()
 
-const pinia = createPinia()
-const options = {
-  initializeApp: ({createApp, component, props, slots, plugin, el}) => {
-    return createApp({ render: () => h(component, props, slots) })
-      .use(plugin)
-      // installing pinia plugin
-      .use(pinia)
-      .mount(el)
-  }
+const initializeApp = context => {
+    // initializeVueApp is a default function creating and initializing LiveVue App
+    const app = initializeVueApp(context)
+    // you can initialize additional plugins here, eg. Pinia
+    // app.use(pinia)
+    return app
 }
-// ...
-let liveSocket = new LiveSocket("/live", Socket, {
-  longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: getHooks(components, options)
-})
-// ...
+
+const hooks = getHooks(components, {initializeApp})
 ```
+
+You can completely change the default initialization method by not using `initializeVueApp` and rolling your own. Current implementation looks like this, feel free to adjust to your needs.
+
+```javascript
+import {h} from "vue"
+
+const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
+    const renderFn = () => h(component, props, slots)
+    const app = createApp({render: renderFn})
+    app.use(plugin)
+    app.mount(el)
+    return app
+}
+```
+
+Context object passed to `initializeApp` has following keys:
+
+| Property    | Descriptor                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createApp` | Either [`createApp()`](https://vuejs.org/api/application#createapp) or [`createSSRApp()`](https://vuejs.org/api/application#createssrapp) depending on whether or not SSR is enabled |
+| `component` | The vue compoenent that is to be rendered                                                                                                                                            |
+| `props`     | The props passed to the component                                                                                                                                                    |
+| `slots`     | The slots passed to the component                                                                                                                                                    |
+| `plugin`    | A `live_vue` plugin that makes it possible to use `useLiveVue` provider                                                                                                              |
+| `el`        | The html element in which the vue app should be mounted                                                                                                                              |
 
 ## LiveVue Development
 

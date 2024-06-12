@@ -54,11 +54,12 @@ function getProps(el, liveSocket) {
  * It's a default implementation of the `initializeApp` hook option, which can be overridden.
  */
 export const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
-    const app = createApp({ render: () => h(component, props, slots) })
-    app.use(plugin)
-    app.mount(el)
-    return app
-  }
+    const renderFn = () => h(component, props, slots)
+    const app = createApp({ render: renderFn });
+    app.use(plugin);
+    app.mount(el);
+    return app;
+}
 
 export function getHooks(components, options = {}) {
     const initializeApp = options.initializeApp || initializeVueApp
