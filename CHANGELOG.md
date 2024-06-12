@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.4.0 - 2024-06-12
+
+### New feature
+
+-   Support for custom Vue instance initialization [#13](https://github.com/Valian/live_vue/pull/13) by @morfert
+
+
 ## 0.3.9 - 2024-06-07
 
 
