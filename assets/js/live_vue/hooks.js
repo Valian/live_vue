@@ -1,6 +1,6 @@
 import { createApp, createSSRApp, reactive, h } from 'vue'
-import { liveInjectKey } from "./use"
-import { normalizeComponents, getComponent } from './components';
+import { liveInjectKey } from "./use.js"
+import { normalizeComponents, getComponent } from './components.js';
 
 
 function mapValues(object, cb) {

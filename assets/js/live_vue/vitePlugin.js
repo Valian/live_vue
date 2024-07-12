@@ -38,7 +38,7 @@ const jsonMiddleware = (req, res, next) => {
     });
 };
 
-function liveVuePlugin(opts = {}) {
+export default function liveVuePlugin(opts = {}) {
     return {
         name: 'live-vue',
         handleHotUpdate({file, modules, server, timestamp}) {
@@ -98,5 +98,3 @@ function liveVuePlugin(opts = {}) {
         },
     }
 }
-
-module.exports = liveVuePlugin

@@ -4,6 +4,7 @@
     "description": "E2E reactivity for Vue and LiveView",
     "license": "MIT",
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
+    "type": "module",
     "module": "./assets/js/live_vue/index.mjs",
     "scripts": {
         "format": "npx prettier --write assets"

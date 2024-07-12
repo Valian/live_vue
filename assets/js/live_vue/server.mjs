@@ -3,7 +3,7 @@ import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { basename, resolve } from "path";
 import { readFileSync } from "fs";
-import { normalizeComponents, getComponent } from "./components";
+import { normalizeComponents, getComponent } from "./components.js";
 
 function getSlots(slots) {
     const slotFunctions = {}
