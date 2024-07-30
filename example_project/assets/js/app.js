@@ -21,13 +21,24 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "topbar"
-import { getHooks } from "live_vue"
+import { getHooks, initializeVueApp } from "live_vue"
 import "../css/app.css"
 import components from "../vue"
+import { getCurrentInstance } from "vue"
 import "vite/modulepreload-polyfill";
 
+// Integrate with PrimeVue
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+
+const initializeApp = context => {
+  const app = initializeVueApp(context)
+  app.use(PrimeVue, { theme: { preset: Aura } });
+  return app
+}
+
 const hooks = {
-  ...getHooks(components),
+  ...getHooks(components, {initializeApp}),
 }
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
