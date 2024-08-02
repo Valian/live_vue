@@ -1,2 +1,2 @@
-export { getHooks, initializeVueApp } from "./hooks"
-export { useLiveVue } from "./use"
+export { getHooks, initializeVueApp } from "./hooks.js"
+export { useLiveVue } from "./use.js"
