@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.4.1 - 2024-08-30
+
+Changed
+
+-   Improved `pathToFullPathAndFilename` to work with `index.vue` files. Now `../ComponentName/index.vue` can be referenced as `ComponentName` [#23](https://github.com/Valian/live_vue/pull/23)
+
+
 ## 0.4.0 - 2024-06-12
 
 ### New feature
