@@ -5,7 +5,7 @@ const flatMapKeys = (object, cb) => Object.entries(object).reduce((acc, [key, va
 }, {});
 
 const pathToFullPathAndFilename = (path) => {
-  path = path.replace(".vue", "")
+  path = path.replace("/index.vue", "").replace(".vue", "")
   // both full path and only filename
   return [ path, path.split("/").slice(-1)[0] ]
 }
