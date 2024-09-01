@@ -46,7 +46,7 @@ defmodule LiveVueExamples.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:live_vue, path: ".."},
-      {:nodejs, github: "revelrylabs/elixir-nodejs", branch: "master", override: true}
+      {:nodejs, "~> 3.1"}
     ]
   end
 
