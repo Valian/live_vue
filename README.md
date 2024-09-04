@@ -537,6 +537,16 @@ As explained in the previous section, it takes a moment for Vue component to ini
 
 It's done only during a "dead" render, without connected socket. It's not needed when doing live navigation - in my experience when using `<.link navigate="...">` component is rendered before displaying a new page.
 
+## Roadmap 🎯
+
+- [ ] Add a default handler for Vue emits to eg. automatically push them to the server without explicit `v-on` handlers. 
+- [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
+- [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
+- [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
+- [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
+- [ ] optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props
+- [ ] VS code extension higlighting `~V` sigil
+
 ## Credits
 
 [LiveSvelte](https://github.com/woutdp/live_svelte)
