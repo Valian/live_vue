@@ -1,13 +1,12 @@
-import { createApp, createSSRApp, reactive, h } from 'vue'
+import { createApp, createSSRApp, reactive, h } from "vue"
 import { liveInjectKey } from "./use"
-import { normalizeComponents, getComponent } from './components';
-
+import { normalizeComponents, getComponent } from "./components"
 
 function mapValues(object, cb) {
     return Object.entries(object).reduce((acc, [key, value]) => {
-        acc[key] = cb(value, key, object);
-        return acc;
-    }, {});
+        acc[key] = cb(value, key, object)
+        return acc
+    }, {})
 }
 
 function getAttributeJson(el, attributeName) {
@@ -17,10 +16,7 @@ function getAttributeJson(el, attributeName) {
 
 function getSlots(el) {
     const dataSlots = getAttributeJson(el, "data-slots")
-    return mapValues(
-        dataSlots, 
-        base64 => () => h('div', {innerHTML: atob(base64).trim()})
-    )
+    return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
 }
 
 function getHandlers(el, liveSocket) {
@@ -29,11 +25,11 @@ function getHandlers(el, liveSocket) {
     for (const handlerName in handlers) {
         const ops = handlers[handlerName]
         const snakeCaseName = `on${handlerName.charAt(0).toUpperCase() + handlerName.slice(1)}`
-        result[snakeCaseName] = (event) => {
+        result[snakeCaseName] = event => {
             // a little bit of magic to replace the event with the value of the input
             const parsedOps = JSON.parse(ops)
             const replacedOps = parsedOps.map(([op, args, ...other]) => {
-                if (op === 'push' && !args.value) args.value = event
+                if (op === "push" && !args.value) args.value = event
                 return [op, args, ...other]
             })
             liveSocket.execJS(el, JSON.stringify(replacedOps))
@@ -52,13 +48,14 @@ function getProps(el, liveSocket) {
 /**
  * Initializes a Vue app with the given options and mounts it to the specified element.
  * It's a default implementation of the `initializeApp` hook option, which can be overridden.
+ * If you want to override it, simply provide your own implementation of the `initializeApp` hook.
+ *
  */
-export const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
-    const renderFn = () => h(component, props, slots)
-    const app = createApp({ render: renderFn });
-    app.use(plugin);
-    app.mount(el);
-    return app;
+export const initializeVueApp = ({ createApp, component, props, slots, plugin, el }) => {
+    const app = createApp({ render: () => h(component, props, slots) })
+    app.use(plugin)
+    app.mount(el)
+    return app
 }
 
 export function getHooks(components, options = {}) {
@@ -74,14 +71,14 @@ export function getHooks(components, options = {}) {
 
             el._props = reactive(getProps(el, liveSocket))
             el._slots = reactive(getSlots(el))
-            
+
             const initializeContext = {
                 createApp: makeApp,
                 component: component,
                 props: el._props,
                 slots: el._slots,
-                plugin: { install: (app) => app.provide(liveInjectKey, this) },
-                el: el
+                plugin: { install: app => app.provide(liveInjectKey, this) },
+                el: el,
             }
 
             const app = initializeApp(initializeContext)
@@ -99,7 +96,7 @@ export function getHooks(components, options = {}) {
         destroyed() {
             const instance = this.el._instance
             if (instance) {
-                window.addEventListener("phx:page-loading-stop", () => instance.unmount(), {once: true})
+                window.addEventListener("phx:page-loading-stop", () => instance.unmount(), { once: true })
             }
         },
     }
