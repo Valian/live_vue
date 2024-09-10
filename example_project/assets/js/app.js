@@ -27,6 +27,17 @@ import "../css/app.css"
 import components from "../vue"
 import "vite/modulepreload-polyfill"
 
+// Vuetify
+import "vuetify/styles"
+import { createVuetify } from "vuetify"
+import * as vuetifyComponents from "vuetify/components"
+import * as vuetifyDirectives from "vuetify/directives"
+
+const vuetify = createVuetify({
+    vuetifyComponents,
+    vuetifyDirectives,
+})
+
 // Integrate with PrimeVue
 import PrimeVue from "primevue/config"
 import Aura from "@primevue/themes/aura"
@@ -35,6 +46,7 @@ const initializeApp = ({ createApp, component, props, slots, plugin, el }) => {
     const app = createApp({ render: () => h(component, props, slots) })
     app.use(plugin)
     app.use(PrimeVue, { theme: { preset: Aura } })
+    app.use(vuetify)
     app.mount(el)
     return app
 }

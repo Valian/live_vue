@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 
 import vue from '@vitejs/plugin-vue'
 import liveVuePlugin from "live_vue/vitePlugin"
+import vuetify from "vite-plugin-vuetify";
 
 // https://vitejs.dev/config/
 export default defineConfig(({command}) => {
@@ -11,11 +12,15 @@ export default defineConfig(({command}) => {
   return {
     base: isDev ? undefined : "/assets",
     publicDir: "static",
-    plugins: [vue(), liveVuePlugin()],
+    plugins: [
+      vue(), 
+      liveVuePlugin(),
+      vuetify({ autoImport: { labs: true } }),
+    ],
     ssr: {
       // we need it, because in SSR build we want no external
       // and in dev, we want external for fast updates
-      noExternal: isDev ? undefined : true,
+      noExternal: ["vuetify"],
     },
     resolve: {
       alias: {
