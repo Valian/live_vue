@@ -501,7 +501,7 @@ Both `LiveVue` and `LiveSvelte `serves the same purpose and are implemented in a
 -   Vue uses virtual DOM, Svelte doesn't. Vue bundle is slightly bigger than Svelte because of runtime.
 -   Vue performance is very similar, or even better, than Svelte. Both are fast enough that you shouldn't make your decision based on it.
 -   Vue is working on a [Vapor mode](https://github.com/vuejs/core-vapor) without virtual DOM. Once stable I'll try to support it here.
--   Svelte reactivity is done based on the compilation step figuring out dependencies. It allows for a very concise syntax, but causes probles when you'd like to keep reactivity cross-files and [has some limitations](https://thoughtspile.github.io/2023/04/22/svelte-state/). Svelte 5 Runes will be very similar to Vue `ref`.
+-   Svelte reactivity is done based on the compilation step figuring out dependencies. It allows for a very concise syntax, but causes problems when you'd like to keep reactivity cross-files and [has some limitations](https://thoughtspile.github.io/2023/04/22/svelte-state/). Svelte 5 Runes will be very similar to Vue `ref`.
 -   Vue reactivity is [based on JS Proxies](https://vuejs.org/guide/extras/reactivity-in-depth.html#how-reactivity-works-in-vue). Syntax is a bit more verbose, but there are less ways to shoot yourself in a foot 😉
 -   Vue is more popular than Svelte, and has a bigger ecosystem. It might be an important thing to consider when making a decision.
 
