@@ -14,7 +14,7 @@
     </LiveVue.Reload.vite_assets>
   </head>
   <body class="bg-white antialiased dark:bg-[#1b1b1f] dark:text-[rgba(255,255,245,.86)]">
-    <header class="px-6 sm:px-8 lg:px-12 h-[70px]">
+    <header class="px-4 sm:px-8 lg:px-12 h-[70px]">
       <div class="flex items-center justify-between py-3">
         <div class="flex items-center gap-4 font-bold">
           <.link navigate={~p"/"}>
@@ -32,8 +32,13 @@
         </div>
       </div>
     </header>
-    <main class="p-2 sm:py-20 sm:px-6 lg:px-8 h-[calc(100vh_-_70px)]">
+    <main class="px-4 py-2 sm:py-10 sm:px-6 lg:px-8">
       <%= @inner_content %>
     </main>
+
+    <footer class="text-center text-sm text-gray-500 mb-12">
+      Made with ❤️ by <a href="https://x.com/jskalc" class="text-orange-500 hover:text-orange-600">@jskalc</a>
+    </footer>
+
   </body>
 </html>

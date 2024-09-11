@@ -4,7 +4,7 @@ defmodule LiveVueExamplesWeb.LiveHome do
   def render(assigns) do
     ~H"""
     <div class="max-w-6xl mx-auto">
-      <div class="flex justify-between gap-4 items-center">
+      <div class="flex justify-between flex-wrap gap- items-center">
         <div>
           <h1 class="text-6xl font-bold leading-normal text-[#FD4F00]">LiveVue</h1>
           <h2 class="text-2xl font-medium text-slate-200/60 leading-loose mt-4">
@@ -33,15 +33,47 @@ defmodule LiveVueExamplesWeb.LiveHome do
           </div>
         </div>
       </div>
-      <div class="mt-12  grid grid-cols-4 gap-6">
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
-        <div class="rounded-lg bg-gray-700 p-4 h-32">Work in progress</div>
+      <div class="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">⚡</div>
+          <h3 class="text-xl font-semibold mb-2">End-To-End Reactivity</h3>
+          <p class="text-sm">Seamless integration with LiveView for real-time updates</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🔋</div>
+          <h3 class="text-xl font-semibold mb-2">Server-Side Rendered</h3>
+          <p class="text-sm">Vue components rendered on the server for optimal performance</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🐌</div>
+          <h3 class="text-xl font-semibold mb-2">Lazy-loading</h3>
+          <p class="text-sm">Load Vue components on-demand for faster initial page loads</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🪄</div>
+          <h3 class="text-xl font-semibold mb-2">~V Sigil</h3>
+          <p class="text-sm">Alternative LiveView DSL for inline Vue components</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🦄</div>
+          <h3 class="text-xl font-semibold mb-2">Tailwind Support</h3>
+          <p class="text-sm">Seamless integration with Tailwind CSS for styling</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">💀</div>
+          <h3 class="text-xl font-semibold mb-2">Dead View Support</h3>
+          <p class="text-sm">Use Vue components in both live and dead views</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🦥</div>
+          <h3 class="text-xl font-semibold mb-2">Slot Interoperability</h3>
+          <p class="text-sm">Pass content from Phoenix to Vue components using slots</p>
+        </div>
+        <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
+          <div class="text-3xl mb-2">🚀</div>
+          <h3 class="text-xl font-semibold mb-2">Amazing DX</h3>
+          <p class="text-sm">Excellent developer experience with Vite integration</p>
+        </div>
       </div>
     </div>
     """
