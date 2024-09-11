@@ -550,3 +550,7 @@ It's done only during a "dead" render, without connected socket. It's not needed
 ## Credits
 
 [LiveSvelte](https://github.com/woutdp/live_svelte)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Valian/live_vue&type=Date)](https://star-history.com/#Valian/live_vue&Date)
