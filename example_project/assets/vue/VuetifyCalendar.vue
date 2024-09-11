@@ -14,7 +14,7 @@ import { useDate } from "vuetify"
 
 const calendar = ref()
 
-const today = ref(new Date())
+const today = ref([new Date()])
 const events = ref([])
 const colors = ["blue", "indigo", "deep-purple", "cyan", "green", "orange", "grey darken-1"]
 const names = ["Meeting", "Holiday", "PTO", "Travel", "Event", "Birthday", "Conference", "Party"]

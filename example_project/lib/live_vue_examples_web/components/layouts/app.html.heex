@@ -3,17 +3,17 @@
     <nav class="bg-white/10 rounded-lg px-4 p-2">
       <h2 class="text-xl font-semibold text-orange-phoenix mb-2">Examples</h2>
       <div class="space-y-1">
-      <.link 
+      <.link
         :for={{link, label} <- [
           {~p"/dead", "Dead view"},
           {~p"/counter", "Counter"},
           {~p"/slots", "Slots"},
-          {~p"/prime_vue", "Prime Vue"},
           {~p"/form", "Form"},
           {~p"/sigil", "Sigil"},
-          {~p"/calendar", "Calendar"},
-        ]} 
-        navigate={link} 
+          {~p"/prime_vue", "Button (Prime Vue)"},
+          {~p"/calendar", "Calendar (Vuetify)"},
+        ]}
+        navigate={link}
         class="block rounded-lg leading-relaxed font-medium px-2 py-1 -mx-2 hover:bg-orange-600/10 "
       >
         <%= label %>
