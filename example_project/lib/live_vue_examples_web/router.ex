@@ -24,6 +24,7 @@ defmodule LiveVueExamplesWeb.Router do
     live "/form", LiveForm
     live "/sigil", LiveSigil
     live "/prime_vue", LivePrimeVue
+    live "/calendar", CalendarLive
   end
 
   # Other scopes may use custom stacks.

@@ -25,6 +25,8 @@
     "pinia": "^2.1.7",
     "primevue": "^4.0.3",
     "topbar": "^2.0.2",
-    "vue": "^3.4.21"
+    "vite-plugin-vuetify": "^2.0.4",
+    "vue": "^3.4.21",
+    "vuetify": "^3.7.1"
   }
 }

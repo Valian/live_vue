@@ -27,7 +27,21 @@ import "../css/app.css"
 import components from "../vue"
 import "vite/modulepreload-polyfill"
 
-// Integrate with PrimeVue
+// Example integration with Vuetify
+// not importing styles because it conflicts with tailwind, if you want vuetify don't use tailwind
+// Calendar example works fine without importing styles
+// https://github.com/tailwindlabs/tailwindcss/issues/465
+// import "vuetify/styles"
+import { createVuetify } from "vuetify"
+import { VCalendar } from "vuetify/labs/VCalendar"
+import * as vuetifyDirectives from "vuetify/directives"
+
+const vuetify = createVuetify({
+    vuetifyComponents: { VCalendar },
+    vuetifyDirectives,
+})
+
+// Example integration wiht PrimeVue
 import PrimeVue from "primevue/config"
 import Aura from "@primevue/themes/aura"
 
@@ -35,6 +49,7 @@ const initializeApp = ({ createApp, component, props, slots, plugin, el }) => {
     const app = createApp({ render: () => h(component, props, slots) })
     app.use(plugin)
     app.use(PrimeVue, { theme: { preset: Aura } })
+    app.use(vuetify)
     app.mount(el)
     return app
 }
