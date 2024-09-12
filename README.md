@@ -546,6 +546,7 @@ It's done only during a "dead" render, without connected socket. It's not needed
 - [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [ ] optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props
 - [ ] VS code extension higlighting `~V` sigil
+- [ ] Add support for Phoenix streams as props
 
 ## Credits
 
