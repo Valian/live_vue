@@ -174,7 +174,7 @@ children = [
 """
 ```
 
-12. (Optional) enable [stateful hot reload](https://twitter.com/jskalc/status/1788308446007132509) of phoenix LiveViews - it allows for stateful reload across the whole stack 🤯. Just adjust your `dev.exs` to loook like this - add `notify` section and remove `live|components` from patterns.
+12. (Optional) enable [stateful hot reload](https://twitter.com/jskalc/status/1788308446007132509) of phoenix LiveViews - it allows for stateful reload across the whole stack 🤯. Just adjust your `dev.exs` to look like this - add `notify` section and remove `live|components` from patterns.
 
 ```elixir
 # Watch static and templates for browser reloading.
