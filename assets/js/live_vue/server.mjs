@@ -19,7 +19,7 @@ export function loadManifest(path) {
         const content = readFileSync(resolve(path), 'utf-8')
         return JSON.parse(content)
     } catch(e) {
-        // manifest is not availabe in dev, let's just ignore
+        // manifest is not available in dev, so let's just ignore it
         return {}
     }
 }

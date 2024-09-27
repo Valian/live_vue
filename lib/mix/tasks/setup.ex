@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.LiveVue.Setup do
   @moduledoc """
-  Copies files from assests/copy of the live_vue dependency to phoenix project assets folder
+  Copies files from assets/copy of the live_vue dependency to phoenix project assets folder
   """
   @shortdoc "copy setup files to assets"
 
@@ -25,11 +25,8 @@ defmodule Mix.Tasks.LiveVue.Setup do
           Mix.Generator.copy_file(full_path, new_path)
       end
     end)
-
-    # |> dbg()
   end
 
   # Copied from live_svelte logger file at https://github.com/woutdp/live_svelte/blob/master/lib/logger.ex
-  @doc false
   defp log_info(status), do: Mix.shell().info([status, :reset])
 end
