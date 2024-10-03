@@ -403,7 +403,7 @@ git commit -m "README version bump"
 mix expublish.minor --dry-run --allow-untracked --branch=main
 
 # to publish everything
-mix expublish.minor --allow-untracked --branch=main
+mix do assets.deploy, expublish.minor --allow-untracked --branch=main
 ```
 
 ## Deployment
@@ -539,7 +539,7 @@ It's done only during a "dead" render, without connected socket. It's not needed
 
 ## Roadmap 🎯
 
-- [ ] Add a default handler for Vue emits to eg. automatically push them to the server without explicit `v-on` handlers. 
+- [ ] Add a default handler for Vue emits to eg. automatically push them to the server without explicit `v-on` handlers.
 - [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX

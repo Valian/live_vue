@@ -1,32 +1,32 @@
-import {type App, createSSRApp, createApp} from 'vue'
+import { type App, createSSRApp, createApp, Ref, Reactive } from 'vue'
+
+export { getHooks, initializeVueApp } from "./hooks"
+export { useLiveVue } from "./use"
 
 export type Live = {
-    // in case of LiveView, el is always a div
-    el: HTMLDivElement
-
+    el: HTMLDivElement & {_props: Reactive<Record<string, any>>, _slots: Reactive<Record<string, () => any>>}
+    liveSocket: any
     pushEvent(event: string, payload?: object, onReply?: (reply: any, ref: number) => void): number
     pushEventTo(phxTarget: any, event: string, payload?: object, onReply?: (reply: any, ref: number) => void): number
-
     handleEvent(event: string, callback: (payload: any) => void): Function
     removeHandleEvent(callbackRef: Function): void
-
     upload(name: string, files: any): void
     uploadTo(phxTarget: any, name: string, files: any): void
 }
 
-type InitializeAppFn = (args: {
+export type LiveVue = {
+    [key: string]: (this: Live, ...args: any[]) => any
+}
+
+export type InitializeAppFn = (args: {
     createApp: typeof createSSRApp | typeof createApp;
     component: any;
     props: any;
-    slots: HTMLElement;
-    plugin: {install: (app: App) => App};
+    slots: Record<string, () => any>;
+    plugin: {install: (app: App) => void};
     el: HTMLElement
 }) => App
 
-interface Options  {
+export interface Options {
     initializeApp?: InitializeAppFn
 }
-
-export declare const useLiveVue: () => Live
-export declare const getHooks: (components: object, options: Options) => {LiveVue: any}
-export declare const initializeVueApp: InitializeAppFn

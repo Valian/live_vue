@@ -6,15 +6,19 @@
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
     "module": "./assets/js/live_vue/index.mjs",
     "scripts": {
-        "format": "npx prettier --write assets"
+        "format": "npx prettier --write assets",
+        "build:types": "tsc --project tsconfig.client.json && tsc --project tsconfig.server.json"
     },
     "devDependencies": {
-        "prettier": "2.8.7"
+        "@types/node": "^22.7.4",
+        "prettier": "2.8.7",
+        "typescript": "^5.6.2",
+        "vue": "^3.5.10"
     },
     "exports": {
-        "./vitePlugin": "./assets/js/live_vue/vitePlugin.js",
-        "./server": "./assets/js/live_vue/server.mjs",
-        ".": "./assets/js/live_vue/index.mjs"
+        "./vitePlugin": "./priv/static/vitePlugin.js",
+        "./server": "./priv/static/server.mjs",
+        ".": "./priv/static/index.mjs"
     },
     "repository": {
         "type": "git",

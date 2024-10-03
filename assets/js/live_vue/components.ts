@@ -1,31 +1,31 @@
-const flatMapKeys = (object, cb) => Object.entries(object).reduce((acc, [key, value]) => {
-  const newKeys = cb(key, value, object);
-  for (const newKey of newKeys) acc[newKey] = value;
-  return acc;
-}, {});
+type ComponentMap = Record<string, any>;
 
-const pathToFullPathAndFilename = (path) => {
+const flatMapKeys = (object: ComponentMap, cb: (key: string, value: any, object: ComponentMap) => string[]): ComponentMap =>
+  Object.entries(object).reduce((acc, [key, value]) => {
+    const newKeys = cb(key, value, object);
+    for (const newKey of newKeys) acc[newKey] = value;
+    return acc;
+  }, {} as ComponentMap);
+
+const pathToFullPathAndFilename = (path: string): string[] => {
   path = path.replace("/index.vue", "").replace(".vue", "")
-  // both full path and only filename
   return [ path, path.split("/").slice(-1)[0] ]
 }
 
-const getRelativePath = (path) => {
+const getRelativePath = (path: string): string => {
   if (path.includes("../../")) {
-    // it's colocated with the LiveView, so path should be relative to lib/my_app_web
     return path.split("/").slice(4).join("/")
   } else {
-    // it's in the current directory
     return path.replace("./", "")
   }
 }
 
-export const normalizeComponents = (components) => flatMapKeys(
+export const normalizeComponents = (components: ComponentMap): ComponentMap => flatMapKeys(
   components,
   key => pathToFullPathAndFilename(getRelativePath(key))
 )
 
-export const getComponent = async (components, componentName) => {
+export const getComponent = async (components: ComponentMap, componentName: string): Promise<any> => {
   if (!componentName) {
     throw new Error("Component name is required")
   }
@@ -38,14 +38,12 @@ export const getComponent = async (components, componentName) => {
   }
 
   if (typeof component === "function") {
-    // it's an async component, let's try to load it
     component = await component()
   } else {
     component = await component
   }
 
   if (component && component.default) {
-    // if there's a default export, use it
     component = component.default
   }
 

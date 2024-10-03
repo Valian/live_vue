@@ -10,7 +10,7 @@ defmodule LiveVue.MixProject do
       version: @version,
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
-      aliases: [],
+      aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
         "test.watch": :test
@@ -76,7 +76,22 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:expublish, "~> 2.5", only: [:dev], runtime: false}
+      {:expublish, "~> 2.5", only: [:dev], runtime: false},
+      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev}
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get", "cmd npm install"],
+      "assets.build": [
+        "esbuild client",
+        "esbuild server",
+        "cmd cp assets/js/live_vue/vitePlugin.js priv/static/",
+        "cmd npm run build:types"
+      ],
+      "assets.watch": ["cmd find assets/js -type f | entr -nc 'mix assets.build'"],
+      "assets.deploy": ["cmd rm -rf priv/static/*", "assets.build"]
     ]
   end
 end
