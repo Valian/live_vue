@@ -350,6 +350,8 @@ Context object passed to `initializeApp` has following keys:
 
 ### Local Setup
 
+Ensure you have node installed. Clone the repo and run `mix setup`. You can then run `mix assets.watch` to start a watcher for the assets.
+
 #### Example Project
 
 You can use `/example_project` as a way to test `live_vue` locally.
@@ -383,7 +385,7 @@ mix assets.build
 Or run the watcher:
 
 ```bash
-mix assets.build --watch
+mix assets.watch
 ```
 
 ### Releasing
