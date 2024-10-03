@@ -1,31 +1,49 @@
-type ComponentMap = Record<string, any>;
+import { type Component } from "vue";
+import { flatMapKeys } from "./utils";
 
-const flatMapKeys = (object: ComponentMap, cb: (key: string, value: any, object: ComponentMap) => string[]): ComponentMap =>
-  Object.entries(object).reduce((acc, [key, value]) => {
-    const newKeys = cb(key, value, object);
-    for (const newKey of newKeys) acc[newKey] = value;
-    return acc;
-  }, {} as ComponentMap);
+type ComponentMap = Record<string, Component | {default: Component} | (() => Promise<Component | {default: Component}>)>;
 
+/**
+ * Converts a path to an array with the full path and just the filename.
+ * Does a bit of cleanup, eg removes .vue and /index.vue from the path.
+ * @returns An array with the full path and the filename.
+ */
 const pathToFullPathAndFilename = (path: string): string[] => {
   path = path.replace("/index.vue", "").replace(".vue", "")
+  // both full path and only filename
   return [ path, path.split("/").slice(-1)[0] ]
 }
 
+/**
+ * Converts a path to a relative path.
+ * @returns A relative path.
+ */
 const getRelativePath = (path: string): string => {
   if (path.includes("../../")) {
+    // it's colocated with the LiveView, so path should be relative to lib/my_app_web
     return path.split("/").slice(4).join("/")
   } else {
+    // it's in the current directory
     return path.replace("./", "")
   }
 }
 
+/**
+ * Normalizes the components by converting the keys to full paths and filenames.
+ * @returns A new object with the normalized components.
+ */
 export const normalizeComponents = (components: ComponentMap): ComponentMap => flatMapKeys(
   components,
   key => pathToFullPathAndFilename(getRelativePath(key))
 )
 
-export const getComponent = async (components: ComponentMap, componentName: string): Promise<any> => {
+/**
+ * Gets the component from the components object.
+ * Throws an error if the component is not found.
+ *
+ * @returns The component.
+ */
+export const getComponent = async (components: ComponentMap, componentName: string | null): Promise<any> => {
   if (!componentName) {
     throw new Error("Component name is required")
   }
@@ -38,12 +56,14 @@ export const getComponent = async (components: ComponentMap, componentName: stri
   }
 
   if (typeof component === "function") {
-    component = await component()
-  } else {
+    // it's an async component, let's try to load it
+    component = await (component as () => Promise<Component | {default: Component}>)()
+  } else if (component instanceof Promise) {
     component = await component
   }
 
-  if (component && component.default) {
+  if (component && 'default' in component) {
+    // if there's a default export, use it
     component = component.default
   }
 
