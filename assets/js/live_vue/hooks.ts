@@ -2,23 +2,8 @@ import { createApp, createSSRApp, reactive, h, type App, type Reactive, type Com
 import { liveInjectKey } from "./use"
 import { normalizeComponents, getComponent } from "./components"
 import { mapValues } from "./utils"
-
-export type Live = {
-  vue: {
-    props: Reactive<Record<string, any>>,
-    slots: Reactive<Record<string, () => any>>,
-    app: App<Element>
-  }
-  el: HTMLDivElement
-  liveSocket: any
-  pushEvent(event: string, payload?: object, onReply?: (reply: any, ref: number) => void): number
-  pushEventTo(phxTarget: any, event: string, payload?: object, onReply?: (reply: any, ref: number) => void): number
-  handleEvent(event: string, callback: (payload: any) => void): Function
-  removeHandleEvent(callbackRef: Function): void
-  upload(name: string, files: any): void
-  uploadTo(phxTarget: any, name: string, files: any): void
-}
-
+import { InitializeAppArgs, Live, LiveVue } from "./types"
+import { LiveVueOptions } from "."
 
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
@@ -70,15 +55,6 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
 })
 
 
-type InitializeAppArgs = {
-  createApp: typeof createSSRApp | typeof createApp;
-  component: Component;
-  props: any;
-  slots: Record<string, () => any>;
-  plugin: {install: (app: App) => void};
-  el: HTMLElement
-}
-
 /**
  * Initializes a Vue app with the given options and mounts it to the specified element.
  * It's a default implementation of the `initializeApp` hook option, which can be overridden.
@@ -90,15 +66,6 @@ export const initializeVueApp = ({ createApp, component, props, slots, plugin, e
     app.use(plugin)
     app.mount(el)
     return app
-}
-
-
-type LiveVueOptions = {
-  initializeApp?: typeof initializeVueApp
-}
-
-export type LiveVue = {
-  [key: string]: (this: Live, ...args: any[]) => any
 }
 
 /**

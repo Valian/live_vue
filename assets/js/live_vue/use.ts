@@ -1,5 +1,5 @@
 import { inject } from "vue"
-import { Live } from "./hooks"
+import type { Live } from "./types"
 
 export const liveInjectKey = '_live_vue'
 

@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./priv/static",
+    "declarationDir": "./priv/static",
     "declaration": true,
     "emitDeclarationOnly": true
   },
