@@ -14,7 +14,8 @@
 //
 //     import "some-package"
 //
-
+// polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
+import "vite/modulepreload-polyfill"
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
@@ -25,7 +26,6 @@ import topbar from "topbar"
 import { getHooks } from "live_vue"
 import "../css/app.css"
 import components from "../vue"
-import "vite/modulepreload-polyfill"
 
 // Example integration with Vuetify
 // not importing styles because it conflicts with tailwind, if you want vuetify don't use tailwind

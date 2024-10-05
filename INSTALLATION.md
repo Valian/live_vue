@@ -31,7 +31,7 @@ config :live_vue,
   ssr: true
 ```
 
-3. Add config entry to your `config/prod.exs` file
+3. Add a config entry to your `config/prod.exs` file
 
 ```elixir
 config :live_vue,
@@ -55,7 +55,7 @@ defp html_helpers do
 end
 ```
 
-5. LiveVue comes with a handy command to setup all the required files. It won't alter any files you already have in your project, you need to adjust them on your own by looking at the provided sources. Additional instructions how to adjust `package.json` can be found at the end of this page.
+5. LiveVue comes with a handy mix command to setup all the required files. It won't alter any files you already have in your project, you need to adjust them on your own by looking at the provided sources. Additional instructions how to adjust `package.json` can be found at the end of this page.
 
 It will create:
 
@@ -74,10 +74,13 @@ Now we just have to adjust `js/app.js` hooks and tailwind config to include `vue
 
 ```js
 // app.js
+import "vite/modulepreload-polyfill" // recommended vite polyfill
 import topbar from "topbar" // instead of ../vendor/topbar
 import {getHooks} from "live_vue"
 import components from "../vue"
 import "../css/app.css"
+
+
 
 let liveSocket = new LiveSocket("/live", Socket, {
     // ...
