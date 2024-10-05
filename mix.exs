@@ -76,21 +76,15 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:expublish, "~> 2.5", only: [:dev], runtime: false},
-      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev}
+      {:expublish, "~> 2.5", only: [:dev], runtime: false}
     ]
   end
 
   defp aliases do
     [
       setup: ["deps.get", "cmd npm install"],
-      "assets.build": [
-        "esbuild client",
-        "esbuild server",
-        "cmd cp assets/js/live_vue/vitePlugin.js priv/static/",
-        "cmd npm run build:types"
-      ],
-      "assets.watch": ["cmd find assets/js -type f | entr -nc 'mix assets.build'"],
+      "assets.build": ["cmd npm run build"],
+      "assets.watch": ["cmd npm run watch"],
       "assets.deploy": ["cmd rm -rf priv/static/*", "assets.build"]
     ]
   end

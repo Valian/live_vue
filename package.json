@@ -6,22 +6,28 @@
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
     "scripts": {
         "format": "npx prettier --write assets",
-        "build:types": "tsc --project tsconfig.client.json && tsc --project tsconfig.server.json"
+        "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
+        "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\""
     },
     "devDependencies": {
         "@types/node": "^22.7.4",
+        "concurrently": "^9.0.1",
         "prettier": "2.8.7",
         "typescript": "^5.6.2",
+        "vite": "^5.4.8",
         "vue": "^3.5.10"
     },
     "exports": {
-        "./vitePlugin": "./priv/static/vitePlugin.js",
+        "./vitePlugin": {
+            "import": "./priv/static/vitePlugin.js",
+            "types": "./priv/static/vitePlugin.d.ts"
+        },
         "./server": {
-            "import": "./priv/static/server.mjs",
+            "import": "./priv/static/server.js",
             "types": "./priv/static/server.d.ts"
         },
         ".": {
-            "import": "./priv/static/index.mjs",
+            "import": "./priv/static/index.js",
             "types": "./priv/static/index.d.ts"
         }
     },

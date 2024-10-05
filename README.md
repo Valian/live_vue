@@ -405,7 +405,7 @@ git commit -m "README version bump"
 mix expublish.minor --dry-run --allow-untracked --branch=main
 
 # to publish everything
-mix do assets.deploy, expublish.minor --allow-untracked --branch=main
+mix do assets.build, expublish.minor --allow-untracked --branch=main
 ```
 
 ## Deployment

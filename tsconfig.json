@@ -9,7 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "declarationDir": "./priv/static",
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": false,
+    "outDir": "./priv/static",
+    "allowJs": true
   },
   "exclude": ["node_modules"]
 }
