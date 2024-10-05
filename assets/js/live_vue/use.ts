@@ -1,7 +1,7 @@
 import { inject } from "vue"
 import type { Live } from "./types"
 
-export const liveInjectKey = '_live_vue'
+export const liveInjectKey = "_live_vue"
 
 /**
  * Returns the LiveVue instance.
@@ -9,7 +9,7 @@ export const liveInjectKey = '_live_vue'
  * It allows to e.g. push events to the LiveView.
  */
 export const useLiveVue = (): Live => {
-  const live = inject<Live>(liveInjectKey)
-  if (!live) throw new Error("LiveVue not provided. Are you using this inside a LiveVue component?")
-  return live
+    const live = inject<Live>(liveInjectKey)
+    if (!live) throw new Error("LiveVue not provided. Are you using this inside a LiveVue component?")
+    return live
 }

@@ -23,7 +23,6 @@ const getSlots = (el: HTMLElement): Record<string, () => any> => {
     return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
 }
 
-
 /**
  * Parses the event handlers from the element's attributes and returns them as a record.
  * The handlers are parsed from the "data-handlers" attribute.
@@ -37,7 +36,7 @@ const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: a
         const ops = handlers[handlerName]
         const snakeCaseName = `on${handlerName.charAt(0).toUpperCase() + handlerName.slice(1)}`
         result[snakeCaseName] = event => {
-           // a little bit of magic to replace the event with the value of the input
+            // a little bit of magic to replace the event with the value of the input
             const parsedOps = JSON.parse(ops)
             const replacedOps = parsedOps.map(([op, args, ...other]: [string, any, ...any[]]) => {
                 if (op === "push" && !args.value) args.value = event
@@ -53,7 +52,6 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
     ...getAttributeJson(el, "data-props"),
     ...getHandlers(el, liveSocket),
 })
-
 
 /**
  * Initializes a Vue app with the given options and mounts it to the specified element.
@@ -80,27 +78,27 @@ export const getHooks = (components: Record<string, Component>, options: LiveVue
 
     const VueHook: LiveVue = {
         async mounted() {
-          const componentName = this.el.getAttribute("data-name")
-          const component = await getComponent(components, componentName)
+            const componentName = this.el.getAttribute("data-name")
+            const component = await getComponent(components, componentName)
 
-          const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+            const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
 
-          const props = reactive(getProps(this.el, this.liveSocket))
-          const slots = reactive(getSlots(this.el))
+            const props = reactive(getProps(this.el, this.liveSocket))
+            const slots = reactive(getSlots(this.el))
 
-          const initializeContext = {
-              createApp: makeApp,
-              component,
-              props,
-              slots,
-              plugin: { install: (app: App) => app.provide(liveInjectKey, this) },
-              el: this.el,
-          }
+            const initializeContext = {
+                createApp: makeApp,
+                component,
+                props,
+                slots,
+                plugin: { install: (app: App) => app.provide(liveInjectKey, this) },
+                el: this.el,
+            }
 
-          const app = initializeApp(initializeContext)
-          if (!app) throw new Error("Custom initialize app function did not return an app")
+            const app = initializeApp(initializeContext)
+            if (!app) throw new Error("Custom initialize app function did not return an app")
 
-          this.vue = { props, slots, app }
+            this.vue = { props, slots, app }
         },
         updated() {
             Object.assign(this.vue.props, getProps(this.el, this.liveSocket))

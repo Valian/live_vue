@@ -1,57 +1,52 @@
 function hotUpdateType(path) {
-    if (path.endsWith('css')) return 'css-update';
-    if (path.endsWith('js')) return 'js-update';
+    if (path.endsWith("css")) return "css-update"
+    if (path.endsWith("js")) return "js-update"
     return null
 }
 
 const jsonResponse = (res, statusCode, data) => {
     res.statusCode = statusCode
-    res.setHeader('Content-Type', 'application/json')
+    res.setHeader("Content-Type", "application/json")
     res.end(JSON.stringify(data))
 }
 
 // Custom JSON parsing middleware
 const jsonMiddleware = (req, res, next) => {
-    let data = '';
+    let data = ""
 
     // Listen for data event to collect the chunks of data
-    req.on('data', chunk => {
-        data += chunk;
-    });
+    req.on("data", chunk => {
+        data += chunk
+    })
 
     // Listen for end event to finish data collection
-    req.on('end', () => {
+    req.on("end", () => {
         try {
             // Parse the collected data as JSON
-            req.body = JSON.parse(data);
-            next(); // Proceed to the next middleware
+            req.body = JSON.parse(data)
+            next() // Proceed to the next middleware
         } catch (error) {
             // Handle JSON parse error
-            jsonResponse(res, 400, { error: 'Invalid JSON' });
+            jsonResponse(res, 400, { error: "Invalid JSON" })
         }
-    });
+    })
 
     // Handle error event
-    req.on('error', err => {
+    req.on("error", err => {
         console.error(err)
-        jsonResponse(res, 500, { error: 'Internal Server Error' });
-    });
-};
+        jsonResponse(res, 500, { error: "Internal Server Error" })
+    })
+}
 
 function liveVuePlugin(opts = {}) {
     return {
-        name: 'live-vue',
-        handleHotUpdate({file, modules, server, timestamp}) {
-            if(file.match(/\.(heex|ex)$/)) {
+        name: "live-vue",
+        handleHotUpdate({ file, modules, server, timestamp }) {
+            if (file.match(/\.(heex|ex)$/)) {
                 // if it's and .ex or .heex file, invalidate all related files so they'll be updated correctly
                 const invalidatedModules = new Set()
                 for (const mod of modules) {
-                    server.moduleGraph.invalidateModule(
-                        mod,
-                        invalidatedModules,
-                        timestamp,
-                        true
-                    )
+                    server.moduleGraph.invalidateModule(mod, invalidatedModules, timestamp, true)
                 }
 
                 const updates = Array.from(invalidatedModules)
@@ -64,7 +59,7 @@ function liveVuePlugin(opts = {}) {
                     }))
 
                 // ask client to hot-reload updated modules
-                server.ws.send({ type: 'update', updates: updates });
+                server.ws.send({ type: "update", updates: updates })
 
                 // we handle the hot update ourselves
                 return []
@@ -73,12 +68,12 @@ function liveVuePlugin(opts = {}) {
         configureServer(server) {
             // Terminate the watcher when Phoenix quits
             // configureServer is only called in dev, so it's safe to use here
-            process.stdin.on("close", () => process.exit(0));
-            process.stdin.resume();
-            
+            process.stdin.on("close", () => process.exit(0))
+            process.stdin.resume()
+
             // setup SSR endpoint /ssr_render
-            const path = opts.path || "/ssr_render" 
-            const entrypoint = opts.entrypoint || './js/server.js'
+            const path = opts.path || "/ssr_render"
+            const entrypoint = opts.entrypoint || "./js/server.js"
             server.middlewares.use(function liveVueMiddleware(req, res, next) {
                 if (req.method == "POST" && req.url.split("?", 1)[0] === path) {
                     jsonMiddleware(req, res, async () => {
@@ -86,15 +81,15 @@ function liveVuePlugin(opts = {}) {
                             const render = (await server.ssrLoadModule(entrypoint)).render
                             const html = await render(req.body.name, req.body.props, req.body.slots)
                             res.end(html)
-                        } catch(e) {
+                        } catch (e) {
                             server.ssrFixStacktrace(e)
                             jsonResponse(res, 500, { error: e })
                         }
-                    });
+                    })
                 } else {
-                    next();
+                    next()
                 }
-            });
+            })
         },
     }
 }
