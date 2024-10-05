@@ -32,3 +32,7 @@ node_modules/
 *.code-workspace
 
 RELEASE.md
+
+priv/static
+.elixir_ls/
+.vscode/

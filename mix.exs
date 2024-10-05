@@ -10,7 +10,7 @@ defmodule LiveVue.MixProject do
       version: @version,
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
-      aliases: [],
+      aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
         "test.watch": :test
@@ -48,7 +48,7 @@ defmodule LiveVue.MixProject do
         Changelog: @repo_url <> "/blob/master/CHANGELOG.md",
         GitHub: @repo_url
       },
-      files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md)
+      files: ~w(priv/static assets/copy lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md)
     ]
   end
 
@@ -77,6 +77,15 @@ defmodule LiveVue.MixProject do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false}
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get", "cmd npm install"],
+      "assets.build": ["cmd npm run build"],
+      "assets.watch": ["cmd npm run watch"],
+      "assets.deploy": ["cmd rm -rf priv/static/*", "assets.build"]
     ]
   end
 end

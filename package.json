@@ -4,17 +4,32 @@
     "description": "E2E reactivity for Vue and LiveView",
     "license": "MIT",
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
-    "module": "./assets/js/live_vue/index.mjs",
     "scripts": {
-        "format": "npx prettier --write assets"
+        "format": "npx prettier --write assets",
+        "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
+        "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\""
     },
     "devDependencies": {
-        "prettier": "2.8.7"
+        "@types/node": "^22.7.4",
+        "concurrently": "^9.0.1",
+        "prettier": "2.8.7",
+        "typescript": "^5.6.2",
+        "vite": "^5.4.8",
+        "vue": "^3.5.10"
     },
     "exports": {
-        "./vitePlugin": "./assets/js/live_vue/vitePlugin.js",
-        "./server": "./assets/js/live_vue/server.mjs",
-        ".": "./assets/js/live_vue/index.mjs"
+        "./vitePlugin": {
+            "import": "./priv/static/vitePlugin.js",
+            "types": "./priv/static/vitePlugin.d.ts"
+        },
+        "./server": {
+            "import": "./priv/static/server.js",
+            "types": "./priv/static/server.d.ts"
+        },
+        ".": {
+            "import": "./priv/static/index.js",
+            "types": "./priv/static/index.d.ts"
+        }
     },
     "repository": {
         "type": "git",
@@ -24,6 +39,7 @@
         "README.md",
         "LICENSE.md",
         "package.json",
-        "assets/js/live_vue/*"
+        "priv/static/*",
+        "priv/static/*.d.ts"
     ]
 }
