@@ -48,7 +48,7 @@ defmodule LiveVue.MixProject do
         Changelog: @repo_url <> "/blob/master/CHANGELOG.md",
         GitHub: @repo_url
       },
-      files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md)
+      files: ~w(priv/static assets/copy lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md)
     ]
   end
 
