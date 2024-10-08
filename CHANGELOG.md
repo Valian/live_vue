@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.1 - 2024-10-08
+
+## Fixed
+
+- Fixed a bug where the server was not preloading the correct assets for the Vue components. It happened because CursorAI "skipped" important part of the code when migrating to the TypeScript 😅
+
+
 ## 0.5.0 - 2024-10-08
 
 ## Changed
