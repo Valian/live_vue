@@ -30,6 +30,9 @@ defmodule LiveVue.SSR.ViteJS do
           {:ok, %{"error" => %{"message" => msg, "loc" => loc, "frame" => frame}}} ->
             {:error, "#{msg}\n#{loc["file"]}:#{loc["line"]}:#{loc["column"]}\n#{frame}"}
 
+          {:ok, %{"error" => %{"stack" => stack}}} ->
+            {:error, stack}
+
           _ ->
             {:error, "Unexpected Vite SSR response: 500 #{body}"}
         end
