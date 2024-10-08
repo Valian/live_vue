@@ -400,13 +400,13 @@ mix assets.watch
 Release is done with `expublish` package.
 
 -   Write version changelog in untracked `RELEASE.md` file
--   Update version in `README.md`
+-   Update version in `INSTALLATION.md`
 
 Run
 
 ```bash
-git add README.md
-git commit -m "README version bump"
+git add INSTALLATION.md
+git commit -m "INSTALLATION version bump"
 
 # to ensure everything works fine
 mix expublish.minor --dry-run --allow-untracked --branch=main

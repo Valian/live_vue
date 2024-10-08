@@ -16,7 +16,7 @@ In production, we'll use [elixir-nodejs](https://github.com/revelrylabs/elixir-n
 ```elixir
 defp deps do
   [
-    {:live_vue, "~> 0.4"}
+    {:live_vue, "~> 0.5"}
   ]
 end
 ```
