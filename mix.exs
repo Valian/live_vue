@@ -84,7 +84,7 @@ defmodule LiveVue.MixProject do
     [
       setup: ["deps.get", "cmd npm install"],
       "assets.build": ["cmd npm run build"],
-      "assets.watch": ["cmd npm run watch"],
+      "assets.watch": ["cmd npm run dev"],
       "assets.deploy": ["cmd rm -rf priv/static/*", "assets.build"]
     ]
   end
