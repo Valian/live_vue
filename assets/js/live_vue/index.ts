@@ -1,3 +1,4 @@
-export { getHooks, initializeVueApp } from "./hooks"
+export { getHooks } from "./hooks"
 export { useLiveVue } from "./use"
-export { LiveVueOptions } from "./types"
+export { createLiveVue } from "./app"
+export { findComponent } from "./utils"

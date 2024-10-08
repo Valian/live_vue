@@ -62,7 +62,7 @@ It will create:
 -   `package.json`
 -   vite, typescript and postcss configs
 -   server entrypoint
--   vue components root
+-   vue entrypoint
 
 ```bash
 mix deps.get
@@ -76,12 +76,14 @@ Now we just have to adjust `js/app.js` hooks and tailwind config to include `vue
 // app.js
 import topbar from "topbar" // instead of ../vendor/topbar
 import {getHooks} from "live_vue"
-import components from "../vue"
+import liveVueApp from "../vue"
+
+// remember to import your css here
 import "../css/app.css"
 
 let liveSocket = new LiveSocket("/live", Socket, {
     // ...
-    hooks: getHooks(components),
+    hooks: getHooks(liveVueApp),
 })
 ```
 

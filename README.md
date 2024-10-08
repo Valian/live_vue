@@ -88,12 +88,6 @@ end
 
 ```
 
-## Relation to LiveSvelte
-
-This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork fo LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
-
-You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
-
 ## Why?
 
 Phoenix Live View makes it possible to create rich, interactive web apps without writing JS.
@@ -301,41 +295,46 @@ const hooks = getHooks(entryComponents)
 
 ### Customize Vue app
 
-If you want to initialize Vue app in a custom way, by eg. adding plugins or directives, you should pass initialization function to `useHooks` as in the following snippet
+If you want to initialize Vue app in any way, by eg. adding plugins or directives, you can customize it easily in `assets/vue/index.js` setup function.
 
 ```javascript
-// in app.js
+// in assets/vue/index.js
 // ...
-import {getHooks, initializeVueApp} from "live_vue"
 // import { createPinia } from "pinia"
 // const pinia = createPinia()
 
-const initializeApp = context => {
-    // initializeVueApp is a default function creating and initializing LiveVue App
-    const app = initializeVueApp(context)
-    // you can initialize additional plugins here, eg. Pinia
-    // app.use(pinia)
-    return app
-}
 
-const hooks = getHooks(components, {initializeApp})
+export default createLiveVue({
+  resolve: name => {
+    // ...
+  },
+  setup: ({ createApp, component, props, slots, plugin, el }) => {
+    const app = createApp({ render: () => h(component, props, slots) })
+    app.use(plugin)
+    // add your own plugins here
+    // app.use(pinia)
+    app.mount(el)
+    return app
+  },
+})
 ```
 
-You can completely change the default initialization method by not using `initializeVueApp` and rolling your own. Current implementation looks like this, feel free to adjust to your needs.
+You can completely change the default initialization method by adjusting `setup` to your needs.
+Note: `setup` is called also in SSR mode. You can adjust initialization based on `ssr` flag passed as an argument to setup.
 
 ```javascript
-import {h} from "vue"
-
-const initializeVueApp = ({createApp, component, props, slots, plugin, el}) => {
-    const renderFn = () => h(component, props, slots)
-    const app = createApp({render: renderFn})
+export default createLiveVue({
+  setup: ({ createApp, component, props, slots, plugin, el, ssr }) => {
+    const app = createApp({ render: () => h(component, props, slots) })
+    if (ssr) { console.log("Creating app for SSR") }
     app.use(plugin)
     app.mount(el)
     return app
-}
+  },
+})
 ```
 
-Context object passed to `initializeApp` has following keys:
+Context object passed to `setup` has following keys:
 
 | Property    | Descriptor                                                                                                                                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -345,6 +344,14 @@ Context object passed to `initializeApp` has following keys:
 | `slots`     | The slots passed to the component                                                                                                                                                    |
 | `plugin`    | A `live_vue` plugin that makes it possible to use `useLiveVue` provider                                                                                                              |
 | `el`        | The html element in which the vue app should be mounted                                                                                                                              |
+| `ssr`        | Boolean indicating if setup is running in SSR or not                                                                                                                              |
+
+## Relation to LiveSvelte
+
+This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork fo LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
+
+You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
+
 
 ## LiveVue Development
 

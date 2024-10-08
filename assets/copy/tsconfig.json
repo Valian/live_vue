@@ -8,7 +8,7 @@
 
       /* Types for Vite https://vitejs.dev/guide/features#client-types */
       "types": ["vite/client"],
-  
+
       /* Bundler mode */
       "moduleResolution": "bundler",
       "allowImportingTsExtensions": true,
@@ -16,13 +16,13 @@
       "isolatedModules": true,
       "noEmit": true,
       "jsx": "preserve",
-  
+
       /* Linting */
       "strict": true,
       "noUnusedLocals": true,
       "noUnusedParameters": true,
       "noFallthroughCasesInSwitch": true,
-      
+
       "paths": {
         "@/*": ["./*"]
       }

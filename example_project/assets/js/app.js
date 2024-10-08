@@ -19,46 +19,19 @@
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix"
-import { h } from "vue"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "topbar"
+
+// live_vue related imports
 import { getHooks } from "live_vue"
 import "../css/app.css"
-import components from "../vue"
-
-// Example integration with Vuetify
-// not importing styles because it conflicts with tailwind, if you want vuetify don't use tailwind
-// Calendar example works fine without importing styles
-// https://github.com/tailwindlabs/tailwindcss/issues/465
-// import "vuetify/styles"
-import { createVuetify } from "vuetify"
-import { VCalendar } from "vuetify/labs/VCalendar"
-import * as vuetifyDirectives from "vuetify/directives"
-
-const vuetify = createVuetify({
-    vuetifyComponents: { VCalendar },
-    vuetifyDirectives,
-})
-
-// Example integration wiht PrimeVue
-import PrimeVue from "primevue/config"
-import Aura from "@primevue/themes/aura"
-
-const initializeApp = ({ createApp, component, props, slots, plugin, el }) => {
-    const app = createApp({ render: () => h(component, props, slots) })
-    app.use(plugin)
-    app.use(PrimeVue, { theme: { preset: Aura } })
-    app.use(vuetify)
-    app.mount(el)
-    return app
-}
-
-const hooks = {
-    ...getHooks(components, { initializeApp }),
-}
+import liveVueApp from "../vue"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, { hooks: hooks, params: { _csrf_token: csrfToken } })
+let liveSocket = new LiveSocket("/live", Socket, {
+  params: { _csrf_token: csrfToken },
+  hooks: { ...getHooks(liveVueApp) },
+})
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })

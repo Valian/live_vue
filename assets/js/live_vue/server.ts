@@ -1,58 +1,55 @@
+import fs from "fs"
 import { App, Component, createSSRApp, h } from "vue"
 import { renderToString } from "vue/server-renderer"
-import { normalizeComponents, getComponent } from "./components"
-import fs from "fs"
+import { LiveVueApp, LiveHook } from "./types"
+import { migrateToLiveVueApp } from "./app"
+import { mapValues } from "./utils"
 
 type Components = Record<string, Component>
 
-// it's of type Live but I can't import it, since types include HTML elements
-const mockLive = {
-    el: {} as any,
-    liveSocket: {} as any,
-    pushEvent: () => 0,
-    pushEventTo: () => 0,
-    handleEvent: () => () => {},
-    removeHandleEvent: () => {},
-    upload: () => {},
-    uploadTo: () => {},
-    vue: {
-        props: {},
-        slots: {},
-        app: {} as App<any>,
-    },
+const mockLive: LiveHook = {
+  el: {} as any,
+  liveSocket: {} as any,
+  pushEvent: () => 0,
+  pushEventTo: () => 0,
+  handleEvent: () => () => {},
+  removeHandleEvent: () => {},
+  upload: () => {},
+  uploadTo: () => {},
+  vue: {
+    props: {},
+    slots: {},
+    app: {} as App<any>,
+  },
 }
 
-export const getRender = (components: Components) => {
-    components = normalizeComponents(components)
+export const getRender = (componentsOrApp: Components | LiveVueApp) => {
+  const { resolve, setup } = migrateToLiveVueApp(componentsOrApp)
 
-    return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
-        const component = await getComponent(components, name)
+  return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
+    const component = await resolve(name)
+    const slotComponents = mapValues(slots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
+    const app = setup({
+      createApp: createSSRApp,
+      component,
+      props,
+      slots: slotComponents,
+      plugin: {
+        install: (app: App) => {
+          // we don't want to mount the app in SSR
+          app.mount = (...args: any[]): any => undefined
+          // we don't have hook instance in SSR, so we need to mock it
+          app.provide("_live_vue", Object.assign({}, mockLive))
+        },
+      },
+      el: {} as any,
+      ssr: true,
+    })
 
-        const app = createSSRApp({
-            render: () =>
-                h(
-                    component,
-                    props,
-                    Object.fromEntries(
-                        Object.entries(slots).map(([name, html]) => [name, () => h("div", { innerHTML: html })])
-                    )
-                ),
-        })
-        // there is no liveSocket or phoneix JS library on the server, so we need to mock it
-        app.use({
-            install: (app: App) =>
-                app.provide("_live_vue", {
-                    ...mockLive,
-                    vue: {
-                        props: slots,
-                        slots: props,
-                        app: app,
-                    },
-                }),
-        })
+    if (!app) throw new Error("Setup function did not return a Vue app!")
 
-        return renderToString(app)
-    }
+    return renderToString(app)
+  }
 }
 /**
  * Loads the manifest file from the given path and returns a record of the assets.
@@ -62,8 +59,6 @@ export const getRender = (components: Components) => {
  * @returns A record of the assets.
  */
 export const loadManifest = (path: string): Record<string, string[]> => {
-    const manifest = JSON.parse(fs.readFileSync(path, "utf8"))
-    return Object.fromEntries(
-        Object.entries(manifest).map(([key, value]) => [key, Array.isArray(value) ? value : [value as string]])
-    )
+  const manifest = JSON.parse(fs.readFileSync(path, "utf8"))
+  return mapValues(manifest, value => (Array.isArray(value) ? value : [value as string]))
 }
