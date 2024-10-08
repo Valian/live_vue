@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.2 - 2024-10-08
+
+## Changed
+
+- Added hint to pass `--silent` flag to `npm` watcher in `INSTALLATION.md`. It prevents `npm` from printing executed command which is not useful and makes output messy.
+
+```elixir
+config :my_app, MyAppWeb.Endpoint,
+  # ...
+  watchers: [
+    npm: ["--silent", "run", "dev", cd: Path.expand("../assets", __DIR__)]
+  ]
+```
+
+
 ## 0.5.1 - 2024-10-08
 
 ### Fixed
