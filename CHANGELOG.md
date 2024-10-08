@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.2 - 2024-10-08
 
-## Changed
+### Changed
 
 - Added hint to pass `--silent` flag to `npm` watcher in `INSTALLATION.md`. It prevents `npm` from printing executed command which is not useful and makes output messy.
 
