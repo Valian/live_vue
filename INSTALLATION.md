@@ -149,7 +149,7 @@ end
 config :my_app, MyAppWeb.Endpoint,
   # ...
   watchers: [
-    npm: ["run", "dev", cd: Path.expand("../assets", __DIR__)]
+    npm: ["--silent", "run", "dev", cd: Path.expand("../assets", __DIR__)]
   ]
 
 ```
