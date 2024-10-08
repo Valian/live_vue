@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.0 - 2024-10-08
+
+## Changed
+
+- Migrated the project to TypeScript 💜 [#32](https://github.com/Valian/live_vue/pull/32)
+- Added `createLiveVue` entrypoint to make it easier to customize Vue app initialization
+
+
+## Deprecations
+
+- `assets/vue/index.js` should export app created by `createLiveVue()`, not just available components. See migration below.
+
+
+## Migration
+
+In `assets/js/app.js`, instead of:
+
+```js
+export default {
+  ...import.meta.glob("./**/*.vue", { eager: true }),
+  ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
+}
+```
+
+use:
+```js
+// polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
+import "vite/modulepreload-polyfill"
+import { h } from "vue"
+import { createLiveVue, findComponent } from "live_vue"
+
+export default createLiveVue({
+  resolve: name => {
+    const components = {
+      ...import.meta.glob("./**/*.vue", { eager: true }),
+      ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
+    }
+
+    // finds component by name or path suffix and gives a nice error message.
+    // `path/to/component/index.vue` can be found as `path/to/component` or simply `component`
+    // `path/to/Component.vue` can be found as `path/to/Component` or simply `Component`
+    return findComponent(components, name)
+  },
+  setup: ({ createApp, component, props, slots, plugin, el }) => {
+    const app = createApp({ render: () => h(component, props, slots) })
+    app.use(plugin)
+    app.mount(el)
+    return app
+  },
+})
+```
+
+then, in `assets/js/app.js`, instead of:
+
+```js
+import components from "./vue"
+```
+
+simply do
+
+```js
+import { getHooks } from "live_vue"
+import liveVueApp from "./vue"
+// ...
+
+const hooks = { ...getHooks(liveVueApp) }
+```
+
+If you had any custom initialization code, you have to move it to `createLiveVue().setup()` function.
+
+
+## Fixed
+
+- Nicely formatted JS error stracktraces during SSR [commit](https://github.com/Valian/live_vue/commit/10f672bce4104a38523905c52c4879083e4bc6db)
+- Previously `initializeVueApp` was not working in SSR mode, since it was declared in app.js which couldn't be imported by server bundle. Now it's in a separate file as `createLiveVue().setup()` and can be imported by both client and server bundles.
+
+
 ## 0.4.1 - 2024-08-30
 
 Changed
