@@ -9,25 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.1 - 2024-10-08
 
-## Fixed
+### Fixed
 
 - Fixed a bug where the server was not preloading the correct assets for the Vue components. It happened because CursorAI "skipped" important part of the code when migrating to the TypeScript 😅
 
 
 ## 0.5.0 - 2024-10-08
 
-## Changed
+### Changed
 
 - Migrated the project to TypeScript 💜 [#32](https://github.com/Valian/live_vue/pull/32)
 - Added `createLiveVue` entrypoint to make it easier to customize Vue app initialization
 
 
-## Deprecations
+### Deprecations
 
 - `assets/vue/index.js` should export app created by `createLiveVue()`, not just available components. See migration below.
 
 
-## Migration
+### Migration
 
 In `assets/js/app.js`, instead of:
 
@@ -85,7 +85,7 @@ const hooks = { ...getHooks(liveVueApp) }
 If you had any custom initialization code, you have to move it to `createLiveVue().setup()` function.
 
 
-## Fixed
+### Fixed
 
 - Nicely formatted JS error stracktraces during SSR [commit](https://github.com/Valian/live_vue/commit/10f672bce4104a38523905c52c4879083e4bc6db)
 - Previously `initializeVueApp` was not working in SSR mode, since it was declared in app.js which couldn't be imported by server bundle. Now it's in a separate file as `createLiveVue().setup()` and can be imported by both client and server bundles.
@@ -93,7 +93,7 @@ If you had any custom initialization code, you have to move it to `createLiveVue
 
 ## 0.4.1 - 2024-08-30
 
-Changed
+### Changed
 
 -   Improved `pathToFullPathAndFilename` to work with `index.vue` files. Now `../ComponentName/index.vue` can be referenced as `ComponentName` [#23](https://github.com/Valian/live_vue/pull/23)
 
