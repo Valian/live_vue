@@ -348,7 +348,7 @@ Context object passed to `setup` has following keys:
 
 ## Relation to LiveSvelte
 
-This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork fo LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
+This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork of LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
 
 You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
 
@@ -497,11 +497,11 @@ fly apps open
 
 ## FAQ
 
-### Name sounds exaclty the same as LiveView
+### Name sounds exactly the same as LiveView
 
 Yes, I noticed it slightly too late to change. Some helpful reddit users pointed it out 😉
 
-I'd suggest refering to it as `LiveVuejs` in speech, to avoid confusion.
+I'd suggest referring to it as `LiveVuejs` in speech, to avoid confusion.
 
 ### Differences from LiveSvelte
 
@@ -554,7 +554,7 @@ It's done only during a "dead" render, without connected socket. It's not needed
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
 - [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [ ] optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props
-- [ ] VS code extension higlighting `~V` sigil
+- [ ] VS code extension highlighting `~V` sigil
 - [ ] Add support for Phoenix streams as props
 
 ## Credits

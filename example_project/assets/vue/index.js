@@ -17,7 +17,7 @@ const vuetify = createVuetify({
   vuetifyDirectives,
 })
 
-// Example integration wiht PrimeVue
+// Example integration with PrimeVue
 import PrimeVue from "primevue/config"
 import Aura from "@primevue/themes/aura"
 
