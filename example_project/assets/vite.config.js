@@ -47,7 +47,7 @@ export default defineConfig(({command}) => {
           app: path.resolve(__dirname, './js/app.js'),
         },
         output: {
-          // remove hashes to match phoenix way of handling asssets
+          // remove hashes to match phoenix way of handling assets
           entryFileNames: "[name].js", 
           chunkFileNames: "[name].js",
           assetFileNames: "[name][extname]"

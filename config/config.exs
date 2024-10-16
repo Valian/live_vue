@@ -6,7 +6,7 @@ config :live_vue,
   ssr_module: nil,
 
   # if we should by default use ssr or not.
-  # can be overriden by v-ssr={true|false} attribute
+  # can be overridden by v-ssr={true|false} attribute
   ssr: nil,
 
   # in dev most likely http://localhost:5173
