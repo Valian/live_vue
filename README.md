@@ -259,6 +259,7 @@ defmodule ExampleWeb.LiveSigil do
         class="mt-4 bg-black text-white rounded p-2 block">
         Increase counter {{ diff }}
       </button>
+    </template>
     """
   end
 
