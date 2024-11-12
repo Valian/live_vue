@@ -2,9 +2,9 @@ import fs from "fs"
 import { basename, resolve } from "path"
 import { App, Component, createSSRApp, h } from "vue"
 import { renderToString, type SSRContext } from "vue/server-renderer"
-import { LiveVueApp, LiveHook } from "./types"
-import { migrateToLiveVueApp } from "./app"
-import { mapValues } from "./utils"
+import { LiveVueApp, LiveHook } from "./types.js"
+import { migrateToLiveVueApp } from "./app.js"
+import { mapValues } from "./utils.js"
 
 type Components = Record<string, Component>
 type Manifest = Record<string, string[]>

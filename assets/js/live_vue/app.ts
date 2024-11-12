@@ -6,7 +6,7 @@ import type {
   LiveVueOptions,
   ComponentMap,
   LiveVueApp,
-} from "./types"
+} from "./types.js"
 
 /**
  * Initializes a Vue app with the given options and mounts it to the specified element.

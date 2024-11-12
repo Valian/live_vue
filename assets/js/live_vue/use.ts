@@ -1,5 +1,5 @@
 import { inject } from "vue"
-import type { LiveHook } from "./types"
+import type { LiveHook } from "./types.js"
 
 export const liveInjectKey = "_live_vue"
 
