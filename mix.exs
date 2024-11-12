@@ -85,7 +85,9 @@ defmodule LiveVue.MixProject do
       setup: ["deps.get", "cmd npm install"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
-      "assets.deploy": ["cmd rm -rf priv/static/*", "assets.build"]
+      "release.patch": ["assets.build", "expublish.patch --branch=main"],
+      "release.minor": ["assets.build", "expublish.minor --branch=main"],
+      "release.major": ["assets.build", "expublish.major --branch=main"]
     ]
   end
 end
