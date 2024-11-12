@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.3 - 2024-11-12
+
+### Fixed
+
+- Added explicit extensions to all JS imports. It should fix some issues with module resulution. [#36](https://github.com/Valian/live_vue/issues/36)
+
+
 ## 0.5.2 - 2024-10-08
 
 ### Changed
