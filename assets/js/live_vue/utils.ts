@@ -1,4 +1,4 @@
-import { ComponentMap, ComponentOrComponentPromise } from "./types"
+import { ComponentMap, ComponentOrComponentPromise } from "./types.js"
 
 /**
  * Maps the values of an object using a callback function and returns a new object with the mapped values.

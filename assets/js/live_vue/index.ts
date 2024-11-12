@@ -1,4 +1,4 @@
-export { getHooks } from "./hooks"
-export { useLiveVue } from "./use"
-export { createLiveVue } from "./app"
-export { findComponent } from "./utils"
+export { getHooks } from "./hooks.js"
+export { useLiveVue } from "./use.js"
+export { createLiveVue } from "./app.js"
+export { findComponent } from "./utils.js"

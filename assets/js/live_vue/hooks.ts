@@ -1,8 +1,8 @@
 import { createApp, createSSRApp, reactive, h, type App, SetupContext } from "vue"
-import { liveInjectKey } from "./use"
-import { mapValues } from "./utils"
-import { ComponentMap, LiveVue, LiveVueApp, LiveVueOptions } from "./types"
-import { migrateToLiveVueApp } from "./app"
+import { liveInjectKey } from "./use.js"
+import { mapValues } from "./utils.js"
+import { ComponentMap, LiveVue, LiveVueApp, LiveVueOptions } from "./types.js"
+import { migrateToLiveVueApp } from "./app.js"
 
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
