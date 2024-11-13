@@ -4,6 +4,7 @@
     "description": "E2E reactivity for Vue and LiveView",
     "license": "MIT",
     "author": "Jakub Skałecki <jakub@skalecki.dev>",
+    "type": "module",
     "scripts": {
         "format": "npx prettier --write assets",
         "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",

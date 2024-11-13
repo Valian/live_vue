@@ -94,4 +94,4 @@ function liveVuePlugin(opts = {}) {
   }
 }
 
-module.exports = liveVuePlugin
+export default liveVuePlugin
