@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.5 - 2024-11-14
+
+### Fixes
+
+- Slots are now rendered correctly in SSR [#39](https://github.com/Valian/live_vue/pull/39)
+
+
 ## 0.5.4 - 2024-11-13
 
 ### Fixed
