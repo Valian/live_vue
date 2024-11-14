@@ -29,7 +29,7 @@ export const getRender = (componentsOrApp: Components | LiveVueApp, manifest: Ma
 
   return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
     const component = await resolve(name)
-    const slotComponents = mapValues(slots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
+    const slotComponents = mapValues(slots, html => () => h("div", { innerHTML: html }))
     const app = setup({
       createApp: createSSRApp,
       component,
