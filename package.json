@@ -12,6 +12,7 @@
     },
     "devDependencies": {
         "@types/node": "^22.7.4",
+        "@types/phoenix_live_view": "^0.20.0",
         "concurrently": "^9.0.1",
         "prettier": "2.8.7",
         "typescript": "^5.6.2",
