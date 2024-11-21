@@ -1,8 +1,8 @@
-import { createApp, createSSRApp, reactive, h, type App, SetupContext } from "vue"
+import { createApp, createSSRApp, h, reactive, type App } from "vue"
+import { migrateToLiveVueApp } from "./app.js"
+import { ComponentMap, LiveHook, LiveVueApp, LiveVueOptions } from "./types.js"
 import { liveInjectKey } from "./use.js"
 import { mapValues } from "./utils.js"
-import { ComponentMap, LiveVue, LiveVueApp, LiveVueOptions } from "./types.js"
-import { migrateToLiveVueApp } from "./app.js"
 
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
@@ -63,7 +63,7 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
   ...getHandlers(el, liveSocket),
 })
 
-export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveVue => ({
+export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveHook => ({
   async mounted() {
     const componentName = this.el.getAttribute("data-name") as string
     const component = await resolve(componentName)
@@ -87,8 +87,8 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveVue => ({
     this.vue = { props, slots, app }
   },
   updated() {
-    Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
-    Object.assign(this.vue.slots, getSlots(this.el))
+    Object.assign(this.vue.props ?? {}, getProps(this.el, this.liveSocket))
+    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
   destroyed() {
     const instance = this.vue.app
@@ -105,15 +105,15 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveVue => ({
  * @param options - The options for the LiveVue app.
  * @returns The hooks for the LiveVue app.
  */
-type VueHooks = { VueHook: LiveVue }
+type VueHooks = { VueHook: LiveHook }
 type getHooksAppFn = (app: LiveVueApp) => VueHooks
 type getHooksComponentsOptions = { initializeApp?: LiveVueOptions["setup"] }
-type getHooksComponentsFn = (components: ComponentMap, options: getHooksComponentsOptions) => VueHooks
+type getHooksComponentsFn = (components: ComponentMap, options?: getHooksComponentsOptions) => VueHooks
 
 export const getHooks: getHooksComponentsFn | getHooksAppFn = (
   componentsOrApp: ComponentMap | LiveVueApp,
-  options: getHooksComponentsOptions = {}
+  options?: getHooksComponentsOptions
 ) => {
-  const app = migrateToLiveVueApp(componentsOrApp, options)
+  const app = migrateToLiveVueApp(componentsOrApp, options ?? {})
   return { VueHook: getVueHook(app) }
 }

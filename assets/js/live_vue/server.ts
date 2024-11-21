@@ -1,17 +1,27 @@
+// @ts-config ./tsconfig.server.json
+
 import fs from "fs"
 import { basename, resolve } from "path"
+import { ViewHookInternal } from "phoenix_live_view"
 import { App, Component, createSSRApp, h } from "vue"
 import { renderToString, type SSRContext } from "vue/server-renderer"
-import { LiveVueApp, LiveHook } from "./types.js"
 import { migrateToLiveVueApp } from "./app.js"
+import { LiveVueOptions, VueArgs } from "./types.js"
 import { mapValues } from "./utils.js"
 
 type Components = Record<string, Component>
 type Manifest = Record<string, string[]>
 
-const mockLive: LiveHook = {
-  el: {} as any,
-  liveSocket: {} as any,
+const mockLive: Partial<Omit<ViewHookInternal, 'el'>> & {
+  el: {}
+  liveSocket: {}
+  removeHandleEvent: () => void
+  upload: () => void
+  uploadTo: () => void
+  vue: Omit<VueArgs, 'app'> & { app: object }
+} = {
+  el: {},
+  liveSocket: {},
   pushEvent: () => 0,
   pushEventTo: () => 0,
   handleEvent: () => () => {},
@@ -21,10 +31,10 @@ const mockLive: LiveHook = {
   vue: {
     props: {},
     slots: {},
-    app: {} as App<any>,
+    app: {},
   },
 }
-export const getRender = (componentsOrApp: Components | LiveVueApp, manifest: Manifest = {}) => {
+export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest: Manifest = {}) => {
   const { resolve, setup } = migrateToLiveVueApp(componentsOrApp)
 
   return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
@@ -38,12 +48,13 @@ export const getRender = (componentsOrApp: Components | LiveVueApp, manifest: Ma
       plugin: {
         install: (app: App) => {
           // we don't want to mount the app in SSR
-          app.mount = (...args: any[]): any => undefined
+          app.mount = (...args: unknown[]): any => undefined
           // we don't have hook instance in SSR, so we need to mock it
           app.provide("_live_vue", Object.assign({}, mockLive))
         },
       },
-      el: {} as any,
+      // @ts-ignore - this is just an IDE issue. the compiler is correctly processing this with the server tsconfig
+      el: {},
       ssr: true,
     })
 
