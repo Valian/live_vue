@@ -19,7 +19,7 @@
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix"
-import { HooksOptions, LiveSocket } from "phoenix_live_view"
+import { LiveSocket } from "phoenix_live_view"
 import topbar from "topbar"
 
 // live_vue related imports
@@ -27,7 +27,7 @@ import { getHooks } from "live_vue"
 import "../css/app.css"
 import liveVueApp from "../vue"
 
-const hooks: HooksOptions = getHooks(liveVueApp)
+const hooks = getHooks(liveVueApp)
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
@@ -49,8 +49,8 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
-declare global {
-  interface Window {
-    liveSocket: LiveSocket
-  }
-}
+// declare global {
+//   interface Window {
+//     liveSocket: LiveSocket
+//   }
+// }

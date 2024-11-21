@@ -1,14 +1,16 @@
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
+/// <reference types="node" />
 
-import fs from "fs"
-import path from "path"
+import tailwindcssForms from "@tailwindcss/forms"
+import fs from "node:fs"
+import path from "node:path"
 import defaultTheme from "tailwindcss/defaultTheme"
 import plugin from "tailwindcss/plugin"
-import { CSSRuleObject } from "tailwindcss/types/config"
+import { CSSRuleObject, DarkModeConfig } from "tailwindcss/types/config"
 
-module.exports = {
-  darkMode: 'selector',
+export default {
+  darkMode: 'selector' as DarkModeConfig,
   content: [
     "./js/**/*.js",
     "../lib/live_vue_examples_web.ex",
@@ -30,7 +32,7 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),
+    tailwindcssForms(),
     // Allows prefixing tailwind classes with LiveView classes to add rules
     // only when LiveView classes are applied, for example:
     //
