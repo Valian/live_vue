@@ -1,10 +1,11 @@
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
 
-const plugin = require("tailwindcss/plugin")
-const fs = require("fs")
-const path = require("path")
-const defaultTheme = require('tailwindcss/defaultTheme')
+import fs from "fs"
+import path from "path"
+import defaultTheme from "tailwindcss/defaultTheme"
+import plugin from "tailwindcss/plugin"
+import { CSSRuleObject, KeyValuePair } from "tailwindcss/types/config"
 
 module.exports = {
   darkMode: 'selector',
@@ -45,7 +46,7 @@ module.exports = {
     //
     plugin(function ({ matchComponents, theme }) {
       let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
-      let values = {}
+      let values: Record<string, unknown> = {}
       let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
@@ -58,8 +59,10 @@ module.exports = {
           values[name] = { name, fullPath: path.join(iconsDir, dir, file) }
         })
       })
-      matchComponents({
-        "hero": ({ name, fullPath }) => {
+      matchComponents<{ name: string; fullPath: string }>({
+        "hero": (options) => {
+          if (typeof options === "string") return null
+          const { name, fullPath } = options
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
           let size = theme("spacing.6")
           if (name.endsWith("-mini")) {
@@ -77,9 +80,9 @@ module.exports = {
             "display": "inline-block",
             "width": size,
             "height": size
-          }
+          } as CSSRuleObject
         }
-      }, { values })
+      }, { values: values as KeyValuePair<string, { name: string; fullPath: string; }> })
     })
   ]
 }

@@ -1,5 +1,5 @@
-import app from "../vue"
 import { getRender, loadManifest } from "live_vue/server"
+import app from "../vue"
 
 // present only in prod build. Returns empty obj if doesn't exist
 // used to render preload links

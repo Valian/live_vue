@@ -1,8 +1,8 @@
-import path from 'path'
-import { defineConfig } from 'vite'
+import path from 'path';
+import { defineConfig } from 'vite';
 
-import vue from '@vitejs/plugin-vue'
-import liveVuePlugin from "live_vue/vitePlugin"
+import vue from '@vitejs/plugin-vue';
+import liveVuePlugin from "live_vue/vitePlugin";
 import vuetify from "vite-plugin-vuetify";
 
 // https://vitejs.dev/config/
@@ -14,7 +14,7 @@ export default defineConfig(({command}) => {
     publicDir: "static",
     plugins: [
       vue(), 
-      liveVuePlugin(),
+      liveVuePlugin({ entrypoint: './js/server.ts' }),
       vuetify({ autoImport: { labs: true } }),
     ],
     ssr: {
@@ -44,7 +44,7 @@ export default defineConfig(({command}) => {
       manifest: false, // do not generate manifest.json
       rollupOptions: {
         input: {
-          app: path.resolve(__dirname, './js/app.js'),
+          app: path.resolve(__dirname, './js/app.ts'),
         },
         output: {
           // remove hashes to match phoenix way of handling assets

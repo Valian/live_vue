@@ -19,7 +19,7 @@
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix"
-import { LiveSocket } from "phoenix_live_view"
+import { HooksOptions, LiveSocket } from "phoenix_live_view"
 import topbar from "topbar"
 
 // live_vue related imports
@@ -27,10 +27,12 @@ import { getHooks } from "live_vue"
 import "../css/app.css"
 import liveVueApp from "../vue"
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const hooks: HooksOptions = getHooks(liveVueApp)
+
+let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { ...getHooks(liveVueApp) },
+  hooks,
 })
 
 // Show progress bar on live navigation and form submits
@@ -46,3 +48,9 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
+declare global {
+  interface Window {
+    liveSocket: LiveSocket
+  }
+}
