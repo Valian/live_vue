@@ -1,5 +1,5 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, PluginOption } from 'vite';
 
 import vue from '@vitejs/plugin-vue';
 import liveVuePlugin from "live_vue/vitePlugin";
@@ -16,7 +16,7 @@ export default defineConfig(({command}) => {
       vue(), 
       liveVuePlugin({ entrypoint: './js/server.ts' }),
       vuetify({ autoImport: { labs: true } }),
-    ],
+    ] as PluginOption[],
     ssr: {
       // we need it, because in SSR build we want no external
       // and in dev, we want external for fast updates
