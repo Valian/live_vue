@@ -5,7 +5,7 @@ import fs from "fs"
 import path from "path"
 import defaultTheme from "tailwindcss/defaultTheme"
 import plugin from "tailwindcss/plugin"
-import { CSSRuleObject, KeyValuePair } from "tailwindcss/types/config"
+import { CSSRuleObject } from "tailwindcss/types/config"
 
 module.exports = {
   darkMode: 'selector',
@@ -46,7 +46,7 @@ module.exports = {
     //
     plugin(function ({ matchComponents, theme }) {
       let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
-      let values: Record<string, unknown> = {}
+      let values: Record<string, { name: string, fullPath: string }> = {}
       let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
@@ -59,7 +59,7 @@ module.exports = {
           values[name] = { name, fullPath: path.join(iconsDir, dir, file) }
         })
       })
-      matchComponents<{ name: string; fullPath: string }>({
+      matchComponents({
         "hero": (options) => {
           if (typeof options === "string") return null
           const { name, fullPath } = options
@@ -70,7 +70,7 @@ module.exports = {
           } else if (name.endsWith("-micro")) {
             size = theme("spacing.4")
           }
-          return {
+          const css:CSSRuleObject = Object.assign({
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
             "mask": `var(--hero-${name})`,
@@ -78,11 +78,11 @@ module.exports = {
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
-            "width": size,
-            "height": size
-          } as CSSRuleObject
+          }, size ? { width: size, height: size } : {})
+
+          return css
         }
-      }, { values: values as KeyValuePair<string, { name: string; fullPath: string; }> })
+      }, { values })
     })
   ]
 }
