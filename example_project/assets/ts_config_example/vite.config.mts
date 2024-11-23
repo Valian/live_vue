@@ -28,6 +28,9 @@ export default defineConfig(({ command }) => {
   return {
     base: isDev ? undefined : "/assets",
     publicDir: "static",
+    // when using typescript in your vite config, you must delete the 
+    // postcss.config.js file, and rely on the vite css option instead
+    // to load the autoprefixer and tailwindcss plugins
     css: {
       postcss: { plugins: [tailwindcss(tailwindConfig), autoprefixer()] },
     },
