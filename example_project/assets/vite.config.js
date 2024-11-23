@@ -1,8 +1,8 @@
-import path from 'path'
-import { defineConfig } from 'vite'
+import path from 'path';
+import { defineConfig } from 'vite';
 
-import vue from '@vitejs/plugin-vue'
-import liveVuePlugin from "live_vue/vitePlugin"
+import vue from '@vitejs/plugin-vue';
+import liveVuePlugin from "live_vue/vitePlugin";
 import vuetify from "vite-plugin-vuetify";
 
 // https://vitejs.dev/config/

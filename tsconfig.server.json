@@ -2,8 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2020"],
-    "types": ["node"],
-    "allowJs": true
+    "types": ["node", "./assets/js/live_vue/serverElementPolyfill.d.ts"],
+    "allowJs": true,
   },
-  "include": ["assets/js/live_vue/server.ts", "assets/js/live_vue/vitePlugin.js"]
+  "include": ["assets/js/live_vue/server.ts", "assets/js/live_vue/vitePlugin.ts"]
 }

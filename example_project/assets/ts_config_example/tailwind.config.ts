@@ -1,13 +1,26 @@
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
+/// <reference types="node" />
 
-const plugin = require("tailwindcss/plugin")
-const fs = require("fs")
-const path = require("path")
-const defaultTheme = require('tailwindcss/defaultTheme')
+/**
+ * This file is given as a reference should you want to use typescript
+ * with your tailwindcss configuration. If you want to use this, you can
+ * replace assets/tailwind.config.js with this file.
+ * 
+ * Depending on your tsconfig, and wether you use type:module in your 
+ * assets/package.json you may have a resolution error using a .ts file
+ * but you can try to name it tailwind.config.mts instead.
+ */
 
-module.exports = {
-  darkMode: 'selector',
+import tailwindcssForms from "@tailwindcss/forms"
+import fs from "node:fs"
+import path from "node:path"
+import defaultTheme from "tailwindcss/defaultTheme"
+import plugin from "tailwindcss/plugin"
+import { CSSRuleObject, DarkModeConfig } from "tailwindcss/types/config"
+
+export default {
+  darkMode: 'selector' as DarkModeConfig,
   content: [
     "./js/**/*.js",
     "../lib/live_vue_examples_web.ex",
@@ -29,7 +42,7 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),
+    tailwindcssForms(),
     // Allows prefixing tailwind classes with LiveView classes to add rules
     // only when LiveView classes are applied, for example:
     //
@@ -45,7 +58,7 @@ module.exports = {
     //
     plugin(function ({ matchComponents, theme }) {
       let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
-      let values = {}
+      let values: Record<string, { name: string, fullPath: string }> = {}
       let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
@@ -59,7 +72,9 @@ module.exports = {
         })
       })
       matchComponents({
-        "hero": ({ name, fullPath }) => {
+        "hero": (options) => {
+          if (typeof options === "string") return null
+          const { name, fullPath } = options
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
           let size = theme("spacing.6")
           if (name.endsWith("-mini")) {
@@ -67,7 +82,7 @@ module.exports = {
           } else if (name.endsWith("-micro")) {
             size = theme("spacing.4")
           }
-          return {
+          const css:CSSRuleObject = Object.assign({
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
             "mask": `var(--hero-${name})`,
@@ -75,9 +90,9 @@ module.exports = {
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
-            "width": size,
-            "height": size
-          }
+          }, size ? { width: size, height: size } : {})
+
+          return css
         }
       }, { values })
     })
