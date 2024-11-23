@@ -547,6 +547,13 @@ As explained in the previous section, it takes a moment for Vue component to ini
 
 It's done only during a "dead" render, without connected socket. It's not needed when doing live navigation - in my experience when using `<.link navigate="...">` component is rendered before displaying a new page.
 
+### What if I want to use typescript in my assets folder ? 
+You can. the library provides good type definitions. you can use the tsconfig.json in the example project, and check `example_project/assets/ts_config_example` for typescript versions of the LiveVue entrypoint file, tailwindcss setup and vite config.
+
+You can also switch server.js to typescript but you will have to make sure to pass the `entrypoint` property to the LiveVue Vite plugin, and update your package.json build script accordingly.
+
+The only thing that is tough to convert to typescript is the `assets/js/app.js` file. Since this config removes esbuild with vite instead, this is not trivial to achieve. But if you want your app's entrypoint to be in typescript, you can simply write the code in another ts file, and have app.js only import and execute a function from that file.
+
 ## Roadmap 🎯
 
 - [ ] Add a default handler for Vue emits to eg. automatically push them to the server without explicit `v-on` handlers.
