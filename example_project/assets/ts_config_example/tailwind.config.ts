@@ -2,6 +2,16 @@
 // https://tailwindcss.com/docs/configuration
 /// <reference types="node" />
 
+/**
+ * This file is given as a reference should you want to use typescript
+ * with your tailwindcss configuration. If you want to use this, you can
+ * replace assets/tailwind.config.js with this file.
+ * 
+ * Depending on your tsconfig, and wether you use type:module in your 
+ * assets/package.json you may have a resolution error using a .ts file
+ * but you can try to name it tailwind.config.mts instead.
+ */
+
 import tailwindcssForms from "@tailwindcss/forms"
 import fs from "node:fs"
 import path from "node:path"

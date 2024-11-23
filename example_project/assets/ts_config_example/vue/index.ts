@@ -1,4 +1,11 @@
 /// <reference types="vite/client" />
+
+/**
+ * This is an example if you want to use typescript for your LiveVue setup.
+ * It is an drop-in replacement for the assets/js/vue/index.js file, so you
+ * can replace it with this file.
+ */
+
 // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
 import { createLiveVue, findComponent, type SetupContext, type VueComponent } from "live_vue"
 import "vite/modulepreload-polyfill"
