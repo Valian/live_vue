@@ -37,8 +37,8 @@ export default defineConfig(({ command }) => {
     plugins: [
       vue(),
       // if you change ./js/server.js, to typescript, you need
-      // to pass this entrypoint option
-      liveVuePlugin({ entrypoint: "./js/server.ts" }),
+      // to set livePlugin({ entrypoint: "./js/server.ts" })
+      liveVuePlugin(),
       vuetify({ autoImport: { labs: true } }),
     ] as PluginOption[],
     ssr: {
