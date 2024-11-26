@@ -233,3 +233,29 @@ and add these scripts used by watcher and `mix assets.build` command
     }
 }
 ```
+
+
+## Troubleshooting
+
+
+### Typescript error
+
+
+There's a [known bug](https://github.com/vuejs/language-tools/issues/5018) where recent version of TS is not compatible with latest version of `vue-tsc`. If you're getting
+
+```bash
+Search string not found: "/supportedTSExtensions = .*(?=;)/"
+(Use `node --trace-uncaught ...` to show where the exception was thrown)
+
+Node.js v22.2.0
+** (exit) 1
+```
+
+then you'd need to downgrade [typescript and vue-tsc](https://github.com/Valian/live_vue/issues/43#issuecomment-2501152160) to versions 5.5.4 and 2.10.0 respectively.
+
+You can do it by running
+
+```bash
+npm install typescript@5.5.4 vue-tsc@2.10.0
+```
+
