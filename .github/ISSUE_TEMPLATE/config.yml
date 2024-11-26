@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: LiveVue Discussions
+    url: https://github.com/Valian/live_vue/discussions
+    about: Please ask and answer questions here
+  - name: LiveVue Documentation
+    url: https://hexdocs.pm/live_vue
+    about: Check out the official documentation
