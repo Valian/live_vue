@@ -1,7 +1,7 @@
 /// <reference types="@types/node" />
 
-import { IncomingMessage, ServerResponse } from "http";
-import { Connect, ModuleNode, Plugin } from "vite";
+import { IncomingMessage, ServerResponse } from "http"
+import { Connect, ModuleNode, Plugin } from "vite"
 
 interface PluginOptions {
   path?: string
@@ -9,7 +9,7 @@ interface PluginOptions {
 }
 
 interface ExtendedIncomingMessage extends Connect.IncomingMessage {
-  body?: Record<string, unknown>; // or more specific type if known
+  body?: Record<string, unknown> // or more specific type if known
 }
 
 function hotUpdateType(path: string): "css-update" | "js-update" | null {
@@ -25,7 +25,11 @@ const jsonResponse = (res: ServerResponse<IncomingMessage>, statusCode: number, 
 }
 
 // Custom JSON parsing middleware
-const jsonMiddleware = (req: ExtendedIncomingMessage, res: ServerResponse<IncomingMessage>, next: () => Promise<void>) => {
+const jsonMiddleware = (
+  req: ExtendedIncomingMessage,
+  res: ServerResponse<IncomingMessage>,
+  next: () => Promise<void>
+) => {
   let data = ""
 
   // Listen for data event to collect the chunks of data

@@ -12,13 +12,13 @@ import { mapValues } from "./utils.js"
 type Components = Record<string, Component>
 type Manifest = Record<string, string[]>
 
-const mockLive: Partial<Omit<ViewHookInternal, 'el'>> & {
+const mockLive: Partial<Omit<ViewHookInternal, "el">> & {
   el: {}
   liveSocket: {}
   removeHandleEvent: () => void
   upload: () => void
   uploadTo: () => void
-  vue: Omit<VueArgs, 'app'> & { app: object }
+  vue: Omit<VueArgs, "app"> & { app: object }
 } = {
   el: {},
   liveSocket: {},

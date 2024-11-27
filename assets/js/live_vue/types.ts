@@ -17,7 +17,7 @@ export type VueArgs = {
   app: App<Element>
 }
 
-export type LiveHook = ViewHook<{ vue: VueArgs, liveSocket: LiveSocket }>
+export type LiveHook = ViewHook<{ vue: VueArgs; liveSocket: LiveSocket }>
 
 export interface SetupContext {
   createApp: typeof createSSRApp | typeof createApp
