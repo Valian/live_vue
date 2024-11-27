@@ -85,9 +85,9 @@ defmodule LiveVue.MixProject do
       setup: ["deps.get", "cmd npm install"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
-      "release.patch": ["assets.build", "expublish.patch --branch=main"],
-      "release.minor": ["assets.build", "expublish.minor --branch=main"],
-      "release.major": ["assets.build", "expublish.major --branch=main"]
+      "release.patch": ["assets.build", "expublish.patch --branch=main --disable-publish"],
+      "release.minor": ["assets.build", "expublish.minor --branch=main --disable-publish"],
+      "release.major": ["assets.build", "expublish.major --branch=main --disable-publish"]
     ]
   end
 end

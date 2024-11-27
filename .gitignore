@@ -31,6 +31,8 @@ node_modules/
 .DS_Store
 *.code-workspace
 
+RELEASE.md
+
 priv/static
 .elixir_ls/
 .vscode/
