@@ -13,7 +13,11 @@ defmodule LiveVue.MixProject do
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
-        "test.watch": :test
+        "test.watch": :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
       ],
 
       # Hex
@@ -36,7 +40,8 @@ defmodule LiveVue.MixProject do
         links: %{
           "GitHub" => @repo_url
         }
-      ]
+      ],
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -73,10 +78,12 @@ defmodule LiveVue.MixProject do
       {:nodejs, "~> 3.1"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
+      {:floki, ">= 0.30.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:expublish, "~> 2.5", only: [:dev], runtime: false}
+      {:expublish, "~> 2.5", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.18", only: :test}
     ]
   end
 
