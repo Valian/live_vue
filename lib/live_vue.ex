@@ -106,15 +106,14 @@ defmodule LiveVue do
       id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
       data-props={"#{json(@props)}"}
-      data-ssr={@ssr_render != nil}
+      data-ssr={(@ssr_render != nil) |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
       phx-update="ignore"
       phx-hook="VueHook"
+      phx-no-format
       class={@class}
-    >
-      <%= raw(@ssr_render[:html]) %>
-    </div>
+    ><%= raw(@ssr_render[:html]) %></div>
     """
   end
 
