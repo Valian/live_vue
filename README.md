@@ -197,6 +197,23 @@ An example:
 </template>
 ```
 
+### Testing Vue Components
+
+LiveVue provides testing utilities through the `LiveVue.Test` module that make it easy to test your Vue components. You can extract and verify component properties, event handlers, slots, and more:
+
+```elixir
+# Test a specific component
+{:ok, view, _html} = live(conn, "/")
+vue = LiveVue.Test.get_vue(view, name: "Counter")
+
+# Verify component properties
+assert vue.component == "Counter"
+assert vue.props["count"] == 0
+assert vue.handlers["inc"] == JS.push("inc")
+```
+
+See [LiveVue.Test documentation](https://hexdocs.pm/live_vue/LiveVue.Test.html) for more details.
+
 ### Dead views vs Live views
 
 You can use `<.vue>` components in dead views. Of course, there will be no updates on assign changes, since there is no websocket connection established to support it.
@@ -547,7 +564,7 @@ As explained in the previous section, it takes a moment for Vue component to ini
 
 It's done only during a "dead" render, without connected socket. It's not needed when doing live navigation - in my experience when using `<.link navigate="...">` component is rendered before displaying a new page.
 
-### What if I want to use typescript in my assets folder ? 
+### What if I want to use typescript in my assets folder ?
 You can. the library provides good type definitions. you can use the tsconfig.json in the example project, and check `example_project/assets/ts_config_example` for typescript versions of the LiveVue entrypoint file, tailwindcss setup and vite config.
 
 You can also switch server.js to typescript but you will have to make sure to pass the `entrypoint` property to the LiveVue Vite plugin, and update your package.json build script accordingly.
