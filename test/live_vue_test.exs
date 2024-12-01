@@ -37,8 +37,8 @@ defmodule LiveVueTest do
     def multi_component(assigns) do
       ~H"""
       <div>
-        <.vue name="John" v-component="UserProfile" />
-        <.vue name="Jane" v-component="UserCard" />
+        <.vue id="profile-1" name="John" v-component="UserProfile" />
+        <.vue id="card-1" name="Jane" v-component="UserCard" />
       </div>
       """
     end
@@ -57,6 +57,34 @@ defmodule LiveVueTest do
 
       assert vue.component == "UserCard"
       assert vue.props == %{"name" => "Jane"}
+    end
+
+    test "finds specific component by id" do
+      html = render_component(&multi_component/1)
+      vue = Test.get_vue(html, id: "card-1")
+
+      assert vue.component == "UserCard"
+      assert vue.id == "card-1"
+    end
+
+    test "raises error when component with name not found" do
+      html = render_component(&multi_component/1)
+
+      assert_raise RuntimeError,
+                   ~r/No Vue component found with name="Unknown".*Available components: UserProfile#profile-1, UserCard#card-1/,
+                   fn ->
+                     Test.get_vue(html, name: "Unknown")
+                   end
+    end
+
+    test "raises error when component with id not found" do
+      html = render_component(&multi_component/1)
+
+      assert_raise RuntimeError,
+                   ~r/No Vue component found with id="unknown-id".*Available components: UserProfile#profile-1, UserCard#card-1/,
+                   fn ->
+                     Test.get_vue(html, id: "unknown-id")
+                   end
     end
   end
 
@@ -110,6 +138,97 @@ defmodule LiveVueTest do
       vue = Test.get_vue(html)
 
       assert vue.ssr == false
+    end
+  end
+
+  describe "slots" do
+    def component_with_slots(assigns) do
+      ~H"""
+      <.vue v-component="WithSlots">
+        Default content
+        <:header>Header content</:header>
+        <:footer>
+          <div>Footer content</div>
+          <button>Click me</button>
+        </:footer>
+      </.vue>
+      """
+    end
+
+    def component_with_default_slot(assigns) do
+      ~H"""
+      <.vue v-component="WithSlots">
+        <:default>Simple content</:default>
+      </.vue>
+      """
+    end
+
+    def component_with_inner_block(assigns) do
+      ~H"""
+      <.vue v-component="WithSlots">
+        Simple content
+      </.vue>
+      """
+    end
+
+    test "warns about usage of <:default> slot" do
+      assert_raise RuntimeError,
+                   "Instead of using <:default> use <:inner_block> slot",
+                   fn -> render_component(&component_with_default_slot/1) end
+    end
+
+    test "renders multiple slots" do
+      html = render_component(&component_with_slots/1)
+      vue = Test.get_vue(html)
+
+      assert vue.slots == %{
+               "default" => "Default content",
+               "header" => "Header content",
+               "footer" => "<div>Footer content</div>\n    <button>Click me</button>"
+             }
+    end
+
+    test "renders default slot with inner_block" do
+      html = render_component(&component_with_inner_block/1)
+      vue = Test.get_vue(html)
+
+      assert vue.slots == %{"default" => "Simple content"}
+    end
+
+    test "encodes slots as base64" do
+      html = render_component(&component_with_slots/1)
+
+      # Get raw data-slots attribute to verify base64 encoding
+      doc = Floki.parse_fragment!(html)
+      slots_attr = Floki.attribute(doc, "data-slots") |> hd()
+
+      # JSON encoded map
+      assert slots_attr =~ ~r/^\{.*\}$/
+
+      slots =
+        slots_attr
+        |> Jason.decode!()
+        |> Enum.map(fn {key, value} -> {key, Base.decode64!(value)} end)
+        |> Enum.into(%{})
+
+      assert slots == %{
+               "default" => "Default content",
+               "header" => "Header content",
+               "footer" => "<div>Footer content</div>\n    <button>Click me</button>"
+             }
+    end
+
+    test "handles empty slots" do
+      html =
+        render_component(fn assigns ->
+          ~H"""
+          <.vue v-component="WithSlots" />
+          """
+        end)
+
+      vue = Test.get_vue(html)
+
+      assert vue.slots == %{}
     end
   end
 end
