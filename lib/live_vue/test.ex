@@ -33,7 +33,7 @@ defmodule LiveVue.Test do
       assert vue.props["title"] == "Hello"
 
       # Event handlers
-      assert vue.handlers["click"] == [%{type: "emit"}]
+      assert vue.handlers["click"] == JS.push("click")
 
       # SSR status and styling
       assert vue.ssr == true
