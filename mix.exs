@@ -8,7 +8,7 @@ defmodule LiveVue.MixProject do
     [
       app: :live_vue,
       version: @version,
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
