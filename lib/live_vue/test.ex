@@ -44,7 +44,7 @@ defmodule LiveVue.Test do
   Extracts Vue component information from a LiveView or HTML string.
 
   When multiple Vue components are present, you can specify which one to extract using
-  the `:name` option.
+  either the `:name` or `:id` option.
 
   Returns a map containing the component's configuration:
     * `:component` - The Vue component name (from `v-component` attribute)
@@ -55,6 +55,10 @@ defmodule LiveVue.Test do
     * `:ssr` - Boolean indicating if server-side rendering was performed
     * `:class` - CSS classes applied to the component root element
 
+  ## Options
+    * `:name` - Find component by name (from `v-component` attribute)
+    * `:id` - Find component by ID
+
   ## Examples
 
       # From a LiveView, get first Vue component
@@ -64,14 +68,8 @@ defmodule LiveVue.Test do
       # Get specific component by name
       vue = LiveVue.Test.get_vue(view, name: "MyComponent")
 
-      # From HTML string with specific component
-      html = \"\"\"
-      <div>
-        <div phx-hook='VueHook' data-name='OtherComponent' ...></div>
-        <div phx-hook='VueHook' data-name='MyComponent' ...></div>
-      </div>
-      \"\"\"
-      vue = LiveVue.Test.get_vue(html, name: "MyComponent")
+      # Get specific component by ID
+      vue = LiveVue.Test.get_vue(view, id: "my-component-1")
   """
   def get_vue(view, opts \\ [])
 
@@ -80,33 +78,34 @@ defmodule LiveVue.Test do
   end
 
   def get_vue(html, opts) when is_binary(html) do
-    doc =
+    vue =
       html
       |> Floki.parse_document!()
       |> Floki.find("[phx-hook='VueHook']")
-      |> find_component(opts[:name])
+      |> find_component!(opts)
 
-    case doc do
-      nil ->
-        nil
-
-      vue ->
-        %{
-          props: Jason.decode!(Floki.attribute(vue, "data-props") |> hd()),
-          component: Floki.attribute(vue, "data-name") |> hd(),
-          id: Floki.attribute(vue, "id") |> hd(),
-          handlers: extract_handlers(Floki.attribute(vue, "data-handlers") |> hd()),
-          slots: Floki.attribute(vue, "data-slots") |> hd() |> Jason.decode!(),
-          ssr: Floki.attribute(vue, "data-ssr") |> hd() |> String.to_existing_atom(),
-          class: Floki.attribute(vue, "class") |> List.first()
-        }
-    end
+    %{
+      props: Jason.decode!(attr(vue, "data-props")),
+      component: attr(vue, "data-name"),
+      id: attr(vue, "id"),
+      handlers: extract_handlers(attr(vue, "data-handlers")),
+      slots: extract_base64_slots(attr(vue, "data-slots")),
+      ssr: attr(vue, "data-ssr") |> String.to_existing_atom(),
+      class: attr(vue, "class")
+    }
   end
 
   defp extract_handlers(handlers) do
     handlers
     |> Jason.decode!()
     |> Enum.map(fn {k, v} -> {k, extract_js_ops(v)} end)
+    |> Enum.into(%{})
+  end
+
+  defp extract_base64_slots(slots) do
+    slots
+    |> Jason.decode!()
+    |> Enum.map(fn {key, value} -> {key, Base.decode64!(value)} end)
     |> Enum.into(%{})
   end
 
@@ -120,14 +119,41 @@ defmodule LiveVue.Test do
     |> then(&%Phoenix.LiveView.JS{ops: &1})
   end
 
-  defp find_component(doc, name) do
-    case name do
-      nil ->
-        doc
+  defp find_component!(components, opts) do
+    available =
+      components
+      |> Enum.map(&"#{attr(&1, "data-name")}##{attr(&1, "id")}")
+      |> Enum.join(", ")
 
-      name ->
-        doc
-        |> Enum.find(fn vue -> Floki.attribute(vue, "data-name") |> hd() == name end)
+    components =
+      Enum.reduce(opts, components, fn
+        {:id, id}, result ->
+          with [] <- Enum.filter(result, &(attr(&1, "id") == id)) do
+            raise "No Vue component found with id=\"#{id}\". Available components: #{available}"
+          end
+
+        {:name, name}, result ->
+          with [] <- Enum.filter(result, &(attr(&1, "data-name") == name)) do
+            raise "No Vue component found with name=\"#{name}\". Available components: #{available}"
+          end
+
+        {key, _}, _result ->
+          raise ArgumentError, "invalid keyword option for get_vue/2: #{key}"
+      end)
+
+    case components do
+      [vue | _] ->
+        vue
+
+      [] ->
+        raise "No Vue components found in the rendered HTML"
+    end
+  end
+
+  defp attr(element, name) do
+    case Floki.attribute(element, name) do
+      [value] -> value
+      [] -> nil
     end
   end
 end

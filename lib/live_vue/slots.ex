@@ -10,6 +10,9 @@ defmodule LiveVue.Slots do
       into: %{},
       do:
         case(key) do
+          # we raise here because :inner_block is always there and we want to avoid
+          # it overriding the default slot content
+          :default -> raise "Instead of using <:default> use <:inner_block> slot"
           :inner_block -> {:default, render(%{slot: slot})}
           slot_name -> {slot_name, render(%{slot: slot})}
         end
