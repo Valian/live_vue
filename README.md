@@ -197,6 +197,35 @@ An example:
 </template>
 ```
 
+### Handling navigation
+
+LiveVue provides a `<Link />` component that can be imported to support navigation between live views and other pages.
+It maintains the same API, with a minor difference (see the _WARNING_ after this section), as the `<.link />` component provided by Phoenix.
+
+Here is a quick breakdown:
+* `<Link href="...">` is HTTP-based, work everywhere, and perform full page reloads
+* `<Link navigate="...">` work across LiveViews in the same session. They mount a new LiveView while keeping the current layout
+* `<Link patch="...">` updates the current LiveView and sends only the minimal diff while also maintaining the scroll position
+
+```vue
+<template>
+  <Link patch="/same-live-view">Patch link</Link>
+  <Link patch="/same-live-view" replace>Patch link (with replace)</Link>
+
+  <Link navigate="/another-live-view">Navigate link</Link>
+  <Link navigate="/another-live-view" replace>Navigate link (with replace)</Link>
+
+  <Link href="/normal-link">Normal link</Link>
+</template>
+
+<script setup>
+import { Link } from 'live_vue';
+</script>
+```
+
+> [!WARNING]
+> We don't support `method` & `csrf` props from the original `<.link />` component.
+
 ### Testing Vue Components
 
 LiveVue provides testing utilities through the `LiveVue.Test` module that make it easy to test your Vue components. You can extract and verify component properties, event handlers, slots, and more:
