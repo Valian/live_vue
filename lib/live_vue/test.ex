@@ -97,7 +97,7 @@ defmodule LiveVue.Test do
         class: attr(vue, "class")
       }
     else
-      raise "Floki is not installed. Add {:floki, \">= 0.30.0\"} to your dependencies to use LiveVue.Test"
+      raise "Floki is not installed. Add {:floki, \">= 0.30.0\", only: :test} to your dependencies to use LiveVue.Test"
     end
   end
 

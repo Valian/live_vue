@@ -13,7 +13,7 @@ defmodule LiveVueExamplesWeb.LiveCounter do
   end
 
   def handle_event("inc", %{"value" => diff}, socket) do
-    socket = update(socket, :count, &(&1 + diff * 2))
+    socket = update(socket, :count, &(&1 + diff))
 
     {:noreply, socket}
   end
