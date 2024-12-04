@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.5.7 - 2024-12-04
+
+### Fixes
+
+- Fix the `useLiveVue` hook typings to show all available functions and properties.
+
+
 ## 0.5.6 - 2024-11-27
 
 ### Improvements
