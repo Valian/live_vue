@@ -1,5 +1,6 @@
 defmodule LiveVueExamplesWeb.LiveCounter do
   use LiveVueExamplesWeb, :live_view
+  @topic "shared_session"
 
   def render(assigns) do
     ~H"""
@@ -9,12 +10,21 @@ defmodule LiveVueExamplesWeb.LiveCounter do
   end
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, count: 10)}
+    if connected?(socket) do
+      LiveVueExamplesWeb.Endpoint.subscribe(@topic)
+    end
+
+    {:ok, assign(socket, :count, 0)}
   end
 
   def handle_event("inc", %{"value" => diff}, socket) do
-    socket = update(socket, :count, &(&1 + diff))
-
+    new_count = socket.assigns.count + diff
+    LiveVueExamplesWeb.Endpoint.broadcast(@topic, "update_count", new_count)
     {:noreply, socket}
+  end
+
+  def handle_info(%{event: "update_count", payload: new_count}, socket) do
+    # Update the count for all connected users
+    {:noreply, assign(socket, :count, new_count)}
   end
 end

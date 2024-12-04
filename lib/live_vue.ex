@@ -1,6 +1,34 @@
 defmodule LiveVue do
   @moduledoc """
+  LiveVue provides seamless integration between Phoenix LiveView and Vue.js components.
+
+  ## Installation and Configuration
+
   See README.md for installation instructions and usage.
+
+  ## Component Options
+
+  When using the `vue/1` component or `~V` sigil, the following options are supported:
+
+  ### Required Attributes
+    * `v-component` (string) - Name of the Vue component (e.g., "YourComponent", "directory/Example")
+
+  ### Optional Attributes
+    * `id` (string) - Explicit ID of the wrapper component. If not provided, a random one will be
+      generated. Useful to keep ID consistent in development (e.g., "vue-1")
+    * `class` (string) - CSS class(es) to apply to the Vue component wrapper
+      (e.g., "my-class" or "my-class another-class")
+    * `v-ssr` (boolean) - Whether to render the component on the server. Defaults to the value set
+      in config (default: true)
+    * `v-socket` (LiveView.Socket) - LiveView socket, should be provided when rendering inside LiveView
+
+  ### Event Handlers
+    * `v-on:*` - Vue event handlers can be attached using the `v-on:` prefix
+      (e.g., `v-on:click`, `v-on:input`)
+
+  ### Props and Slots
+    * All other attributes are passed as props to the Vue component
+    * Slots can be passed as regular Phoenix slots
   """
 
   use Phoenix.Component
@@ -20,49 +48,27 @@ defmodule LiveVue do
     end
   end
 
-  # TODO - commented out because it's impossible to make :rest accept all attrs without a warning
-  # attr(
-  #   :"v-component",
-  #   :string,
-  #   required: true,
-  #   doc: "Name of the Vue component",
-  #   examples: ["YourComponent", "directory/Example"]
-  # )
+  @doc """
+  Renders a Vue component within Phoenix LiveView.
 
-  # attr(
-  #   :id,
-  #   :string,
-  #   default: nil,
-  #   doc:
-  #     "Explicit id of a wrapper component. If not provided, a random one will be generated. Useful to keep ID consistent in development.",
-  #   examples: ["vue-1"]
-  # )
+  ## Examples
 
-  # attr(
-  #   :class,
-  #   :string,
-  #   default: nil,
-  #   doc: "Class to apply to the Vue component",
-  #   examples: ["my-class", "my-class another-class"]
-  # )
+      <.vue
+        v-component="MyComponent"
+        message="Hello"
+        v-on:click="handleClick"
+        class="my-component"
+      />
 
-  # attr(
-  #   :"v-ssr",
-  #   :boolean,
-  #   default: Application.compile_env(:live_vue, :ssr, true),
-  #   doc: "Whether to render the component on the server",
-  #   examples: [true, false]
-  # )
-
-  # attr(
-  #   :"v-socket",
-  #   :map,
-  #   default: nil,
-  #   doc: "LiveView socket, should be provided when rendering inside LiveView"
-  # )
-
-  # attr :rest, :global
-
+      <.vue
+        v-component="nested/Component"
+        v-ssr={false}
+        items={@items}
+      >
+        <:default>Default slot content</:default>
+        <:named>Named slot content</:named>
+      </.vue>
+  """
   def vue(assigns) do
     init = assigns.__changed__ == nil
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
