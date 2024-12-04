@@ -1,4 +1,4 @@
-import type { LiveSocket, ViewHook } from "phoenix_live_view"
+import type { LiveSocket, ViewHook, ViewHookInternal } from "phoenix_live_view"
 import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
 
 export type ComponentOrComponentModule = Component | { default: Component }
@@ -17,7 +17,11 @@ export type VueArgs = {
   app: App<Element>
 }
 
-export type LiveHook = ViewHook<{ vue: VueArgs; liveSocket: LiveSocket }>
+// all the functions and additional properties that are available on the LiveHook
+export type LiveHook = ViewHookInternal & { vue: VueArgs; liveSocket: LiveSocket }
+
+// internal type for the hooks.ts file
+export type LiveHookInternal = ViewHook<{ vue: VueArgs; liveSocket: LiveSocket }>
 
 export interface SetupContext {
   createApp: typeof createSSRApp | typeof createApp
