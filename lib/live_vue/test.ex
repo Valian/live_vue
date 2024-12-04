@@ -40,6 +40,8 @@ defmodule LiveVue.Test do
       assert vue.class == "my-custom-class"
   """
 
+  @compile {:no_warn_undefined, Floki}
+
   @doc """
   Extracts Vue component information from a LiveView or HTML string.
 
@@ -78,21 +80,25 @@ defmodule LiveVue.Test do
   end
 
   def get_vue(html, opts) when is_binary(html) do
-    vue =
-      html
-      |> Floki.parse_document!()
-      |> Floki.find("[phx-hook='VueHook']")
-      |> find_component!(opts)
+    if Code.ensure_loaded?(Floki) do
+      vue =
+        html
+        |> Floki.parse_document!()
+        |> Floki.find("[phx-hook='VueHook']")
+        |> find_component!(opts)
 
-    %{
-      props: Jason.decode!(attr(vue, "data-props")),
-      component: attr(vue, "data-name"),
-      id: attr(vue, "id"),
-      handlers: extract_handlers(attr(vue, "data-handlers")),
-      slots: extract_base64_slots(attr(vue, "data-slots")),
-      ssr: attr(vue, "data-ssr") |> String.to_existing_atom(),
-      class: attr(vue, "class")
-    }
+      %{
+        props: Jason.decode!(attr(vue, "data-props")),
+        component: attr(vue, "data-name"),
+        id: attr(vue, "id"),
+        handlers: extract_handlers(attr(vue, "data-handlers")),
+        slots: extract_base64_slots(attr(vue, "data-slots")),
+        ssr: attr(vue, "data-ssr") |> String.to_existing_atom(),
+        class: attr(vue, "class")
+      }
+    else
+      raise "Floki is not installed. Add {:floki, \">= 0.30.0\"} to your dependencies to use LiveVue.Test"
+    end
   end
 
   defp extract_handlers(handlers) do

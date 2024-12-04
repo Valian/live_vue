@@ -78,7 +78,7 @@ defmodule LiveVue.MixProject do
       {:nodejs, "~> 3.1"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
-      {:floki, ">= 0.30.0"},
+      {:floki, ">= 0.30.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
