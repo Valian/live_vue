@@ -4,15 +4,7 @@ defmodule LiveVueExamplesWeb.Navigation.PageTwo do
   def render(assigns) do
     ~H"""
     <.header>Navigation example: Page Two</.header>
-    <.vue
-      v-component="NavigationExample"
-      page="Two"
-      other-page="One"
-      other-page-path={~p"/navigation/page_one"}
-      params={@params}
-      v-socket={@socket}
-      v-ssr={false}
-    />
+    <.vue v-component="NavigationExample" params={@params} v-socket={@socket} />
     """
   end
 
