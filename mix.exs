@@ -34,8 +34,19 @@ defmodule LiveVue.MixProject do
         main: "readme",
         extras: [
           "README.md": [title: "LiveVue"],
-          "INSTALLATION.md": [title: "Installation"],
+          "guides/installation.md": [title: "Installation"],
+          "guides/getting_started.md": [title: "Getting Started"],
+          "guides/basic_usage.md": [title: "Basic Usage"],
+          "guides/advanced_features.md": [title: "Advanced Features"],
+          "guides/deployment.md": [title: "Deployment"],
+          "guides/testing.md": [title: "Testing Guide"],
+          "guides/faq.md": [title: "FAQ"],
           "CHANGELOG.md": [title: "Changelog"]
+        ],
+        extra_section: "GUIDES",
+        groups_for_extras: [
+          Introduction: ["README.md", "guides/installation.md"],
+          Guides: Path.wildcard("guides/*.md") |> Enum.reject(&(&1 == "guides/faq.md"))
         ],
         links: %{
           "GitHub" => @repo_url
