@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ArgumentError at GET /</title>
+    <meta name="viewport" content="width=device-width">
+    <style>/*! normalize.css v4.2.0 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,main,menu,nav,section{display:block}audio,canvas,progress,video{display:inline-block}audio:not([controls]){display:none;height:0}progress{vertical-align:baseline}template,[hidden]{display:none}a{background-color:transparent;-webkit-text-decoration-skip:objects}a:active,a:hover{outline-width:0}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:inherit}b,strong{font-weight:bolder}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background-color:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-0.25em}sup{top:-0.5em}img{border-style:none}svg:not(:root){overflow:hidden}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}figure{margin:1em 40px}hr{box-sizing:content-box;height:0;overflow:visible}button,input,optgroup,select,textarea{font:inherit;margin:0}optgroup{font-weight:bold}button,input{overflow:visible}button,select{text-transform:none}button,html [type="button"],[type="reset"],[type="submit"]{-webkit-appearance:button}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner{border-style:none;padding:0}button:-moz-focusring,[type="button"]:-moz-focusring,[type="reset"]:-moz-focusring,[type="submit"]:-moz-focusring{outline:1px dotted ButtonText}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{box-sizing:border-box;color:inherit;display:table;max-width:100%;padding:0;white-space:normal}textarea{overflow:auto}[type="checkbox"],[type="radio"]{box-sizing:border-box;padding:0}[type="number"]::-webkit-inner-spin-button,[type="number"]::-webkit-outer-spin-button{height:auto}[type="search"]{-webkit-appearance:textfield;outline-offset:-2px}[type="search"]::-webkit-search-cancel-button,[type="search"]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-input-placeholder{color:inherit;opacity:0.54}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}</style>
+    <style>
+    html, body, td, input {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        font-size: 15px;
+        line-height: 1.6;
+        background: white;
+        color: #203040;
+        color-scheme: light;
+    }
+
+    
+
+    @media (max-width: 768px) {
+        html {
+             font-size: 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        html {
+             font-size: 13px;
+        }
+    }
+
+    button:focus,
+    summary:focus {
+        outline: 0;
+    }
+
+    summary {
+        cursor: pointer;
+    }
+
+    pre {
+        font-family: menlo, consolas, monospace;
+        overflow: auto;
+        max-width: 100%;
+    }
+
+    .top-details {
+        padding: 48px;
+        background: #f9f9fa;
+    }
+
+    
+
+    .top-details,
+    .conn-info {
+        padding: 48px;
+    }
+
+
+    @media (max-width: 768px) {
+        .top-details,
+        .conn-info {
+            padding: 32px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .top-details,
+        .conn-info {
+            padding: 16px;
+        }
+    }
+
+    /*
+     * Exception logo
+     */
+
+    
+    .exception-logo {
+        position: absolute;
+        right: 48px;
+        top: 48px;
+        pointer-events: none;
+        width: 100%;
+    }
+
+    .exception-logo:before {
+        content: '';
+        display: block;
+        height: 64px;
+        width: 100%;
+        background-size: auto 100%;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzEgNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgoJPHBhdGggZD0ibTI2LjM3MSAzMy40NzctLjU1Mi0uMWMtMy45Mi0uNzI5LTYuMzk3LTMuMS03LjU3LTYuODI5LS43MzMtMi4zMjQuNTk3LTQuMDM1IDMuMDM1LTQuMTQ4IDEuOTk1LS4wOTIgMy4zNjIgMS4wNTUgNC41NyAyLjM5IDEuNTU3IDEuNzIgMi45ODQgMy41NTggNC41MTQgNS4zMDUgMi4yMDIgMi41MTUgNC43OTcgNC4xMzQgOC4zNDcgMy42MzQgMy4xODMtLjQ0OCA1Ljk1OC0xLjcyNSA4LjM3MS0zLjgyOC4zNjMtLjMxNi43NjEtLjU5MiAxLjE0NC0uODg2bC0uMjQxLS4yODRjLTIuMDI3LjYzLTQuMDkzLjg0MS02LjIwNS43MzUtMy4xOTUtLjE2LTYuMjQtLjgyOC04Ljk2NC0yLjU4Mi0yLjQ4Ni0xLjYwMS00LjMxOS0zLjc0Ni01LjE5LTYuNjExLS43MDQtMi4zMTUuNzM2LTMuOTM0IDMuMTM1LTMuNi45NDguMTMzIDEuNzQ2LjU2IDIuNDYzIDEuMTY1LjU4My40OTMgMS4xNDMgMS4wMTUgMS43MzggMS40OTMgMi44IDIuMjUgNi43MTIgMi4zNzUgMTAuMjY1LS4wNjgtNS44NDItLjAyNi05LjgxNy0zLjI0LTEzLjMwOC03LjMxMy0xLjM2Ni0xLjU5NC0yLjctMy4yMTYtNC4wOTUtNC43ODUtMi42OTgtMy4wMzYtNS42OTItNS43MS05Ljc5LTYuNjIzQzEyLjgtLjYyMyA3Ljc0NS4xNCAyLjg5MyAyLjM2MSAxLjkyNiAyLjgwNC45OTcgMy4zMTkgMCA0LjE0OWMuNDk0IDAgLjc2My4wMDYgMS4wMzIgMCAyLjQ0Ni0uMDY0IDQuMjggMS4wMjMgNS42MDIgMy4wMjQuOTYyIDEuNDU3IDEuNDE1IDMuMTA0IDEuNzYxIDQuNzk4LjUxMyAyLjUxNS4yNDcgNS4wNzguNTQ0IDcuNjA1Ljc2MSA2LjQ5NCA0LjA4IDExLjAyNiAxMC4yNiAxMy4zNDYgMi4yNjcuODUyIDQuNTkxIDEuMTM1IDcuMTcyLjU1NVpNMTAuNzUxIDMuODUyYy0uOTc2LjI0Ni0xLjc1Ni0uMTQ4LTIuNTYtLjk2MiAxLjM3Ny0uMzQzIDIuNTkyLS40NzYgMy44OTctLjUyOC0uMTA3Ljg0OC0uNjA3IDEuMzA2LTEuMzM2IDEuNDlabTMyLjAwMiAzNy45MjRjLS4wODUtLjYyNi0uNjItLjkwMS0xLjA0LTEuMjI4LTEuODU3LTEuNDQ2LTQuMDMtMS45NTgtNi4zMzMtMi0xLjM3NS0uMDI2LTIuNzM1LS4xMjgtNC4wMzEtLjYxLS41OTUtLjIyLTEuMjYtLjUwNS0xLjI0NC0xLjI3Mi4wMTUtLjc4LjY5My0xIDEuMzEtMS4xODQuNTA1LS4xNSAxLjAyNi0uMjQ3IDEuNi0uMzgyLTEuNDYtLjkzNi0yLjg4Ni0xLjA2NS00Ljc4Ny0uMy0yLjk5MyAxLjIwMi01Ljk0MyAxLjA2LTguOTI2LS4wMTctMS42ODQtLjYwOC0zLjE3OS0xLjU2My00LjczNS0yLjQwOGwtLjA0My4wM2EyLjk2IDIuOTYgMCAwIDAgLjA0LS4wMjljLS4wMzgtLjExNy0uMTA3LS4xMi0uMTk3LS4wNTRsLjEyMi4xMDdjMS4yOSAyLjExNSAzLjAzNCAzLjgxNyA1LjAwNCA1LjI3MSAzLjc5MyAyLjggNy45MzYgNC40NzEgMTIuNzg0IDMuNzNBNjYuNzE0IDY2LjcxNCAwIDAgMSAzNyA0MC44NzdjMS45OC0uMTYgMy44NjYuMzk4IDUuNzUzLjg5OVptLTkuMTQtMzAuMzQ1Yy0uMTA1LS4wNzYtLjIwNi0uMjY2LS40Mi0uMDY5IDEuNzQ1IDIuMzYgMy45ODUgNC4wOTggNi42ODMgNS4xOTMgNC4zNTQgMS43NjcgOC43NzMgMi4wNyAxMy4yOTMuNTEgMy41MS0xLjIxIDYuMDMzLS4wMjggNy4zNDMgMy4zOC4xOS0zLjk1NS0yLjEzNy02LjgzNy01Ljg0My03LjQwMS0yLjA4NC0uMzE4LTQuMDEuMzczLTUuOTYyLjk0LTUuNDM0IDEuNTc1LTEwLjQ4NS43OTgtMTUuMDk0LTIuNTUzWm0yNy4wODUgMTUuNDI1Yy43MDguMDU5IDEuNDE2LjEyMyAyLjEyNC4xODUtMS42LTEuNDA1LTMuNTUtMS41MTctNS41MjMtMS40MDQtMy4wMDMuMTctNS4xNjcgMS45MDMtNy4xNCAzLjk3Mi0xLjczOSAxLjgyNC0zLjMxIDMuODctNS45MDMgNC42MDQuMDQzLjA3OC4wNTQuMTE3LjA2Ni4xMTcuMzUuMDA1LjY5OS4wMjEgMS4wNDcuMDA1IDMuNzY4LS4xNyA3LjMxNy0uOTY1IDEwLjE0LTMuNy44OS0uODYgMS42ODUtMS44MTcgMi41NDQtMi43MS43MTYtLjc0NiAxLjU4NC0xLjE1OSAyLjY0NS0xLjA3Wm0tOC43NTMtNC42N2MtMi44MTIuMjQ2LTUuMjU0IDEuNDA5LTcuNTQ4IDIuOTQzLTEuNzY2IDEuMTgtMy42NTQgMS43MzgtNS43NzYgMS4zNy0uMzc0LS4wNjYtLjc1LS4xMTQtMS4xMjQtLjE3bC0uMDEzLjE1NmMuMTM1LjA3LjI2NS4xNTEuNDA1LjIwNy4zNTQuMTQuNzAyLjMwOCAxLjA3LjM5NSA0LjA4My45NzEgNy45OTIuNDc0IDExLjUxNi0xLjgwMyAyLjIyMS0xLjQzNSA0LjUyMS0xLjcwNyA3LjAxMy0xLjMzNi4yNTIuMDM4LjUwMy4wODMuNzU2LjEwNy4yMzQuMDIyLjQ3OS4yNTUuNzk1LjAwMy0yLjE3OS0xLjU3NC00LjUyNi0yLjA5Ni03LjA5NC0xLjg3MlptLTEwLjA0OS05LjU0NGMxLjQ3NS4wNTEgMi45NDMtLjE0MiA0LjQ4Ni0xLjA1OS0uNDUyLjA0LS42NDMuMDQtLjgyNy4wNzYtMi4xMjYuNDI0LTQuMDMzLS4wNC01LjczMy0xLjM4My0uNjIzLS40OTMtMS4yNTctLjk3NC0xLjg4OS0xLjQ1Ny0yLjUwMy0xLjkxNC01LjM3NC0yLjU1NS04LjUxNC0yLjUuMDUuMTU0LjA1NC4yNi4xMDguMzE1IDMuNDE3IDMuNDU1IDcuMzcxIDUuODM2IDEyLjM2OSA2LjAwOFptMjQuNzI3IDE3LjczMWMtMi4xMTQtMi4wOTctNC45NTItMi4zNjctNy41NzgtLjUzNyAxLjczOC4wNzggMy4wNDMuNjMyIDQuMTAxIDEuNzI4LjM3NC4zODguNzYzLjc2OCAxLjE4MiAxLjEwNiAxLjYgMS4yOSA0LjMxMSAxLjM1MiA1Ljg5Ni4xNTUtMS44NjEtLjcyNi0xLjg2MS0uNzI2LTMuNjAxLTIuNDUyWm0tMjEuMDU4IDE2LjA2Yy0xLjg1OC0zLjQ2LTQuOTgxLTQuMjQtOC41OS00LjAwOGE5LjY2NyA5LjY2NyAwIDAgMSAyLjk3NyAxLjM5Yy44NC41ODYgMS41NDcgMS4zMTEgMi4yNDMgMi4wNTUgMS4zOCAxLjQ3MyAzLjUzNCAyLjM3NiA0Ljk2MiAyLjA3LS42NTYtLjQxMi0xLjIzOC0uODQ4LTEuNTkyLTEuNTA3Wm0xNy4yOS0xOS4zMmMwLS4wMjMuMDAxLS4wNDUuMDAzLS4wNjhsLS4wMDYuMDA2LjAwNi0uMDA2LS4wMzYtLjAwNC4wMjEuMDE4LjAxMi4wNTNabS0yMCAxNC43NDRhNy42MSA3LjYxIDAgMCAwLS4wNzItLjA0MS4xMjcuMTI3IDAgMCAwIC4wMTUuMDQzYy4wMDUuMDA4LjAzOCAwIC4wNTgtLjAwMlptLS4wNzItLjA0MS0uMDA4LS4wMzQtLjAwOC4wMS4wMDgtLjAxLS4wMjItLjAwNi4wMDUuMDI2LjAyNC4wMTRaIgogICAgICAgICAgICBmaWxsPSIjRkQ0RjAwIiAvPgo8L3N2Zz4K");
+        background-position: right 0;
+        background-repeat: no-repeat;
+        margin-bottom: 16px;
+    }
+
+    
+
+    @media (max-width: 768px) {
+        .exception-logo {
+            position: static;
+        }
+
+        .exception-logo:before {
+            height: 32px;
+            background-position: left 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .exception-logo {
+            display: none;
+        }
+    }
+    
+
+    /*
+     * Exception info
+     */
+
+    /* Compensate for logo placement */
+    @media (min-width: 769px) {
+        .exception-info {
+            max-width: 90%;
+        }
+    }
+
+    .exception-info > .struct {
+        margin: 0;
+        padding: 0;
+    }
+
+    .exception-info > .struct {
+        font-size: 1em;
+        font-weight: 700;
+        color: #EB532D;
+    }
+
+    .exception-info > .struct > small {
+        font-size: 1em;
+        color: #607080;
+        font-weight: 400;
+    }
+
+    
+
+    .exception-info > code {
+        line-height: 1.5;
+        font-size: 0.7692307692307692em;
+    }
+
+    .exception-details-text {
+        white-space: pre-wrap;
+     }
+
+    /*
+     * Code explorer
+     */
+
+    .code-explorer {
+      margin: 32px 0 0 0;
+    }
+
+    @media (max-width: 768px) {
+        .code-explorer {
+            margin-top: 16px;
+        }
+    }
+
+    .code-explorer:after {
+        content: '';
+        display: table;
+        clear: both;
+        zoom: 1;
+    }
+
+    .code-explorer > .code-snippets {
+        float: left;
+        width: 45%;
+    }
+
+    .code-explorer > .stack-trace {
+        float: right;
+        width: 55%;
+        padding-left: 32px;
+    }
+
+    .code-explorer .hidden-contents {
+        position: absolute;
+        left: -999em;
+    }
+
+    /* Collapse to single-column */
+    @media (max-width: 960px) {
+        .code-explorer > .code-snippets {
+            float: none;
+            width: auto;
+            margin-bottom: 16px;
+        }
+
+        .code-explorer > .stack-trace {
+            float: none;
+            width: auto;
+            padding-left: 0;
+        }
+    }
+
+    /*
+     * Frame info:
+     * Holds the code (code-block) and more
+     */
+
+    .frame-info {
+        background: @style.background;
+        border-radius: 4px;
+        box-shadow:
+            0 1px 3px rgba(80, 100, 140, .1),
+            0 8px 15px rgba(80, 100, 140, .05);
+    }
+
+    
+
+    .frame-info > .meta,
+    .frame-info > .file {
+        padding: 12px 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.8333333333333334em;
+    }
+
+    @media (max-width: 480px) {
+        .frame-info > .meta,
+        .frame-info > .file {
+            padding: 6px 16px;
+            font-size: 0.9090909090909091em;
+        }
+    }
+
+    .frame-info > .file > a {
+        text-decoration: none;
+        color: #203040;
+        font-weight: 700;
+    }
+
+    
+
+    .frame-info > .code {
+        border-top: solid 1px #eee;
+        border-bottom: solid 1px #eee;
+        font-size: 0.8em;
+    }
+
+    /* Hiding */
+    .frame-info {
+        display: none;
+    }
+
+    .frame-info.-active {
+        display: block;
+    }
+
+    .frame-info > details.meta {
+        border-top: solid 1px #eee;
+        padding: 0;
+    }
+
+    .frame-info > details.meta > summary {
+        padding: 12px 16px;
+    }
+
+    .frame-info > details.meta > pre {
+        line-height: 16px;
+        padding: 6px 0 24px 30px;
+    }
+
+    .frame-info > details.meta > ol {
+        counter-reset: item;
+        padding: 6px 0 24px 46px;
+        list-style: none;
+    }
+
+    .frame-info > details.meta > ol > li {
+        counter-increment: item;
+    }
+
+    .frame-info > details.meta > ol > li:before {
+        content: counter(item) ". ";
+        color: #EB532D;
+        filter: saturate(50%);
+    }
+
+    /*
+     * Frame details
+     */
+
+    .frame-mfa {
+        color: #607080;
+    }
+
+    .frame-mfa > .app {
+        color: #607080;
+    }
+
+    .frame-mfa > .docs {
+        color: #EB532D;
+        text-decoration: none;
+    }
+
+    
+
+    .frame-mfa .docs:hover {
+        text-decoration: underline;
+    }
+
+    .frame-mfa > .right {
+        float: right;
+        padding-left: 5px;
+    }
+
+    .frame-mfa > .right:after {
+        content: '·';
+        margin-left: .2em;
+        padding-left: .2em;
+    }
+
+    .frame-mfa > .right:first-child:after {
+        content: '';
+    }
+
+    /*
+     * Code block:
+     * The `pre` that holds the code
+     */
+
+    .code-block {
+        margin: 0;
+        padding: 12px 0;
+        font-size: 0.8333333333333334em;
+        line-height: 1.4;
+        white-space: normal;
+    }
+
+    .code-block > .line {
+        white-space: pre;
+        display: block;
+        padding: 0 16px;
+    }
+
+    /* Line highlight */
+    .code-block > .line.-highlight {
+        background-color: #f0f4fa;
+        -webkit-animation: line-highlight 750ms linear;
+        animation: line-highlight 750ms linear;
+    }
+
+    
+
+    @-webkit-keyframes line-highlight {
+        0% { background-color: #f0f4fa; }
+        25% { background-color: #ffe5e5; }
+        50% { background-color: #f0f4fa; }
+        75% { background-color: #ffe5e5; }
+    }
+
+    
+
+    @keyframes line-highlight {
+        0% { background-color: #f0f4fa; }
+        25% { background-color: #ffe5e5; }
+        50% { background-color: #f0f4fa; }
+        75% { background-color: #ffe5e5; }
+    }
+
+    
+
+    .code-block > .line > .ln {
+        color: #607080;
+        margin-right: 1.5em;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    
+
+    .code-block > .line > .code {
+        font-family: menlo, consolas, monospace;
+    }
+
+    /*
+     * Empty code
+     */
+
+    .code-block-empty {
+        text-align: center;
+        color: #607080;
+        padding-top: 48px;
+        padding-bottom: 48px;
+    }
+
+    
+
+    /*
+     * Stack trace heading
+     */
+
+    .stack-trace-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+    }
+
+    .stack-trace-heading > h3 {
+        display: none;
+    }
+
+    .stack-trace-heading > label {
+        display: inline-block;
+        padding-left: 5px;
+        line-height: 1.9;
+        font-size: 0.8333333333333334em;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    .stack-trace-heading > label > input {
+        margin: -0.2em 0.5em 0 0;
+        vertical-align: middle;
+    }
+
+    .stack-trace-heading .copy-markdown {
+        color: #203040;
+        background-color: transparent;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.8333333333333334em;
+        line-height: 1.9;
+        border-width: 0;
+    }
+
+    
+
+    .stack-trace-heading .copy-markdown:active {
+        cursor: pointer;
+    }
+
+    .stack-trace-heading .copy-markdown:hover {
+        cursor: pointer;
+    }
+
+    .stack-trace-heading .copy-markdown-icon {
+        height: 1rem;
+        width: 1rem;
+        margin: 0.1em 0.3rem 0;
+        fill: currentColor;
+    }
+
+    @media (max-width: 480px) {
+        .stack-trace-heading > label {
+            font-size: 0.9090909090909091em;
+        }
+    }
+
+    /*
+     * Stack trace
+     */
+
+    .stack-trace-list,
+    .stack-trace-list > li {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+    }
+
+    .stack-trace-list > li > .stack-trace-item.-all {
+        display: none;
+    }
+
+    .stack-trace-list.-show-all > li > .stack-trace-item.-all {
+        display: block;
+    }
+
+    /*
+     * Stack trace item:
+     * The clickable line to inspect a stack trace
+     */
+
+    .stack-trace-item {
+        font-size: 0.8333333333333334em;
+        display: block;
+        width: 100%;
+        border: 0;
+        margin: 0;
+        padding: 4px 8px;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .stack-trace-item:hover,
+    .stack-trace-item:focus {
+        background-color: rgba(80, 100, 140, 0.05);
+        border-radius: 4px;
+    }
+
+    .stack-trace-item,
+    .stack-trace-item:active {
+        color: #203040;
+    }
+
+    
+
+    .stack-trace-item:active {
+        background-color: rgba(80, 100, 140, 0.1);
+    }
+
+    .stack-trace-item.-active {
+        background-color: rgba(80, 100, 140, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Circle */
+    .stack-trace-item > .left:before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #a0b0c0;
+        border-radius: 50%;
+        margin-right: 8px;
+        opacity: 0.5;
+    }
+
+    .stack-trace-item.-active > .left:before {
+        opacity: 1;
+    }
+
+    .stack-trace-item.-app > .left:before {
+        background: #EB532D;
+    }
+
+    
+
+    .stack-trace-item.-app > .left > .app {
+        display: none;
+    }
+
+    .stack-trace-item > .left {
+        float: left;
+        max-width: 55%;
+    }
+
+    .stack-trace-item > .info {
+        color: #607080;
+        float: right;
+        max-width: 45%;
+    }
+
+    
+
+    .stack-trace-item > .left,
+    .stack-trace-item > .info {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stack-trace-item > .left > .filename > .line {
+        color: #607080;
+    }
+
+    /* App name */
+    .stack-trace-item > .left > .app {
+        color: #607080;
+    }
+
+    
+
+    .stack-trace-item > .left > .app:after {
+        content: '·';
+        margin: 0 .2em;
+    }
+
+    /*
+     * Code as a blockquote:
+     * Like `pre` but with wrapping
+     */
+
+    .code-quote {
+        font-family: menlo, consolas, monospace;
+        font-size: 0.8333333333333334em;
+        margin: 0;
+        overflow: auto;
+        max-width: 100%;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    .code-quote > pre {
+        margin: 0;
+    }
+
+    .code-quote > li {
+        padding: 6px 0;
+    }
+
+    .code.-padded {
+        padding: 0 16px 16px 16px;
+    }
+
+    .code i.red {
+        color: #CC0000;
+        font-style: normal;
+    }
+
+    .code i.green {
+        font-style: normal;
+    }
+
+    .banner {
+      padding: 24px 48px 24px 48px;
+      border-top: solid 1px #eee;
+    }
+
+    
+
+    /*
+     * Conn info
+     */
+
+    .conn-info {
+        border-top: solid 1px #eee;
+    }
+
+    
+
+    /*
+     * Conn details
+     */
+
+    .conn-details {
+    }
+
+    .conn-details + .conn-details {
+        margin-top: 16px;
+    }
+
+    .conn-details > summary {
+    }
+
+    .conn-details > dl {
+        display: block;
+        overflow: hidden;
+        margin: 0;
+        padding: 4px 0;
+        border-bottom: solid 1px #eee;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .conn-details > dl:first-of-type {
+        margin-top: 16px;
+        border-top: solid 1px #eee;
+    }
+
+    /* Term */
+    .conn-details > dl > dt {
+        width: 20%;
+        float: left;
+        font-size: 0.8333333333333334em;
+        color: #607080;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: relative;
+        top: -1px; /* Compensate for font metrics */
+    }
+
+    
+
+    /* Definition */
+    .conn-details > dl > dd {
+        width: 80%;
+        float: left;
+    }
+
+    @media (max-width: 480px) {
+        .conn-details > dl > dt {
+            font-size: 0.9090909090909091em;
+        }
+    }
+
+    .action-form {
+        display: inline-block;
+        margin: 20px 10px 5px 0;
+    }
+
+    .action-button {
+        padding: 0 10px;
+        cursor: pointer;
+    }
+    </style>
+</head>
+<body>
+    <div class="top-details">
+        
+        <aside class="exception-logo"></aside>
+        
+
+        <header class="exception-info">
+            <h5 class="struct">
+                ArgumentError
+                <small>at GET</small>
+                <small class="path">/</small>
+            </h5>
+            <code><pre class="exception-details-text">the signing salt for LiveVueUIExampleWeb.Endpoint is missing or too short.
+
+Add the following LiveView configuration to your config/runtime.exs
+or config/config.exs:
+
+    config :my_app, MyAppWeb.Endpoint,
+        ...,
+        live_view: [signing_salt: &quot;GC1SjoMfAJRx3hbh&quot;]
+
+</pre></code>
+        </header>
+
+        
+
+    
+
+        <div class="code-explorer">
+            <textarea class="hidden-contents" role="copy-contents"># ArgumentError at GET /
+
+Exception:
+
+    ** (ArgumentError) the signing salt for LiveVueUIExampleWeb.Endpoint is missing or too short.
+    
+    Add the following LiveView configuration to your config/runtime.exs
+    or config/config.exs:
+    
+        config :my_app, MyAppWeb.Endpoint,
+            ...,
+            live_view: [signing_salt: &quot;GC1SjoMfAJRx3hbh&quot;]
+    
+    
+        (phoenix_live_view 0.20.17) lib/phoenix_live_view/utils.ex:303: Phoenix.LiveView.Utils.salt!/1
+        (phoenix_live_view 0.20.17) lib/phoenix_live_view/static.ex:363: Phoenix.LiveView.Static.sign_token/2
+        (phoenix_live_view 0.20.17) lib/phoenix_live_view/static.ex:119: Phoenix.LiveView.Static.render/3
+        (phoenix_live_view 0.20.17) lib/phoenix_live_view/controller.ex:39: Phoenix.LiveView.Controller.live_render/3
+        (phoenix 1.7.20) lib/phoenix/router.ex:484: Phoenix.Router.__call__/5
+        (live_vue_ui_example 0.1.0) lib/example_web/endpoint.ex:1: LiveVueUIExampleWeb.Endpoint.plug_builder_call/2
+        (live_vue_ui_example 0.1.0) deps/plug/lib/plug/debugger.ex:155: LiveVueUIExampleWeb.Endpoint.&quot;call (overridable 3)&quot;/2
+        (live_vue_ui_example 0.1.0) lib/example_web/endpoint.ex:1: LiveVueUIExampleWeb.Endpoint.call/2
+        (phoenix 1.7.20) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+        (bandit 1.6.8) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+        (bandit 1.6.8) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+        (bandit 1.6.8) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+        (bandit 1.6.8) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+        (bandit 1.6.8) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+        (stdlib 6.2) gen_server.erl:2335: :gen_server.try_handle_continue/3
+        (stdlib 6.2) gen_server.erl:2244: :gen_server.loop/7
+        (stdlib 6.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+    
+
+Code:
+
+`lib/phoenix_live_view/utils.ex`
+
+    298       salt = endpoint.config(:live_view)[:signing_salt]
+    299   
+    300       if is_binary(salt) and byte_size(salt) &amp;gt;= 8 do
+    301         salt
+    302       else
+    303&gt;        raise ArgumentError, &amp;quot;&amp;quot;&amp;quot;
+    304         the signing salt for #{inspect(endpoint)} is missing or too short.
+    305   
+    306         Add the following LiveView configuration to your config/runtime.exs
+    307         or config/config.exs:
+    308   
+    
+`lib/phoenix_live_view/static.ex`
+
+    358   
+    359     @doc &amp;quot;&amp;quot;&amp;quot;
+    360     Signs a LiveView token.
+    361     &amp;quot;&amp;quot;&amp;quot;
+    362     def sign_token(endpoint, data) do
+    363&gt;      Phoenix.Token.sign(endpoint, Utils.salt!(endpoint), {@token_vsn, data})
+    364     end
+    365   
+    366     defp container(%{container: {tag, attrs}}, opts) do
+    367       case opts[:container] do
+    368         {tag, extra} -&amp;gt; {tag, Keyword.merge(attrs, extra)}
+    
+`lib/phoenix_live_view/static.ex`
+
+    114         )
+    115   
+    116       case call_mount_and_handle_params!(socket, view, mount_session, conn.params, request_url) do
+    117         {:ok, socket} -&amp;gt;
+    118           data_attrs = [
+    119&gt;            phx_session: sign_root_session(socket, router, view, to_sign_session, live_session),
+    120             phx_static: sign_static_token(socket)
+    121           ]
+    122   
+    123           data_attrs = if(router, do: [phx_main: true], else: []) ++ data_attrs
+    124   
+    
+`lib/phoenix_live_view/controller.ex`
+
+    34           end
+    35         end
+    36   
+    37     &amp;quot;&amp;quot;&amp;quot;
+    38     def live_render(%Plug.Conn{} = conn, view, opts \\ []) do
+    39&gt;      case LiveView.Static.render(conn, view, opts) do
+    40         {:ok, content, socket_assigns} -&amp;gt;
+    41           conn
+    42           |&amp;gt; Plug.Conn.fetch_query_params()
+    43           |&amp;gt; ensure_format()
+    44           |&amp;gt; Phoenix.Controller.put_view(LiveView.Static)
+    
+`lib/phoenix/router.ex`
+
+    479           :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
+    480           halted_conn
+    481   
+    482         %Plug.Conn{} = piped_conn -&amp;gt;
+    483           try do
+    484&gt;            plug.call(piped_conn, plug.init(opts))
+    485           else
+    486             conn -&amp;gt;
+    487               measurements = %{duration: System.monotonic_time() - start}
+    488               metadata = %{metadata | conn: conn}
+    489               :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
+    
+`lib/example_web/endpoint.ex`
+
+    1&gt;  defmodule LiveVueUIExampleWeb.Endpoint do
+    2     use Phoenix.Endpoint, otp_app: :live_vue_ui_example
+    3   
+    4     # The session will be stored in the cookie and signed,
+    5     # this means its contents can be read but not tampered with.
+    6     # Set :encryption_salt if you would also like to encrypt it.
+    
+`deps/plug/lib/plug/debugger.ex`
+
+    150             case conn do
+    151               %Plug.Conn{path_info: [&amp;quot;__plug__&amp;quot;, &amp;quot;debugger&amp;quot;, &amp;quot;action&amp;quot;], method: &amp;quot;POST&amp;quot;} -&amp;gt;
+    152                 Plug.Debugger.run_action(conn)
+    153   
+    154               %Plug.Conn{} -&amp;gt;
+    155&gt;                super(conn, opts)
+    156             end
+    157           rescue
+    158             e in Plug.Conn.WrapperError -&amp;gt;
+    159               %{conn: conn, kind: kind, reason: reason, stack: stack} = e
+    160               Plug.Debugger.__catch__(conn, kind, reason, stack, @plug_debugger)
+    
+`lib/example_web/endpoint.ex`
+
+    1&gt;  defmodule LiveVueUIExampleWeb.Endpoint do
+    2     use Phoenix.Endpoint, otp_app: :live_vue_ui_example
+    3   
+    4     # The session will be stored in the cookie and signed,
+    5     # this means its contents can be read but not tampered with.
+    6     # Set :encryption_salt if you would also like to encrypt it.
+    
+`lib/phoenix/endpoint/sync_code_reload_plug.ex`
+
+    17   
+    18     def call(conn, {endpoint, opts}), do: do_call(conn, endpoint, opts, true)
+    19   
+    20     defp do_call(conn, endpoint, opts, retry?) do
+    21       try do
+    22&gt;        endpoint.call(conn, opts)
+    23       rescue
+    24         exception in [UndefinedFunctionError] -&amp;gt;
+    25           case exception do
+    26             %UndefinedFunctionError{module: ^endpoint} when retry? -&amp;gt;
+    27               # Sync with the code reloader and retry once
+    
+`lib/bandit/pipeline.ex`
+
+    125       end
+    126     end
+    127   
+    128     @spec call_plug!(Plug.Conn.t(), plug_def()) :: Plug.Conn.t() | no_return()
+    129     defp call_plug!(%Plug.Conn{} = conn, {plug, plug_opts}) when is_atom(plug) do
+    130&gt;      case plug.call(conn, plug_opts) do
+    131         %Plug.Conn{} = conn -&amp;gt; conn
+    132         other -&amp;gt; raise(&amp;quot;Expected #{plug}.call/2 to return %Plug.Conn{} but got: #{inspect(other)}&amp;quot;)
+    133       end
+    134     end
+    135   
+    
+`lib/bandit/pipeline.ex`
+
+    35         conn = build_conn!(transport, method, request_target, headers, opts)
+    36         span = Bandit.Telemetry.start_span(:request, measurements, Map.put(metadata, :conn, conn))
+    37   
+    38         try do
+    39           conn
+    40&gt;          |&amp;gt; call_plug!(plug)
+    41           |&amp;gt; maybe_upgrade!()
+    42           |&amp;gt; case do
+    43             {:no_upgrade, conn} -&amp;gt;
+    44               %Plug.Conn{adapter: {_mod, adapter}} = conn = commit_response!(conn)
+    45               Bandit.Telemetry.stop_span(span, adapter.metrics, %{conn: conn})
+    
+`lib/bandit/http1/handler.ex`
+
+    7     @impl ThousandIsland.Handler
+    8     def handle_data(data, socket, state) do
+    9       transport = %Bandit.HTTP1.Socket{socket: socket, buffer: data, opts: state.opts}
+    10       connection_span = ThousandIsland.Socket.telemetry_span(socket)
+    11   
+    12&gt;      case Bandit.Pipeline.run(transport, state.plug, connection_span, state.opts) do
+    13         {:ok, transport} -&amp;gt; maybe_keepalive(transport, state)
+    14         {:error, _reason} -&amp;gt; {:close, state}
+    15         {:upgrade, _transport, :websocket, opts} -&amp;gt; do_websocket_upgrade(opts, state)
+    16       end
+    17     end
+    
+`lib/bandit/delegating_handler.ex`
+
+    13       |&amp;gt; handle_bandit_continuation(socket)
+    14     end
+    15   
+    16     @impl ThousandIsland.Handler
+    17     def handle_data(data, socket, %{handler_module: handler_module} = state) do
+    18&gt;      handler_module.handle_data(data, socket, state)
+    19       |&amp;gt; handle_bandit_continuation(socket)
+    20     end
+    21   
+    22     @impl ThousandIsland.Handler
+    23     def handle_shutdown(socket, %{handler_module: handler_module} = state) do
+    
+`lib/bandit/delegating_handler.ex`
+
+    3     # Delegates all implementation of the ThousandIsland.Handler behaviour
+    4     # to an implementation specified in state. Allows for clean separation
+    5     # between protocol implementations &amp;amp; friction free protocol selection &amp;amp;
+    6     # upgrades.
+    7   
+    8&gt;    use ThousandIsland.Handler
+    9   
+    10     @impl ThousandIsland.Handler
+    11     def handle_connection(socket, %{handler_module: handler_module} = state) do
+    12       handler_module.handle_connection(socket, state)
+    13       |&amp;gt; handle_bandit_continuation(socket)
+    
+`gen_server.erl`
+
+    No code available.
+
+`gen_server.erl`
+
+    No code available.
+
+`proc_lib.erl`
+
+    No code available.
+
+
+## Connection details
+
+### Params
+
+    %{}
+
+### Request info
+
+  * URI: http://localhost:4001/
+  * Query string: 
+
+### Headers
+  
+  * accept: */*
+  * host: localhost:4001
+  * user-agent: curl/8.7.1
+
+### Session
+
+    %{}
+</textarea>
+            <div class="code-snippets">
+                
+                  <div class="frame-info" data-index="0" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix_live_view/utils.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">298</span><span class="code">    salt = endpoint.config(:live_view)[:signing_salt]</span></span>
+<span class="line "><span class="ln">299</span><span class="code"></span></span>
+<span class="line "><span class="ln">300</span><span class="code">    if is_binary(salt) and byte_size(salt) &gt;= 8 do</span></span>
+<span class="line "><span class="ln">301</span><span class="code">      salt</span></span>
+<span class="line "><span class="ln">302</span><span class="code">    else</span></span>
+<span class="line -highlight"><span class="ln">303</span><span class="code">      raise ArgumentError, &quot;&quot;&quot;</span></span>
+<span class="line "><span class="ln">304</span><span class="code">      the signing salt for #{inspect(endpoint)} is missing or too short.</span></span>
+<span class="line "><span class="ln">305</span><span class="code"></span></span>
+<span class="line "><span class="ln">306</span><span class="code">      Add the following LiveView configuration to your config/runtime.exs</span></span>
+<span class="line "><span class="ln">307</span><span class="code">      or config/config.exs:</span></span>
+<span class="line "><span class="ln">308</span><span class="code"></span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.LiveView.Utils.salt!/1
+                            
+                            
+                                <span class="app right">phoenix_live_view</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="1" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix_live_view/static.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">358</span><span class="code"></span></span>
+<span class="line "><span class="ln">359</span><span class="code">  @doc &quot;&quot;&quot;</span></span>
+<span class="line "><span class="ln">360</span><span class="code">  Signs a LiveView token.</span></span>
+<span class="line "><span class="ln">361</span><span class="code">  &quot;&quot;&quot;</span></span>
+<span class="line "><span class="ln">362</span><span class="code">  def sign_token(endpoint, data) do</span></span>
+<span class="line -highlight"><span class="ln">363</span><span class="code">    Phoenix.Token.sign(endpoint, Utils.salt!(endpoint), {@token_vsn, data})</span></span>
+<span class="line "><span class="ln">364</span><span class="code">  end</span></span>
+<span class="line "><span class="ln">365</span><span class="code"></span></span>
+<span class="line "><span class="ln">366</span><span class="code">  defp container(%{container: {tag, attrs}}, opts) do</span></span>
+<span class="line "><span class="ln">367</span><span class="code">    case opts[:container] do</span></span>
+<span class="line "><span class="ln">368</span><span class="code">      {tag, extra} -&gt; {tag, Keyword.merge(attrs, extra)}</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.LiveView.Static.sign_token/2
+                            
+                            
+                                <span class="app right">phoenix_live_view</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="2" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix_live_view/static.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">114</span><span class="code">      )</span></span>
+<span class="line "><span class="ln">115</span><span class="code"></span></span>
+<span class="line "><span class="ln">116</span><span class="code">    case call_mount_and_handle_params!(socket, view, mount_session, conn.params, request_url) do</span></span>
+<span class="line "><span class="ln">117</span><span class="code">      {:ok, socket} -&gt;</span></span>
+<span class="line "><span class="ln">118</span><span class="code">        data_attrs = [</span></span>
+<span class="line -highlight"><span class="ln">119</span><span class="code">          phx_session: sign_root_session(socket, router, view, to_sign_session, live_session),</span></span>
+<span class="line "><span class="ln">120</span><span class="code">          phx_static: sign_static_token(socket)</span></span>
+<span class="line "><span class="ln">121</span><span class="code">        ]</span></span>
+<span class="line "><span class="ln">122</span><span class="code"></span></span>
+<span class="line "><span class="ln">123</span><span class="code">        data_attrs = if(router, do: [phx_main: true], else: []) ++ data_attrs</span></span>
+<span class="line "><span class="ln">124</span><span class="code"></span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.LiveView.Static.render/3
+                            
+                            
+                                <span class="app right">phoenix_live_view</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="3" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix_live_view/controller.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">34</span><span class="code">        end</span></span>
+<span class="line "><span class="ln">35</span><span class="code">      end</span></span>
+<span class="line "><span class="ln">36</span><span class="code"></span></span>
+<span class="line "><span class="ln">37</span><span class="code">  &quot;&quot;&quot;</span></span>
+<span class="line "><span class="ln">38</span><span class="code">  def live_render(%Plug.Conn{} = conn, view, opts \\ []) do</span></span>
+<span class="line -highlight"><span class="ln">39</span><span class="code">    case LiveView.Static.render(conn, view, opts) do</span></span>
+<span class="line "><span class="ln">40</span><span class="code">      {:ok, content, socket_assigns} -&gt;</span></span>
+<span class="line "><span class="ln">41</span><span class="code">        conn</span></span>
+<span class="line "><span class="ln">42</span><span class="code">        |&gt; Plug.Conn.fetch_query_params()</span></span>
+<span class="line "><span class="ln">43</span><span class="code">        |&gt; ensure_format()</span></span>
+<span class="line "><span class="ln">44</span><span class="code">        |&gt; Phoenix.Controller.put_view(LiveView.Static)</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.LiveView.Controller.live_render/3
+                            
+                                <a class="docs right" href="https://hexdocs.pm/phoenix_live_view/0.20.17/Phoenix.LiveView.Controller.html#live_render/3">Docs</a>
+                            
+                            
+                                <span class="app right">phoenix_live_view</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="4" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix/router.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">479</span><span class="code">        :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)</span></span>
+<span class="line "><span class="ln">480</span><span class="code">        halted_conn</span></span>
+<span class="line "><span class="ln">481</span><span class="code"></span></span>
+<span class="line "><span class="ln">482</span><span class="code">      %Plug.Conn{} = piped_conn -&gt;</span></span>
+<span class="line "><span class="ln">483</span><span class="code">        try do</span></span>
+<span class="line -highlight"><span class="ln">484</span><span class="code">          plug.call(piped_conn, plug.init(opts))</span></span>
+<span class="line "><span class="ln">485</span><span class="code">        else</span></span>
+<span class="line "><span class="ln">486</span><span class="code">          conn -&gt;</span></span>
+<span class="line "><span class="ln">487</span><span class="code">            measurements = %{duration: System.monotonic_time() - start}</span></span>
+<span class="line "><span class="ln">488</span><span class="code">            metadata = %{metadata | conn: conn}</span></span>
+<span class="line "><span class="ln">489</span><span class="code">            :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.Router.__call__/5
+                            
+                            
+                                <span class="app right">phoenix</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="5" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/example_web/endpoint.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line -highlight"><span class="ln">1</span><span class="code">defmodule LiveVueUIExampleWeb.Endpoint do</span></span>
+<span class="line "><span class="ln">2</span><span class="code">  use Phoenix.Endpoint, otp_app: :live_vue_ui_example</span></span>
+<span class="line "><span class="ln">3</span><span class="code"></span></span>
+<span class="line "><span class="ln">4</span><span class="code">  # The session will be stored in the cookie and signed,</span></span>
+<span class="line "><span class="ln">5</span><span class="code">  # this means its contents can be read but not tampered with.</span></span>
+<span class="line "><span class="ln">6</span><span class="code">  # Set :encryption_salt if you would also like to encrypt it.</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            LiveVueUIExampleWeb.Endpoint.plug_builder_call/2
+                            
+                            
+                                <span class="app right">live_vue_ui_example</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="6" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">deps/plug/lib/plug/debugger.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">150</span><span class="code">          case conn do</span></span>
+<span class="line "><span class="ln">151</span><span class="code">            %Plug.Conn{path_info: [&quot;__plug__&quot;, &quot;debugger&quot;, &quot;action&quot;], method: &quot;POST&quot;} -&gt;</span></span>
+<span class="line "><span class="ln">152</span><span class="code">              Plug.Debugger.run_action(conn)</span></span>
+<span class="line "><span class="ln">153</span><span class="code"></span></span>
+<span class="line "><span class="ln">154</span><span class="code">            %Plug.Conn{} -&gt;</span></span>
+<span class="line -highlight"><span class="ln">155</span><span class="code">              super(conn, opts)</span></span>
+<span class="line "><span class="ln">156</span><span class="code">          end</span></span>
+<span class="line "><span class="ln">157</span><span class="code">        rescue</span></span>
+<span class="line "><span class="ln">158</span><span class="code">          e in Plug.Conn.WrapperError -&gt;</span></span>
+<span class="line "><span class="ln">159</span><span class="code">            %{conn: conn, kind: kind, reason: reason, stack: stack} = e</span></span>
+<span class="line "><span class="ln">160</span><span class="code">            Plug.Debugger.__catch__(conn, kind, reason, stack, @plug_debugger)</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            LiveVueUIExampleWeb.Endpoint.&quot;call (overridable 3)&quot;/2
+                            
+                            
+                                <span class="app right">live_vue_ui_example</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="7" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/example_web/endpoint.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line -highlight"><span class="ln">1</span><span class="code">defmodule LiveVueUIExampleWeb.Endpoint do</span></span>
+<span class="line "><span class="ln">2</span><span class="code">  use Phoenix.Endpoint, otp_app: :live_vue_ui_example</span></span>
+<span class="line "><span class="ln">3</span><span class="code"></span></span>
+<span class="line "><span class="ln">4</span><span class="code">  # The session will be stored in the cookie and signed,</span></span>
+<span class="line "><span class="ln">5</span><span class="code">  # this means its contents can be read but not tampered with.</span></span>
+<span class="line "><span class="ln">6</span><span class="code">  # Set :encryption_salt if you would also like to encrypt it.</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            LiveVueUIExampleWeb.Endpoint.call/2
+                            
+                            
+                                <span class="app right">live_vue_ui_example</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="8" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/phoenix/endpoint/sync_code_reload_plug.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">17</span><span class="code"></span></span>
+<span class="line "><span class="ln">18</span><span class="code">  def call(conn, {endpoint, opts}), do: do_call(conn, endpoint, opts, true)</span></span>
+<span class="line "><span class="ln">19</span><span class="code"></span></span>
+<span class="line "><span class="ln">20</span><span class="code">  defp do_call(conn, endpoint, opts, retry?) do</span></span>
+<span class="line "><span class="ln">21</span><span class="code">    try do</span></span>
+<span class="line -highlight"><span class="ln">22</span><span class="code">      endpoint.call(conn, opts)</span></span>
+<span class="line "><span class="ln">23</span><span class="code">    rescue</span></span>
+<span class="line "><span class="ln">24</span><span class="code">      exception in [UndefinedFunctionError] -&gt;</span></span>
+<span class="line "><span class="ln">25</span><span class="code">        case exception do</span></span>
+<span class="line "><span class="ln">26</span><span class="code">          %UndefinedFunctionError{module: ^endpoint} when retry? -&gt;</span></span>
+<span class="line "><span class="ln">27</span><span class="code">            # Sync with the code reloader and retry once</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+                            
+                            
+                                <span class="app right">phoenix</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="9" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/bandit/pipeline.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">125</span><span class="code">    end</span></span>
+<span class="line "><span class="ln">126</span><span class="code">  end</span></span>
+<span class="line "><span class="ln">127</span><span class="code"></span></span>
+<span class="line "><span class="ln">128</span><span class="code">  @spec call_plug!(Plug.Conn.t(), plug_def()) :: Plug.Conn.t() | no_return()</span></span>
+<span class="line "><span class="ln">129</span><span class="code">  defp call_plug!(%Plug.Conn{} = conn, {plug, plug_opts}) when is_atom(plug) do</span></span>
+<span class="line -highlight"><span class="ln">130</span><span class="code">    case plug.call(conn, plug_opts) do</span></span>
+<span class="line "><span class="ln">131</span><span class="code">      %Plug.Conn{} = conn -&gt; conn</span></span>
+<span class="line "><span class="ln">132</span><span class="code">      other -&gt; raise(&quot;Expected #{plug}.call/2 to return %Plug.Conn{} but got: #{inspect(other)}&quot;)</span></span>
+<span class="line "><span class="ln">133</span><span class="code">    end</span></span>
+<span class="line "><span class="ln">134</span><span class="code">  end</span></span>
+<span class="line "><span class="ln">135</span><span class="code"></span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Bandit.Pipeline.call_plug!/2
+                            
+                            
+                                <span class="app right">bandit</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="10" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/bandit/pipeline.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">35</span><span class="code">      conn = build_conn!(transport, method, request_target, headers, opts)</span></span>
+<span class="line "><span class="ln">36</span><span class="code">      span = Bandit.Telemetry.start_span(:request, measurements, Map.put(metadata, :conn, conn))</span></span>
+<span class="line "><span class="ln">37</span><span class="code"></span></span>
+<span class="line "><span class="ln">38</span><span class="code">      try do</span></span>
+<span class="line "><span class="ln">39</span><span class="code">        conn</span></span>
+<span class="line -highlight"><span class="ln">40</span><span class="code">        |&gt; call_plug!(plug)</span></span>
+<span class="line "><span class="ln">41</span><span class="code">        |&gt; maybe_upgrade!()</span></span>
+<span class="line "><span class="ln">42</span><span class="code">        |&gt; case do</span></span>
+<span class="line "><span class="ln">43</span><span class="code">          {:no_upgrade, conn} -&gt;</span></span>
+<span class="line "><span class="ln">44</span><span class="code">            %Plug.Conn{adapter: {_mod, adapter}} = conn = commit_response!(conn)</span></span>
+<span class="line "><span class="ln">45</span><span class="code">            Bandit.Telemetry.stop_span(span, adapter.metrics, %{conn: conn})</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Bandit.Pipeline.run/4
+                            
+                            
+                                <span class="app right">bandit</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="11" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/bandit/http1/handler.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">7</span><span class="code">  @impl ThousandIsland.Handler</span></span>
+<span class="line "><span class="ln">8</span><span class="code">  def handle_data(data, socket, state) do</span></span>
+<span class="line "><span class="ln">9</span><span class="code">    transport = %Bandit.HTTP1.Socket{socket: socket, buffer: data, opts: state.opts}</span></span>
+<span class="line "><span class="ln">10</span><span class="code">    connection_span = ThousandIsland.Socket.telemetry_span(socket)</span></span>
+<span class="line "><span class="ln">11</span><span class="code"></span></span>
+<span class="line -highlight"><span class="ln">12</span><span class="code">    case Bandit.Pipeline.run(transport, state.plug, connection_span, state.opts) do</span></span>
+<span class="line "><span class="ln">13</span><span class="code">      {:ok, transport} -&gt; maybe_keepalive(transport, state)</span></span>
+<span class="line "><span class="ln">14</span><span class="code">      {:error, _reason} -&gt; {:close, state}</span></span>
+<span class="line "><span class="ln">15</span><span class="code">      {:upgrade, _transport, :websocket, opts} -&gt; do_websocket_upgrade(opts, state)</span></span>
+<span class="line "><span class="ln">16</span><span class="code">    end</span></span>
+<span class="line "><span class="ln">17</span><span class="code">  end</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Bandit.HTTP1.Handler.handle_data/3
+                            
+                            
+                                <span class="app right">bandit</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="12" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/bandit/delegating_handler.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">13</span><span class="code">    |&gt; handle_bandit_continuation(socket)</span></span>
+<span class="line "><span class="ln">14</span><span class="code">  end</span></span>
+<span class="line "><span class="ln">15</span><span class="code"></span></span>
+<span class="line "><span class="ln">16</span><span class="code">  @impl ThousandIsland.Handler</span></span>
+<span class="line "><span class="ln">17</span><span class="code">  def handle_data(data, socket, %{handler_module: handler_module} = state) do</span></span>
+<span class="line -highlight"><span class="ln">18</span><span class="code">    handler_module.handle_data(data, socket, state)</span></span>
+<span class="line "><span class="ln">19</span><span class="code">    |&gt; handle_bandit_continuation(socket)</span></span>
+<span class="line "><span class="ln">20</span><span class="code">  end</span></span>
+<span class="line "><span class="ln">21</span><span class="code"></span></span>
+<span class="line "><span class="ln">22</span><span class="code">  @impl ThousandIsland.Handler</span></span>
+<span class="line "><span class="ln">23</span><span class="code">  def handle_shutdown(socket, %{handler_module: handler_module} = state) do</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Bandit.DelegatingHandler.handle_data/3
+                            
+                            
+                                <span class="app right">bandit</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="13" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">lib/bandit/delegating_handler.ex</a>
+                    </div>
+
+                    
+<pre class="code code-block"><span class="line "><span class="ln">3</span><span class="code">  # Delegates all implementation of the ThousandIsland.Handler behaviour</span></span>
+<span class="line "><span class="ln">4</span><span class="code">  # to an implementation specified in state. Allows for clean separation</span></span>
+<span class="line "><span class="ln">5</span><span class="code">  # between protocol implementations &amp; friction free protocol selection &amp;</span></span>
+<span class="line "><span class="ln">6</span><span class="code">  # upgrades.</span></span>
+<span class="line "><span class="ln">7</span><span class="code"></span></span>
+<span class="line -highlight"><span class="ln">8</span><span class="code">  use ThousandIsland.Handler</span></span>
+<span class="line "><span class="ln">9</span><span class="code"></span></span>
+<span class="line "><span class="ln">10</span><span class="code">  @impl ThousandIsland.Handler</span></span>
+<span class="line "><span class="ln">11</span><span class="code">  def handle_connection(socket, %{handler_module: handler_module} = state) do</span></span>
+<span class="line "><span class="ln">12</span><span class="code">    handler_module.handle_connection(socket, state)</span></span>
+<span class="line "><span class="ln">13</span><span class="code">    |&gt; handle_bandit_continuation(socket)</span></span>
+</pre>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            Bandit.DelegatingHandler.handle_continue/2
+                            
+                            
+                                <span class="app right">bandit</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="14" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">gen_server.erl</a>
+                    </div>
+
+                    
+                    <div class="code code-block-empty">No code available.</div>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            :gen_server.try_handle_continue/3
+                            
+                            
+                                <span class="app right">stdlib</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="15" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">gen_server.erl</a>
+                    </div>
+
+                    
+                    <div class="code code-block-empty">No code available.</div>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            :gen_server.loop/7
+                            
+                            
+                                <span class="app right">stdlib</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+                  <div class="frame-info" data-index="16" role="stack-trace-details">
+                    <div class="file">
+                      <a href="">proc_lib.erl</a>
+                    </div>
+
+                    
+                    <div class="code code-block-empty">No code available.</div>
+                    
+
+                    <div class="meta">
+                        <div class="frame-mfa">
+                            :proc_lib.init_p_do_apply/3
+                            
+                            
+                                <span class="app right">stdlib</span>
+                            
+                        </div>
+                    </div>
+
+                    
+
+                    
+                </div>
+                
+            </div>
+
+            <div class="stack-trace">
+                <div class="stack-trace-heading">
+                    <label><input type="checkbox" role="show-all-toggle">Show only app frames</label>
+                    <button class="copy-markdown" role="copy-to-markdown" type="button">
+                      <span role="copy-to-markdown-text">Copy markdown</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="copy-markdown-icon" viewBox="0 0 115.77 122.88"><g><path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/></g></svg>
+                    </button>
+                </div>
+
+                <ul class="stack-trace-list -show-all" role="stack-trace-list">
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="0">
+                            <span class="left">
+                                
+                                <span class="app">phoenix_live_view</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix_live_view/utils.ex<span class="line">:303</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.LiveView.Utils.salt!/1</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="1">
+                            <span class="left">
+                                
+                                <span class="app">phoenix_live_view</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix_live_view/static.ex<span class="line">:363</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.LiveView.Static.sign_token/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="2">
+                            <span class="left">
+                                
+                                <span class="app">phoenix_live_view</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix_live_view/static.ex<span class="line">:119</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.LiveView.Static.render/3</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="3">
+                            <span class="left">
+                                
+                                <span class="app">phoenix_live_view</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix_live_view/controller.ex<span class="line">:39</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.LiveView.Controller.live_render/3</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="4">
+                            <span class="left">
+                                
+                                <span class="app">phoenix</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix/router.ex<span class="line">:484</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.Router.__call__/5</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -app" role="stack-trace-item" data-index="5">
+                            <span class="left">
+                                
+                                <span class="app">live_vue_ui_example</span>
+                                
+
+                                <span class="filename">
+                                    lib/example_web/endpoint.ex<span class="line">:1</span>
+                                </span>
+                            </span>
+
+                            <span class="info">LiveVueUIExampleWeb.Endpoint.plug_builder_call/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -app" role="stack-trace-item" data-index="6">
+                            <span class="left">
+                                
+                                <span class="app">live_vue_ui_example</span>
+                                
+
+                                <span class="filename">
+                                    deps/plug/lib/plug/debugger.ex<span class="line">:155</span>
+                                </span>
+                            </span>
+
+                            <span class="info">LiveVueUIExampleWeb.Endpoint.&quot;call (overridable 3)&quot;/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -app" role="stack-trace-item" data-index="7">
+                            <span class="left">
+                                
+                                <span class="app">live_vue_ui_example</span>
+                                
+
+                                <span class="filename">
+                                    lib/example_web/endpoint.ex<span class="line">:1</span>
+                                </span>
+                            </span>
+
+                            <span class="info">LiveVueUIExampleWeb.Endpoint.call/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="8">
+                            <span class="left">
+                                
+                                <span class="app">phoenix</span>
+                                
+
+                                <span class="filename">
+                                    lib/phoenix/endpoint/sync_code_reload_plug.ex<span class="line">:22</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="9">
+                            <span class="left">
+                                
+                                <span class="app">bandit</span>
+                                
+
+                                <span class="filename">
+                                    lib/bandit/pipeline.ex<span class="line">:130</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Bandit.Pipeline.call_plug!/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="10">
+                            <span class="left">
+                                
+                                <span class="app">bandit</span>
+                                
+
+                                <span class="filename">
+                                    lib/bandit/pipeline.ex<span class="line">:40</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Bandit.Pipeline.run/4</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="11">
+                            <span class="left">
+                                
+                                <span class="app">bandit</span>
+                                
+
+                                <span class="filename">
+                                    lib/bandit/http1/handler.ex<span class="line">:12</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Bandit.HTTP1.Handler.handle_data/3</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="12">
+                            <span class="left">
+                                
+                                <span class="app">bandit</span>
+                                
+
+                                <span class="filename">
+                                    lib/bandit/delegating_handler.ex<span class="line">:18</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Bandit.DelegatingHandler.handle_data/3</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="13">
+                            <span class="left">
+                                
+                                <span class="app">bandit</span>
+                                
+
+                                <span class="filename">
+                                    lib/bandit/delegating_handler.ex<span class="line">:8</span>
+                                </span>
+                            </span>
+
+                            <span class="info">Bandit.DelegatingHandler.handle_continue/2</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="14">
+                            <span class="left">
+                                
+                                <span class="app">stdlib</span>
+                                
+
+                                <span class="filename">
+                                    gen_server.erl<span class="line">:2335</span>
+                                </span>
+                            </span>
+
+                            <span class="info">:gen_server.try_handle_continue/3</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="15">
+                            <span class="left">
+                                
+                                <span class="app">stdlib</span>
+                                
+
+                                <span class="filename">
+                                    gen_server.erl<span class="line">:2244</span>
+                                </span>
+                            </span>
+
+                            <span class="info">:gen_server.loop/7</span>
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="stack-trace-item -all" role="stack-trace-item" data-index="16">
+                            <span class="left">
+                                
+                                <span class="app">stdlib</span>
+                                
+
+                                <span class="filename">
+                                    proc_lib.erl<span class="line">:329</span>
+                                </span>
+                            </span>
+
+                            <span class="info">:proc_lib.init_p_do_apply/3</span>
+                        </button>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="conn-info">
+        
+
+        <details class="conn-details">
+            <summary>Request info</summary>
+
+            <dl>
+                <dt>URI:</dt>
+                <dd class="code-quote">http://localhost:4001/</dd>
+            </dl>
+
+            <dl>
+                <dt>Query string:</dt>
+                <dd class="code-quote"></dd>
+            </dl>
+        </details>
+
+        <details class="conn-details">
+            <summary>Headers</summary>
+            
+            <dl>
+                <dt>accept</dt>
+                <dd class="code-quote">*/*</dd>
+            </dl>
+            
+            <dl>
+                <dt>host</dt>
+                <dd class="code-quote">localhost:4001</dd>
+            </dl>
+            
+            <dl>
+                <dt>user-agent</dt>
+                <dd class="code-quote">curl/8.7.1</dd>
+            </dl>
+            
+        </details>
+
+        
+    </div>
+
+    <script>(function () {
+        var $items = document.querySelectorAll('[role~="stack-trace-item"]')
+        var $toggle = document.querySelector('[role~="show-all-toggle"]')
+        var $list = document.querySelector('[role~="stack-trace-list"]')
+        var $copyBtn = document.querySelector('[role~="copy-to-markdown"]')
+        var $copyBtnText = document.querySelector('[role~="copy-to-markdown-text"]')
+        var $copy = document.querySelector('[role~="copy-contents"]')
+
+        each($items, function ($item) {
+            on($item, 'click', itemOnclick)
+        })
+
+        on($toggle, 'click', toggleOnclick)
+        on($copyBtn, 'click', copyToClipboard)
+
+        restoreToggle()
+
+        function copyToClipboard () {
+          if(navigator.clipboard) {
+            // For those working on localhost or HTTPS
+            navigator.clipboard.writeText($copy.textContent).then(copiedClipboard).catch(() => {})
+          } else {
+            // For those working on HTTP
+            $copy.select()
+            if (document.execCommand("copy")) copiedClipboard()
+          }
+        }
+
+        function copiedClipboard () {
+          $copyBtnText.innerText = "Copied!"
+          setTimeout(function () {
+            $copyBtnText.innerText = "Copy markdown"
+          }, 5000)
+        }
+
+        function toggleOnclick () {
+            localStorage.setItem('plugStackTrace', this.checked ? 'checked' : '');
+
+            if (this.checked) {
+                var $first = document.querySelector('[role~="stack-trace-item"].-app:first-of-type')
+                if ($first) itemOnclick.call($first)
+                removeClass($list, '-show-all')
+            } else {
+                addClass($list, '-show-all')
+            }
+        }
+
+        function restoreToggle () {
+            $toggle.checked = localStorage.getItem('plugStackTrace') === 'checked'
+            toggleOnclick.call($toggle)
+        }
+
+        function itemOnclick () {
+            var idx = this.getAttribute('data-index')
+
+            var $detail = document.querySelector('[role~="stack-trace-details"].-active')
+            if ($detail) removeClass($detail, '-active')
+
+            $detail = document.querySelector('[role~="stack-trace-details"][data-index="' + idx + '"]')
+            if ($detail) addClass($detail, '-active')
+
+            var $item = document.querySelector('[role~="stack-trace-item"].-active')
+            if ($item) removeClass($item, '-active')
+
+            $item = document.querySelector('[role~="stack-trace-item"][data-index="' + idx + '"]')
+            if ($item) addClass($item, '-active')
+        }
+
+        var $first = document.querySelector('[role~="stack-trace-item"]:first-of-type')
+        if ($first) itemOnclick.call($first)
+
+        /*
+         * Helpers
+         */
+
+        function each (list, fn) {
+            for (var i = 0, len = list.length; i < len; i++) {
+                var item = list[i]
+                fn(item)
+            }
+        }
+
+        function addClass (el, className) {
+            if (el.classList) {
+                el.classList.add(className)
+            } else {
+                el.className += ' ' + className
+            }
+        }
+
+        function removeClass (el, className) {
+            if (el.classList) {
+                el.classList.remove(className)
+            } else {
+                var expr = new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi')
+                el.className = el.className.replace(expr, ' ')
+            }
+        }
+
+        function on (el, event, handler) {
+            if (el.addEventListener) {
+                el.addEventListener(event, handler)
+            } else {
+                el.attachEvent('on' + event, function () {
+                    handler.call(el)
+                })
+            }
+        }
+    }())</script>
+<iframe hidden height="0" width="0" src="/phoenix/live_reload/frame"></iframe></body>
+</html>

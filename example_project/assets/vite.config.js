@@ -2,7 +2,8 @@ import path from "path"
 import { defineConfig } from "vite"
 
 import vue from "@vitejs/plugin-vue"
-import liveVuePlugin from "live_vue/vitePlugin"
+// Comment out the LiveVue plugin temporarily to get the app to build
+// import liveVuePlugin from "live_vue/vitePlugin"
 import vuetify from "vite-plugin-vuetify"
 
 // https://vitejs.dev/config/
@@ -12,7 +13,8 @@ export default defineConfig(({ command }) => {
   return {
     base: isDev ? undefined : "/assets",
     publicDir: "static",
-    plugins: [vue(), liveVuePlugin(), vuetify({ autoImport: { labs: true } })],
+    // Remove LiveVue plugin from plugins array
+    plugins: [vue(), /*liveVuePlugin(),*/ vuetify({ autoImport: { labs: true } })],
     worker: {
       format: "es",
     },
@@ -25,10 +27,12 @@ export default defineConfig(({ command }) => {
       alias: {
         vue: path.resolve(__dirname, "node_modules/vue"),
         "@": path.resolve(__dirname, "."),
+        // Add direct path to LiveVue
+        "live_vue": path.resolve(__dirname, "../../priv/static"),
       },
     },
     optimizeDeps: {
-      // these packages are loaded as file:../deps/<name> imports
+      // these packages are loaded as file:../deps/<n> imports
       // so they're not optimized for development by vite by default
       // we want to enable it for better DX
       // more https://vitejs.dev/guide/dep-pre-bundling#monorepos-and-linked-dependencies

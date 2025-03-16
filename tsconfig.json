@@ -1,17 +1,33 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declarationDir": "./priv/static",
-    "declaration": true,
-    "emitDeclarationOnly": false,
-    "outDir": "./priv/static",
-    "allowJs": true
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "exclude": ["node_modules"],
+  "include": [
+    "vue/**/*.vue", 
+    "js/**/*.ts", 
+    "js/**/*.js",
+    "js/**/*.tsx",
+    "types/**/*.ts", 
+    "types/**/*.d.ts", 
+    "*.config.ts"
+  ],
+  "exclude": ["node_modules"]
 }

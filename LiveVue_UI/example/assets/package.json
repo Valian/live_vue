@@ -1,0 +1,20 @@
+{
+  "name": "live_vue_ui_example_assets",
+  "version": "1.0.0",
+  "description": "Assets for LiveVue UI Example",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phoenix": "^1.7.0",
+    "phoenix_html": "^3.3.0",
+    "phoenix_live_view": "^0.20.0",
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.3.0",
+    "vite": "^4.4.0"
+  }
+} 

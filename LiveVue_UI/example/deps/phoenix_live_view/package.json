@@ -1,0 +1,39 @@
+{
+  "name": "phoenix_live_view",
+  "version": "0.20.17",
+  "description": "The Phoenix LiveView JavaScript client.",
+  "license": "MIT",
+  "module": "./priv/static/phoenix_live_view.esm.js",
+  "main": "./priv/static/phoenix_live_view.cjs.js",
+  "unpkg": "./priv/static/phoenix_live_view.min.js",
+  "jsdelivr": "./priv/static/phoenix_live_view.min.js",
+  "exports": {
+    "import": "./priv/static/phoenix_live_view.esm.js",
+    "require": "./priv/static/phoenix_live_view.cjs.js"
+  },
+  "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/phoenixframework/phoenix_live_view.git"
+  },
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/*",
+    "assets/js/phoenix_live_view/*"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.43.1",
+    "monocart-reporter": "^2.3.1"
+  },
+  "scripts": {
+    "e2e:server": "MIX_ENV=e2e mix test --cover --export-coverage e2e test/e2e/test_helper.exs",
+    "e2e:test": "mix assets.build && cd test/e2e && npx playwright test",
+    "js:test": "cd assets && npm install && npm run test",
+    "test": "npm run js:test && npm run e2e:test",
+    "cover:merge": "node test/e2e/merge-coverage.mjs",
+    "cover": "npm run test && npm run cover:merge",
+    "cover:report": "npx monocart show-report cover/merged-js/index.html"
+  }
+}

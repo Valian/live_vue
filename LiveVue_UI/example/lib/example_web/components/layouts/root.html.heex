@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={Phoenix.Controller.get_csrf_token()} />
+    <title>LiveVue UI - Reka UI Components</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+    <script defer phx-track-static type="text/javascript" src={"/assets/app.js"}></script>
+  </head>
+  <body class="h-full">
+    <div class="min-h-full">
+      <nav class="bg-blue-600">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex h-16 items-center justify-between">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="text-white text-xl font-bold">LiveVue UI</span>
+              </div>
+              <div class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                  <a href="/" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                  <a href="/buttons" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Buttons</a>
+                  <a href="/modals" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Modals</a>
+                  <a href="/accordions" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Accordions</a>
+                  <a href="/tabs" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Tabs</a>
+                  <a href="/dropdowns" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Dropdowns</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <header class="bg-white shadow">
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <h1 class="text-3xl font-bold leading-tight text-gray-900">
+            <%= @page_title || "Reka UI Components" %>
+          </h1>
+        </div>
+      </header>
+
+      <main>
+        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+          <%= @inner_content %>
+        </div>
+      </main>
+    </div>
+  </body>
+</html> 

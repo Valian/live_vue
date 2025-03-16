@@ -1,0 +1,8 @@
+<.header>
+  New <%= schema.human_singular %>
+  <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+</.header>
+
+<.<%= schema.singular %>_form changeset={@changeset} action={~p"<%= schema.route_prefix %>"} />
+
+<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>

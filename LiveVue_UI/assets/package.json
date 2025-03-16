@@ -1,0 +1,27 @@
+{
+  "name": "live_vue_ui",
+  "version": "0.1.0",
+  "description": "LiveVue UI component library assets",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@reka-ui/tooltip": "^0.5.0",
+    "@reka-ui/accordion": "^0.5.0",
+    "@reka-ui/alert-dialog": "^0.5.0",
+    "@reka-ui/dialog": "^0.5.0",
+    "@reka-ui/dropdown-menu": "^0.5.0",
+    "@reka-ui/popover": "^0.5.0",
+    "@reka-ui/tabs": "^0.5.0",
+    "tailwindcss": "^3.3.0",
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.9"
+  }
+} 

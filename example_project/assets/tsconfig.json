@@ -25,7 +25,19 @@
       
       "paths": {
         "@/*": ["./*"]
-      }
+      },
+
+      /* Type definitions */
+      "typeRoots": ["./node_modules/@types", "./types"]
     },
-    "include": ["js/**/*.ts", "js/**/*.js", "js/**/*.tsx", "vue/**/*.vue", "*.config.ts"],
+    "include": [
+      "vue/**/*.vue", 
+      "js/**/*.ts", 
+      "js/**/*.js",
+      "js/**/*.tsx",
+      "types/**/*.ts", 
+      "types/**/*.d.ts", 
+      "*.config.ts"
+    ],
+    "exclude": ["node_modules"]
   }

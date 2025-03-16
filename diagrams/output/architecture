@@ -1,0 +1,24 @@
+digraph "LiveVue Architecture" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="LiveVue Architecture" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	subgraph cluster_Client {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Client labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		e3c13dd6dba34bfab697fd733b29ef02 [label=Browser height=1.9 image="/Users/speed/miniconda3/lib/python3.12/site-packages/resources/onprem/client/client.png" shape=none]
+		"918db3e55bbd40ffbe3eb95f2e3709b4" [label="Vue.js Components" height=1.9 image="/Users/speed/miniconda3/lib/python3.12/site-packages/resources/programming/framework/vue.png" shape=none]
+	}
+	subgraph cluster_Server {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Server labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"6bcae3c35c1d4bef930338439627c4f6" [label="Phoenix LiveView" height=1.9 image="/Users/speed/miniconda3/lib/python3.12/site-packages/resources/programming/language/elixir.png" shape=none]
+		subgraph cluster_LiveVue {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label=LiveVue labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			a50ec560da164462bf6748a21312dc88 [label="LiveVue Core" height=1.9 image="./docs/phoenix.png" shape=none]
+			f24fb7481311432c920aee8e90580d14 [label="SSR Module" height=1.9 image="./docs/vue.png" shape=none]
+		}
+	}
+	e3c13dd6dba34bfab697fd733b29ef02 -> "918db3e55bbd40ffbe3eb95f2e3709b4" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	e3c13dd6dba34bfab697fd733b29ef02 -> "6bcae3c35c1d4bef930338439627c4f6" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"6bcae3c35c1d4bef930338439627c4f6" -> a50ec560da164462bf6748a21312dc88 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	a50ec560da164462bf6748a21312dc88 -> f24fb7481311432c920aee8e90580d14 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	f24fb7481311432c920aee8e90580d14 -> "918db3e55bbd40ffbe3eb95f2e3709b4" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}
