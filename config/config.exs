@@ -14,4 +14,9 @@ config :live_vue,
 
   # it's relative to LiveVue.SSR.NodeJS.server_path, so "priv" directory
   # that file is created by Vite "build-server" command
-  ssr_filepath: "./vue/server.js"
+  ssr_filepath: "./vue/server.js",
+
+  # it's a name of gettext module that will be used for translations
+  # it's used in LiveVue.Form protocol implementation
+  # by default it's not-enabled
+  gettext_backend: nil

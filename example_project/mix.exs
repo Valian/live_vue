@@ -45,6 +45,9 @@ defmodule LiveVueExamples.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
+      {:ecto_sql, "~> 3.0"},
+      {:phoenix_ecto, "~> 4.0"},
+      {:gettext, "~> 0.20"},
       {:live_vue, path: ".."},
 
       # overriden with a forked version with package.json
