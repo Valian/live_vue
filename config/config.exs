@@ -16,6 +16,11 @@ config :live_vue,
   # that file is created by Vite "build-server" command
   ssr_filepath: "./vue/server.js",
 
+  # it's a name of gettext module that will be used for translations
+  # it's used in LiveVue.Form protocol implementation
+  # by default it's not-enabled
+  gettext_backend: nil,
+
   # if false, we will always update full props and not send diffs
   # defaults to true as it greatly reduces payload size
   enable_props_diff: true,
