@@ -148,24 +148,7 @@ end
 
 ## Integration Testing
 
-For full integration tests, combine LiveVue testing with LiveView test helpers:
-
-```elixir
-test "counter increments correctly", %{conn: conn} do
-  {:ok, view, _html} = live(conn, "/counter")
-
-  # Verify initial state
-  vue = Test.get_vue(view)
-  assert vue.props == %{"count" => 0}
-
-  # Simulate increment event
-  view |> element("button") |> render_click()
-
-  # Verify updated state
-  vue = Test.get_vue(view)
-  assert vue.props == %{"count" => 1}
-end
-```
+For full integration tests, you should use headless browser to render components. Currently this guide is a work in progress.
 
 ## Best Practices
 

@@ -38,6 +38,7 @@ defmodule LiveVue.MixProject do
           "guides/getting_started.md": [title: "Getting Started"],
           "guides/basic_usage.md": [title: "Basic Usage"],
           "guides/advanced_features.md": [title: "Advanced Features"],
+          "guides/configuration.md": [title: "Configuration"],
           "guides/deployment.md": [title: "Deployment"],
           "guides/testing.md": [title: "Testing Guide"],
           "guides/faq.md": [title: "FAQ"],
@@ -94,12 +95,14 @@ defmodule LiveVue.MixProject do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test}
+      {:excoveralls, "~> 0.18", only: :test},
+      {:makeup_html, "~> 0.1.0", only: :dev, runtime: false}
     ]
   end
 
   defp aliases do
     [
+      docs: ["docs", &copy_images/1],
       setup: ["deps.get", "cmd npm install"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
@@ -107,5 +110,10 @@ defmodule LiveVue.MixProject do
       "release.minor": ["assets.build", "expublish.minor --branch=main --disable-publish"],
       "release.major": ["assets.build", "expublish.major --branch=main --disable-publish"]
     ]
+  end
+
+  defp copy_images(_) do
+    File.mkdir_p!("./doc/images")
+    File.cp_r("./guides/images", "./doc/images")
   end
 end

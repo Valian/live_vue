@@ -15,17 +15,16 @@ defmodule MyAppWeb.CounterLive do
     <script setup lang="ts">
     import {ref} from "vue"
     const props = defineProps<{count: number}>()
-    const diff = ref<number>(1)
+    const diff = ref(1)
     </script>
 
     <template>
       Current count: {{ props.count }}
-      <input v-model="diff" type="range" min="1" max="10">
-      <button
-        phx-click="inc"
-        :phx-value-diff="diff"
-        class="button">
-        Increment by {{ diff }}
+      <label>Diff: </label>
+      <input v-model.number="diff" type="range" min="1" max="10" />
+
+      <button phx-click="inc" :phx-value-diff="diff">
+        Increase counter by {{ diff }}
       </button>
     </template>
     """
@@ -45,7 +44,7 @@ end
 
 Enable lazy loading by returning a function that returns a promise in your components configuration:
 
-```javascript
+```html
 // assets/vue/index.js
 const components = {
   Counter: () => import("./Counter.vue"),
@@ -65,7 +64,7 @@ When SSR is enabled, related JS and CSS files will be automatically preloaded in
 
 You can customize the Vue app instance in `assets/vue/index.js`:
 
-```javascript
+```html
 import { createPinia } from "pinia"
 const pinia = createPinia()
 
@@ -124,24 +123,6 @@ Vue SSR is compiled into string concatenation for optimal performance. The SSR s
 - Skips during live navigation
 - Can be disabled per-component with `v-ssr={false}`
 
-## Client-Side Hooks
-
-Access Phoenix hooks from Vue components using `useLiveVue`:
-
-```vue
-<script setup>
-import {useLiveVue} from "live_vue"
-
-const hook = useLiveVue()
-
-// Access all Phoenix hook methods
-hook.pushEvent("hello", {value: "world"})
-hook.handleEvent("response", (payload) => {
-  console.log(payload)
-})
-</script>
-```
-
 ## TypeScript Support
 
 LiveVue provides full TypeScript support:
@@ -153,7 +134,7 @@ LiveVue provides full TypeScript support:
    - Vite configuration
 
 For app.js TypeScript support:
-```javascript
+```html
 // app.js
 import {initApp} from './app.ts'
 initApp()
@@ -161,6 +142,7 @@ initApp()
 
 ## Next Steps
 
+- [Configuration](configuration.html) for advanced configuration options
 - Check out the [FAQ](faq.html) for implementation details and optimization tips
 - Visit the [Deployment Guide](deployment.html) for production setup
 - Join our [GitHub Discussions](https://github.com/Valian/live_vue/discussions) for questions and ideas

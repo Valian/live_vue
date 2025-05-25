@@ -13,6 +13,12 @@ defmodule LiveVue do
   ### Required Attributes
     * `v-component` (string) - Name of the Vue component (e.g., "YourComponent", "directory/Example")
 
+  > #### Tip {: .tip}
+  >
+  > Value of `v-component` will be directly passed to `resolve` function of the `createLiveVue` instance.
+  > It should return Vue component or a promise that resolves to a Vue component.
+  > In a standard setup, you can find it in `assets/vue/index.js`.
+
   ### Optional Attributes
     * `id` (string) - Explicit ID of the wrapper component. If not provided, a random one will be
       generated. Useful to keep ID consistent in development (e.g., "vue-1")

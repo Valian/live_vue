@@ -8,12 +8,7 @@ By default, Vue components should be placed in either:
 - `assets/vue` directory
 - Colocated with your LiveView files in `lib/my_app_web`
 
-You can configure these paths by:
-1. Modifying `assets/vue/index.js`
-2. Adjusting the LiveVue.Components configuration:
-```elixir
-use LiveVue.Components, vue_root: ["your/vue/dir"]
-```
+See [Configuration](configuration.html) to learn how to configure the component resolution.
 
 ## Rendering Components
 
@@ -23,9 +18,10 @@ To render a Vue component from HEEX, use the `<.vue>` function:
 
 ```elixir
 <.vue
+  count={@count}
   v-component="Counter"
   v-socket={@socket}
-  count={@count}
+  v-on:inc={JS.push("inc")}
 />
 ```
 
@@ -49,13 +45,11 @@ To render a Vue component from HEEX, use the `<.vue>` function:
 Instead of writing `<.vue v-component="Counter">`, you can use the shortcut syntax:
 
 ```elixir
-<.Counter
-  count={@count}
-  v-socket={@socket}
-/>
+<.Counter count={@count} v-socket={@socket} />
 ```
 
 Function names are generated based on `.vue` file names. For files with identical names, use the full path:
+
 ```elixir
 <.vue v-component="helpers/nested/Modal" />
 ```
@@ -66,26 +60,13 @@ Props can be passed in three equivalent ways:
 
 ```elixir
 # Individual props
-<.vue
-  count={@count}
-  name={@name}
-  v-component="Counter"
-  v-socket={@socket}
-/>
+<.vue count={@count} max={123} v-component="Counter" v-socket={@socket} />
 
 # Map spread
-<.vue
-  v-component="Counter"
-  v-socket={@socket}
-  {%{count: @count, name: @name}}
-/>
+<.vue v-component="Counter" v-socket={@socket} {@props} />
 
-# Using shortcut
-<.Counter
-  count={@count}
-  name={@name}
-  v-socket={@socket}
-/>
+# Using shortcut - you don't have to specify v-component
+<.Counter count={@count} max={123} v-socket={@socket} />
 ```
 
 ## Handling Events
@@ -98,9 +79,11 @@ All standard Phoenix event handlers work inside Vue components:
 - `phx-submit`
 - etc.
 
+They will be pushed directly to LiveView, exactly as happens with `HEEX` components.
+
 ### Vue Events
 
-For Vue-specific events, use the `v-on:` syntax:
+If you want to create reusable Vue components where you'd like to define what happens when Vue emits an event, you can use the `v-on:` syntax with `JS` [module helpers](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.JS.html#module-client-utility-commands).
 
 ```elixir
 <.vue
@@ -136,7 +119,7 @@ Vue components can receive slots from LiveView templates:
 </.Card>
 ```
 
-```vue
+```html
 <template>
   <div>
     <!-- Default slot -->
@@ -150,9 +133,17 @@ Vue components can receive slots from LiveView templates:
 
 Important notes about slots:
 - Each slot is wrapped in a div (technical limitation)
-- Slots are passed as raw HTML
-- Phoenix hooks in slots won't work
+- You can use HEEX components inside slots 🥳
 - Slots stay reactive and update when their content changes
+
+
+> #### Hooks inside slots are not supported {: .warning}
+>
+> Slots are rendered server-side and then sent to the client as a raw HTML.
+> It happens outside of the LiveView lifecycle, so hooks inside slots are not supported.
+>
+> As a consequence, since `.vue` components rely on hooks, it's not possible to nest `.vue` components inside other `.vue` components.
+
 
 ## Dead Views vs Live Views
 
@@ -166,16 +157,17 @@ Components can be used in both contexts:
 
 Access Phoenix hooks from Vue components using `useLiveVue`:
 
-```vue
+```html
 <script setup>
 import {useLiveVue} from "live_vue"
 
-const hook = useLiveVue()
-hook.pushEvent("hello", {value: "from Vue"})
+const live = useLiveVue()
+live.pushEvent("hello", {value: "world"})
+live.handleEvent("response", (payload) => { console.log(payload) })
 </script>
 ```
 
-The hook provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook).
+The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook).
 
 ## Next Steps
 
