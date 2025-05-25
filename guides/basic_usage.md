@@ -8,7 +8,7 @@ By default, Vue components should be placed in either:
 - `assets/vue` directory
 - Colocated with your LiveView files in `lib/my_app_web`
 
-See [Configuration](configuration.html) to learn how to configure the component resolution.
+For advanced component organization and custom resolution patterns, see [Configuration](configuration.html#component-organization).
 
 ## Rendering Components
 
@@ -153,6 +153,46 @@ Components can be used in both contexts:
   - `v-socket={@socket}` not required
   - SSR still works for initial render
 
+## Using ~V Sigil
+
+The `~V` sigil provides an alternative to the standard LiveView DSL, allowing you to write Vue components directly in your LiveView:
+
+```elixir
+defmodule MyAppWeb.CounterLive do
+  use MyAppWeb, :live_view
+
+  def render(assigns) do
+    ~V"""
+    <script setup lang="ts">
+    import {ref} from "vue"
+    const props = defineProps<{count: number}>()
+    const diff = ref(1)
+    </script>
+
+    <template>
+      Current count: {{ props.count }}
+      <label>Diff: </label>
+      <input v-model.number="diff" type="range" min="1" max="10" />
+
+      <button phx-click="inc" :phx-value-diff="diff">
+        Increase counter by {{ diff }}
+      </button>
+    </template>
+    """
+  end
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, count: 0)}
+  end
+
+  def handle_event("inc", %{"diff" => diff}, socket) do
+    {:noreply, update(socket, :count, &(&1 + String.to_integer(diff)))}
+  end
+end
+```
+
+This approach is great when you want to keep everything in one file or when prototyping components quickly.
+
 ## Client-Side Hooks
 
 Access Phoenix hooks from Vue components using `useLiveVue`:
@@ -167,19 +207,13 @@ live.handleEvent("response", (payload) => { console.log(payload) })
 </script>
 ```
 
-The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook).
+The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
 
 ## Next Steps
 
 Now that you understand the basics, you might want to explore:
 
-- [Advanced Features](advanced_features.html) to learn about:
-  - Using the `~V` sigil for inline Vue components
-  - Lazy loading components
-  - Customizing the Vue app instance
-  - SSR configuration and optimization
-- [FAQ](faq.html) for:
-  - Understanding how LiveVue works under the hood
-  - Performance optimizations
-  - TypeScript setup
-  - Comparison with LiveSvelte
+- [Component Reference](component_reference.html) for complete syntax documentation
+- [Configuration](configuration.html) for advanced setup and customization options
+- [Client-Side API](client_api.html) for detailed API reference and advanced patterns
+- [FAQ](faq.html) for common questions and troubleshooting

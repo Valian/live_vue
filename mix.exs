@@ -35,52 +35,52 @@ defmodule LiveVue.MixProject do
         extras: [
           "README.md": [title: "LiveVue"],
 
-          # Tutorials (learning-oriented)
+          # Getting Started
           "guides/installation.md": [title: "Installation"],
           "guides/getting_started.md": [title: "Getting Started"],
-          "guides/tutorial.md": [title: "Building Your First App"],
 
-          # How-to Guides (problem-oriented)
+          # Core Usage
           "guides/basic_usage.md": [title: "Basic Usage"],
-          "guides/advanced_features.md": [title: "Advanced Features"],
-          "guides/deployment.md": [title: "Deployment"],
-          "guides/testing.md": [title: "Testing"],
-          "guides/troubleshooting.md": [title: "Troubleshooting"],
-
-          # Reference (information-oriented)
           "guides/configuration.md": [title: "Configuration"],
-          "guides/client_api.md": [title: "Client-Side API"],
-          "guides/component_reference.md": [title: "Component Reference"],
 
-          # Explanation (understanding-oriented)
+          # Reference
+          "guides/component_reference.md": [title: "Component Reference"],
+          "guides/client_api.md": [title: "Client-Side API"],
+
+          # Advanced Topics
           "guides/architecture.md": [title: "How LiveVue Works"],
+          "guides/testing.md": [title: "Testing"],
+          "guides/deployment.md": [title: "Deployment"],
+
+          # Help & Troubleshooting
           "guides/faq.md": [title: "FAQ"],
+          "guides/troubleshooting.md": [title: "Troubleshooting"],
           "guides/comparison.md": [title: "LiveVue vs Alternatives"],
           "CHANGELOG.md": [title: "Changelog"]
         ],
         extra_section: "GUIDES",
         groups_for_extras: [
           Introduction: ["README.md"],
-          Tutorials: [
+          "Getting Started": [
             "guides/installation.md",
-            "guides/getting_started.md",
-            "guides/tutorial.md"
+            "guides/getting_started.md"
           ],
-          "How-to Guides": [
+          "Core Usage": [
             "guides/basic_usage.md",
-            "guides/advanced_features.md",
-            "guides/deployment.md",
-            "guides/testing.md",
-            "guides/troubleshooting.md"
+            "guides/configuration.md"
           ],
           Reference: [
-            "guides/configuration.md",
-            "guides/client_api.md",
-            "guides/component_reference.md"
+            "guides/component_reference.md",
+            "guides/client_api.md"
           ],
-          Explanation: [
+          "Advanced Topics": [
             "guides/architecture.md",
+            "guides/testing.md",
+            "guides/deployment.md"
+          ],
+          "Help & Troubleshooting": [
             "guides/faq.md",
+            "guides/troubleshooting.md",
             "guides/comparison.md"
           ],
           Other: ["CHANGELOG.md"]

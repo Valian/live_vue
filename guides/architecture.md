@@ -2,6 +2,10 @@
 
 This guide explains the architecture and inner workings of LiveVue, helping you understand the design decisions and implementation details.
 
+> #### Practical Usage {: .tip}
+>
+> Looking for practical examples? Check out [Basic Usage](basic_usage.html) for common patterns and [Getting Started](getting_started.html) for your first component.
+
 ## Overview
 
 LiveVue bridges two different paradigms: **Phoenix LiveView** with its server-side state management and HTML over WebSockets, and **Vue.js** with its client-side reactivity and virtual DOM. The challenge is making these two systems work together seamlessly while maintaining the benefits of both.
@@ -137,10 +141,6 @@ LiveVue uses Phoenix LiveView's hook system rather than a separate JavaScript fr
 
 Props and slots are made reactive using Vue's reactivity system, enabling efficient updates where only changed data triggers re-renders, full compatibility with Vue features like computed properties and watchers, and minimal overhead for prop updates.
 
-### Component Resolution Strategy
-
-Components are resolved using a configurable function that supports multiple patterns including file-based loading, lazy loading, and custom resolution strategies. This enables code splitting where components can be loaded on demand and flexible organization of your component files.
-
 ## Performance Optimizations
 
 ### Selective Updates
@@ -163,10 +163,6 @@ destroyed() {
   }
 }
 ```
-
-### Bundle Optimization
-
-LiveVue supports multiple strategies for optimizing JavaScript bundles including lazy loading of components on demand, tree shaking to eliminate unused code, and code splitting for large applications.
 
 ## Security Considerations
 
@@ -217,31 +213,10 @@ LiveVue is a good fit for complex client-side interactions, rich UI components w
 
 Consider alternatives for simple forms and basic interactions, applications prioritizing minimal JavaScript, or teams without Vue.js experience.
 
-## Future Improvements
-
-### Planned Optimizations
-
-Future improvements include prop diffing to send only the specific properties that changed, component streaming for progressive loading of dependencies, enhanced TypeScript support for better type safety and developer experience, and performance monitoring with built-in metrics and optimization suggestions.
-
-### Ecosystem Integration
-
-Potential integrations include Vue Router for client-side routing, better patterns for complex state scenarios, and enhanced testing utilities and patterns.
-
-## Comparison with Alternatives
-
-### vs. Pure LiveView
-LiveVue offers rich client interactions, access to the Vue ecosystem, and better UX for complex components, but comes with larger bundle size, additional complexity, and a learning curve.
-
-### vs. SPA + API
-LiveVue provides server-side state management, real-time updates, and simpler deployment, but offers less client-side control and potential performance limitations.
-
-### vs. LiveSvelte
-LiveVue has a larger ecosystem, more mature tooling, and better TypeScript support, but comes with a larger runtime bundle and different compilation model.
-
 ## Next Steps
 
 Now that you understand how LiveVue works:
 
-- [Configuration](configuration.html) to customize the behavior
-- [Advanced Features](advanced_features.html) for complex scenarios
+- [Configuration](configuration.html) to customize behavior and SSR settings
+- [Basic Usage](basic_usage.html) for practical patterns and examples
 - [Client-Side API](client_api.html) for detailed API reference

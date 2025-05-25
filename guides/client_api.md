@@ -2,6 +2,10 @@
 
 This guide documents all client-side utilities, composables, and APIs available in LiveVue for Vue components.
 
+> #### Getting Started {: .tip}
+>
+> New to LiveVue? Check out [Basic Usage](basic_usage.html) for fundamental patterns before diving into the API details.
+
 ## Core Composables
 
 ### useLiveVue()
@@ -21,16 +25,41 @@ const live = useLiveVue()
 Push an event to the LiveView server.
 
 ```typescript
-// Basic usage
-live.pushEvent("save_user", { name: "John", email: "john@example.com" })
+// Basic usage - increment a counter
+live.pushEvent("increment", { amount: 1 })
 
-// With callback
-live.pushEvent("save_user", payload, (reply, ref) => {
-  console.log("Server replied:", reply)
+// Form submission with validation feedback
+live.pushEvent("save_user", {
+  name: "John",
+  email: "john@example.com"
+}, (reply, ref) => {
+  if (reply.status === "ok") {
+    console.log("User saved successfully!")
+  } else {
+    console.log("Validation errors:", reply.errors)
+  }
 })
 
-// Without payload
+// Simple refresh without payload
 live.pushEvent("refresh")
+```
+
+**Real-world example - Auto-save draft:**
+```vue
+<script setup>
+import { watch, debounce } from 'vue'
+import { useLiveVue } from 'live_vue'
+
+const live = useLiveVue()
+const content = ref('')
+
+// Auto-save draft every 2 seconds after user stops typing
+const debouncedSave = debounce((text) => {
+  live.pushEvent("save_draft", { content: text })
+}, 2000)
+
+watch(content, debouncedSave)
+</script>
 ```
 
 **Parameters:**
@@ -45,14 +74,37 @@ live.pushEvent("refresh")
 Listen for events pushed from the LiveView server.
 
 ```typescript
-// Listen for server events
-live.handleEvent("user_updated", (payload) => {
-  console.log("User was updated:", payload)
+// Listen for server-sent notifications
+live.handleEvent("notification", (payload) => {
+  showToast(payload.message, payload.type)
 })
 
-// Multiple event handlers
-live.handleEvent("notification", showNotification)
-live.handleEvent("redirect", handleRedirect)
+// Handle real-time data updates
+live.handleEvent("data_updated", (data) => {
+  // Update local reactive state
+  localData.value = data
+})
+```
+
+**Real-world example - Live chat:**
+```vue
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useLiveVue } from 'live_vue'
+
+const live = useLiveVue()
+const messages = ref([])
+
+onMounted(() => {
+  // Listen for new messages
+  const callbackRef = live.handleEvent("new_message", (message) => {
+    messages.value.push(message)
+  })
+
+  // Clean up on unmount
+  onUnmounted(() => live.removeHandleEvent(callbackRef))
+})
+</script>
 ```
 
 **Parameters:**
@@ -66,18 +118,25 @@ live.handleEvent("redirect", handleRedirect)
 Push an event to a specific LiveView component.
 
 ```typescript
-// Push to specific component
+// Push to specific form component
 live.pushEventTo("#user-form", "validate", formData)
 
-// Push to component by data attribute
+// Target component by data attribute
 live.pushEventTo("[data-component='UserProfile']", "refresh")
 ```
 
-**Parameters:**
-- `selector` (string): CSS selector for target component
-- `event` (string): Event name
-- `payload` (object, optional): Event data
-- `callback` (function, optional): Reply callback
+**Real-world example - Multi-component dashboard:**
+```vue
+<script setup>
+const live = useLiveVue()
+
+const refreshWidget = (widgetId) => {
+  live.pushEventTo(`#widget-${widgetId}`, "refresh", {
+    timestamp: Date.now()
+  })
+}
+</script>
+```
 
 ##### upload(name, entries)
 
@@ -92,6 +151,44 @@ const handleUpload = () => {
     live.upload("avatar", fileInput.value.files)
   }
 }
+```
+
+**Real-world example - Drag & drop upload:**
+```vue
+<script setup>
+import { ref } from 'vue'
+import { useLiveVue } from 'live_vue'
+
+const live = useLiveVue()
+const isDragging = ref(false)
+
+const handleDrop = (event) => {
+  event.preventDefault()
+  isDragging.value = false
+
+  const files = event.dataTransfer.files
+  if (files.length > 0) {
+    live.upload("documents", files)
+  }
+}
+
+const handleDragOver = (event) => {
+  event.preventDefault()
+  isDragging.value = true
+}
+</script>
+
+<template>
+  <div
+    @drop="handleDrop"
+    @dragover="handleDragOver"
+    @dragleave="isDragging = false"
+    :class="{ 'border-blue-500': isDragging }"
+    class="border-2 border-dashed border-gray-300 p-8 text-center"
+  >
+    Drop files here to upload
+  </div>
+</template>
 ```
 
 **Parameters:**
@@ -110,7 +207,7 @@ live.uploadTo("#profile-form", "avatar", files)
 
 ### createLiveVue(config)
 
-Creates a LiveVue application instance. Read more in [Configuration](configuration.html).
+Creates a LiveVue application instance. For complete configuration options, see [Configuration](configuration.html#vue-application-setup).
 
 ### findComponent(components, name)
 
@@ -175,7 +272,29 @@ const live = useLiveVue()
 // live is fully typed with all available methods
 ```
 
-## Advanced Usage
+## Common Patterns
+
+### Real-Time Data Synchronization
+
+```typescript
+// Composable for real-time data sync with {:reply, data, socket} tuple
+export const useRealtimeData = (dataType: string) => {
+  const live = useLiveVue()
+  const data = ref(null)
+  const loading = ref(true)
+  const error = ref(null)
+
+  onMounted(() => {
+    // Request initial data
+    live.pushEvent("load_data", { type: dataType }, (newData) => {
+      data.value = newData
+      loading.value = false
+    })
+  })
+
+  return { data, loading, error }
+}
+```
 
 ### File Upload Helper
 
@@ -208,7 +327,6 @@ export const useFileUpload = (uploadName: string) => {
 }
 ```
 
-
 ## Performance Considerations
 
 ### Debounced Events
@@ -237,6 +355,7 @@ onUnmounted(() => {
 
 ## Next Steps
 
+- [Basic Usage](basic_usage.html) for fundamental patterns and examples
 - [Component Reference](component_reference.html) for LiveView-side API
-- [Advanced Features](advanced_features.html) for complex scenarios
+- [Configuration](configuration.html) for advanced setup options
 - [Testing](testing.html) for testing client-side code

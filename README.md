@@ -93,19 +93,33 @@ See [Installation](docs/installation.md).
 
 ## Guides
 
- - [Getting Started](docs/getting_started.md)
- - [Basic Usage](docs/basic_usage.md)
- - [Advanced Features](docs/advanced_features.md)
- - [FAQ](docs/faq.md)
- - [Deployment](docs/deployment.md)
- - [Testing](docs/testing.md)
+### Getting Started
+ - [Installation](docs/installation.md) - Set up LiveVue in your Phoenix app
+ - [Getting Started](docs/getting_started.md) - Create your first Vue component with transitions
+
+### Core Usage
+ - [Basic Usage](docs/basic_usage.md) - Fundamental patterns, ~V sigil, and common examples
+ - [Configuration](docs/configuration.md) - Advanced setup, SSR, and customization options
+
+### Reference
+ - [Component Reference](docs/component_reference.md) - Complete syntax documentation
+ - [Client-Side API](docs/client_api.md) - Vue composables and utilities
+
+### Advanced Topics
+ - [Architecture](docs/architecture.md) - How LiveVue works under the hood
+ - [Testing](docs/testing.md) - Testing Vue components in LiveView
+ - [Deployment](docs/deployment.md) - Production deployment guide
+
+### Help & Troubleshooting
+ - [FAQ](docs/faq.md) - Common questions and comparisons
+ - [Troubleshooting](docs/troubleshooting.md) - Debug common issues
+ - [Comparison](docs/comparison.md) - LiveVue vs other solutions
 
 ## Relation to LiveSvelte
 
 This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork of LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
 
 You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
-
 
 ## LiveVue Development
 

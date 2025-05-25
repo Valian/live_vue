@@ -13,14 +13,14 @@ LiveVue is part of a growing ecosystem of libraries that integrate modern fronte
 | **Framework** | Vue.js | Svelte | React | Framework-agnostic |
 | **SSR Support** | ✅ | ✅ | ✅ | ❌ |
 | **Component Shortcuts** | ✅ | ✅ | ❌ | ❌ |
-| **Slots Support** | ✅ | ✅ | ❌ | ❌ |
+| **Slots Support** | ✅ | ✅ | ✅ | ❌ |
 | **TypeScript Support** | ✅ | ✅ | ✅ | ✅ |
-| **Build System** | Vite | Custom esbuild | Vite/esbuild | Any |
-| **Sigil DSL** | ❌ | ✅ (`~V`) | ❌ | ❌ |
+| **Build System** | Vite | Custom esbuild | Vite | Any |
+| **Sigil DSL** | ✅ (`~V`) | ✅ (`~V`) | ❌ | ❌ |
 | **Embeddable Apps** | ❌ | ❌ | ❌ | ✅ |
 | **Real-time Updates** | ✅ | ✅ | ✅ | ✅ |
 | **Event Handling** | ✅ | ✅ | ✅ | ✅ |
-| **Maturity** | Stable | Mature | Stable | Stable |
+| **Maturity** | Mature | Mature | Stable | Stable |
 
 ## LiveSvelte
 
@@ -338,6 +338,6 @@ Choose based on your team's expertise, project requirements, and long-term goals
 
 - [LiveVue Documentation](https://hexdocs.pm/live_vue)
 - [LiveSvelte Documentation](https://hexdocs.pm/live_svelte)
-- [LiveReact Documentation](https://hexdocs.pm/phoenix_live_react)
+- [LiveReact Documentation](https://hexdocs.pm/live_react)
 - [LiveState Documentation](https://hexdocs.pm/live_state)
 - [Phoenix LiveView Documentation](https://hexdocs.pm/phoenix_live_view)

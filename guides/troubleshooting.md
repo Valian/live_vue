@@ -2,6 +2,10 @@
 
 This guide helps you diagnose and fix common issues when working with LiveVue.
 
+> #### Quick Start {: .tip}
+>
+> New to LiveVue? Start with [Getting Started](getting_started.html) for a working example, then check [Basic Usage](basic_usage.html) for common patterns.
+
 ## Component Issues
 
 ### Component Not Rendering
@@ -250,6 +254,8 @@ config :live_vue,
   ssr: true
 ```
 
+For complete SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr).
+
 **Verify Node.js version:**
 ```bash
 node --version  # Should be 19+
@@ -270,6 +276,8 @@ children = [
 ```bash
 ls priv/vue/server.js  # Should exist after build
 ```
+
+For production SSR setup details, see [Configuration](configuration.html#production-ssr-setup).
 
 ## Performance Issues
 
@@ -368,6 +376,7 @@ window.liveVueDebug = true
 **Solution:** Check component name and file path
 ```javascript
 // Debug component resolution
+// find component does it by default, you might need to do it if you override it
 console.log("Resolving component:", componentName)
 console.log("Available components:", Object.keys(components))
 ```
@@ -406,7 +415,7 @@ export default defineConfig({
 ### Before Asking for Help
 
 1. **Check browser console for errors**
-2. **Verify all configuration steps**
+2. **Verify all configuration steps** (see [Configuration](configuration.html))
 3. **Test with minimal reproduction case**
 4. **Check if issue exists in example project**
 
@@ -431,4 +440,5 @@ Include:
 
 - [FAQ](faq.html) for conceptual questions
 - [Architecture](architecture.html) to understand how things work
+- [Configuration](configuration.html) for advanced setup options
 - [GitHub Issues](https://github.com/Valian/live_vue/issues) to report bugs

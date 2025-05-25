@@ -52,6 +52,8 @@ The implementation is straightforward:
 
 Note: Hooks fire only after `app.js` loads, which may cause slight delays in initial render.
 
+For a deeper dive into the architecture, see [Architecture](architecture.html).
+
 ### What Optimizations Does LiveVue Use?
 
 LiveVue implements several performance optimizations:
@@ -83,6 +85,8 @@ Important notes:
 - Not needed during live navigation
 - Can be disabled per-component with `v-ssr={false}`
 
+For complete SSR configuration, see [Configuration](configuration.html#server-side-rendering-ssr).
+
 ## Development
 
 ### How Do I Use TypeScript?
@@ -106,6 +110,8 @@ import {initApp} from './app.ts'
 initApp()
 ```
 
+For complete TypeScript setup, see [Configuration](configuration.html#typescript-support).
+
 ### Where Should I Put Vue Files?
 
 Vue files in LiveVue are similar to HEEX templates. You have two main options:
@@ -119,6 +125,8 @@ Colocating provides better DX by:
 - Simplifying maintenance
 
 No configuration needed - just place `.vue` files in `lib/my_app_web` and reference them by name or path.
+
+For advanced component organization, see [Configuration](configuration.html#component-organization).
 
 ## Comparison with Other Solutions
 
@@ -149,6 +157,8 @@ Choose based on:
 - Ecosystem requirements
 - Syntax preferences
 - Bundle size concerns
+
+For a detailed comparison with other solutions, see [Comparison](comparison.html).
 
 ## Additional Resources
 

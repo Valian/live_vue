@@ -2,6 +2,10 @@
 
 This guide provides a complete reference for using Vue components in Phoenix LiveView templates.
 
+> #### Practical Examples {: .tip}
+>
+> For practical usage examples and patterns, see [Basic Usage](basic_usage.html). This reference focuses on complete syntax documentation.
+
 ## The `.vue` Component
 
 The `.vue` component is the primary way to render Vue components in LiveView templates.
@@ -15,6 +19,8 @@ The `.vue` component is the primary way to render Vue components in LiveView tem
   prop_name={@value}
 />
 ```
+
+For practical examples of different rendering patterns, see [Basic Usage](basic_usage.html#rendering-components).
 
 ### Required Attributes
 
@@ -178,6 +184,8 @@ Standard Phoenix events work directly in Vue components:
 </.vue>
 ```
 
+For more event handling patterns and examples, see [Basic Usage](basic_usage.html#handling-events).
+
 ### Vue Event Handlers
 
 Use `v-on:` for handling Vue component events:
@@ -193,16 +201,7 @@ Use `v-on:` for handling Vue component events:
 />
 ```
 
-```vue
-<!-- Counter.vue -->
-<script setup>
-const emit = defineEmits(['increment', 'decrement', 'reset'])
-
-const increment = () => emit('increment', { amount: 1 })
-const decrement = () => emit('decrement', { amount: 1 })
-const reset = () => emit('reset')
-</script>
-```
+For client-side event handling within Vue components, see [Client-Side API](client_api.html#uselive-vue).
 
 ### Event Payload Handling
 
@@ -235,7 +234,7 @@ When using `JS.push()` without a value, the emit payload is automatically used:
 
 ### Global SSR Configuration
 
-See [Configuration](configuration.html) for more details.
+For complete SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr).
 
 ### Per-Component SSR Control
 
@@ -464,6 +463,7 @@ const createdAt = new Date(props.created_at)
 
 ## Next Steps
 
+- [Basic Usage](basic_usage.html) for practical patterns and examples
 - [Client-Side API](client_api.html) for Vue component development
-- [Basic Usage](basic_usage.html) for common patterns and examples
-- [Advanced Features](advanced_features.html) for complex scenarios
+- [Configuration](configuration.html) for advanced setup and customization
+- [Testing](testing.html) for testing component integration

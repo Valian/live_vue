@@ -58,6 +58,91 @@ end
 live "/counter", CounterLive
 ```
 
+Start server and visit `http://localhost:4000/counter` to see your counter in action!
+If it's not working correctly, see [Troubleshooting](troubleshooting.html).
+
+## Adding Smooth Transitions
+
+One of Vue's strengths is its built-in transition system. Let's enhance our counter with smooth animations and nice tailwind styling:
+
+1. Create `assets/vue/AnimatedCounter.vue`:
+
+```html
+<script setup lang="ts">
+import {ref} from "vue"
+
+const props = defineProps<{count: number}>()
+const diff = ref(1)
+</script>
+
+<template>
+  <div class="space-y-4">
+    <div class="text-center">
+      <Transition name="count" mode="out-in">
+        <span
+          :key="props.count"
+          class="text-4xl font-bold text-blue-600"
+        >
+          {{ props.count }}
+        </span>
+      </Transition>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <label class="text-sm font-medium">Diff:</label>
+      <input
+        v-model.number="diff"
+        type="range"
+        min="1"
+        max="10"
+        class="flex-1"
+      />
+      <span class="text-sm text-gray-600">{{ diff }}</span>
+    </div>
+
+    <button
+      phx-click="inc"
+      :phx-value-diff="diff"
+      class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+    >
+      Increase by {{ diff }}
+    </button>
+  </div>
+</template>
+
+<style scoped>
+.count-enter-active,
+.count-leave-active {
+  transition: all 0.3s ease;
+}
+
+.count-enter-from {
+  opacity: 0;
+  transform: scale(0.8) translateY(-10px);
+}
+
+.count-leave-to {
+  opacity: 0;
+  transform: scale(1.2) translateY(10px);
+}
+</style>
+```
+
+2. Update your LiveView to use the animated version:
+
+```elixir
+def render(assigns) do
+  ~H"""
+  <div class="max-w-sm mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">Animated Counter</h1>
+    <.vue count={@count} v-component="AnimatedCounter" v-socket={@socket} />
+  </div>
+  """
+end
+```
+
+Now your counter will smoothly animate when the value changes! This showcases how Vue's transition system can add polish to your LiveView apps without any server-side complexity.
+
 ## Key Concepts
 
 This example demonstrates several key LiveVue features:
@@ -66,6 +151,7 @@ This example demonstrates several key LiveVue features:
 - **Event Handling**: Vue emits an `inc` event with `phx-click` and `phx-value-diff` attributes
 - **State Management**: LiveView maintains the source of truth (the counter value)
 - **Local UI State**: Vue maintains the slider value locally without server involvement
+- **Transitions**: Vue handles smooth animations purely on the client side
 
 Basic diagram of the flow:
 
@@ -84,7 +170,7 @@ If you want to understand how it works in depth, see [Architecture](architecture
 ## Next Steps
 
 Now that you have your first component working, explore:
-- [Tutorial](tutorial.html) for a more comprehensive example
-- [Basic usage](basic_usage.html) for more examples
+- [Basic Usage](basic_usage.html) for more patterns and the ~V sigil
+- [Component Reference](component_reference.html) for complete syntax documentation
 - [FAQ](faq.html) for common questions and troubleshooting
 - [Troubleshooting](troubleshooting.html) for common issues

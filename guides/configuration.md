@@ -242,46 +242,115 @@ Components are resolved by name or path suffix:
 
 ## Server-Side Rendering (SSR)
 
+LiveVue provides flexible SSR options that work great in both development and production environments.
+
 ### SSR Modules
 
+LiveVue offers two SSR strategies depending on your environment:
+
 #### ViteJS (Development)
-Uses Vite's `ssrLoadModule` for efficient development compilation:
+Perfect for development with hot module replacement:
 
 ```elixir
+# config/dev.exs
 config :live_vue,
   ssr_module: LiveVue.SSR.ViteJS,
   vite_host: "http://localhost:5173"
 ```
 
+Uses Vite's `ssrLoadModule` for efficient development compilation with instant updates.
+
 #### NodeJS (Production)
-Uses elixir-nodejs with an in-memory server bundle:
+Optimized for production with an in-memory server bundle:
 
 ```elixir
+# config/prod.exs
 config :live_vue,
   ssr_module: LiveVue.SSR.NodeJS,
-  ssr_filepath: "./vue/server.js"
+  ssr: true
+```
+
+Uses elixir-nodejs with a pre-built server bundle for optimal performance.
+
+### SSR Configuration
+
+Control SSR behavior globally or per-component:
+
+```elixir
+# Global SSR settings
+config :live_vue,
+  ssr: true,  # Enable SSR by default
+  ssr_filepath: "./vue/server.js"  # Server bundle path
 ```
 
 ### SSR Behavior
 
-SSR runs only during:
-- Initial page loads (dead renders)
-- When enabled in config or `v-ssr={true}` is explicitly set
+SSR is intelligently applied:
+- **Runs during**: Initial page loads (dead renders)
+- **Skips during**: Live navigation and WebSocket updates
+- **Can be disabled**: Per-component with `v-ssr={false}`
 
-SSR is skipped during:
-- Live navigation
-- WebSocket updates
-- When disabled in config or `v-ssr={false}` is set
+This gives you the SEO and performance benefits of SSR without the overhead during live updates.
 
 ### Per-Component SSR Control
 
-```elixir
-# Enable SSR for this component
-<.vue v-component="Counter" v-ssr={true} v-socket={@socket} />
+Override global settings for specific components:
 
-# Disable SSR for this component
-<.vue v-component="Modal" v-ssr={false} v-socket={@socket} />
+```elixir
+<!-- Force SSR for this component -->
+<.vue v-component="CriticalContent" v-ssr={true} v-socket={@socket} />
+
+<!-- Disable SSR for client-only widgets -->
+<.vue v-component="InteractiveChart" v-ssr={false} v-socket={@socket} />
+
+<!-- Use global default -->
+<.vue v-component="RegularComponent" v-socket={@socket} />
 ```
+
+### SSR Performance
+
+Vue SSR is compiled into optimized string concatenation for maximum performance. The SSR process:
+- Only runs during "dead" renders (no WebSocket connection)
+- Skips during live navigation for better UX
+- Can be disabled per-component when not needed
+
+### Production SSR Setup
+
+For production deployments, you'll need Node.js 19+ and proper configuration:
+
+1. **Install Node.js 19+** in your production environment
+2. **Configure NodeJS supervisor** in your `application.ex`:
+
+```elixir
+children = [
+  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
+  # ... other children
+]
+```
+
+3. **Build server bundle** as part of your deployment:
+
+```bash
+# In your deployment script
+cd assets && npm run build-server
+```
+
+The server bundle will be created at `priv/vue/server.js` and used by the NodeJS supervisor.
+
+### SSR Troubleshooting
+
+**SSR not working in development?**
+- Check that Vite dev server is running on the configured port
+- Verify `vite_host` matches your Vite server URL
+
+**SSR failing in production?**
+- Ensure Node.js 19+ is installed
+- Check that `priv/vue/server.js` exists after build
+- Verify NodeJS supervisor is properly configured
+
+**Performance issues?**
+- Consider adjusting the NodeJS pool size based on your server capacity
+- Disable SSR for components that don't benefit from it
 
 ## Troubleshooting Configuration
 

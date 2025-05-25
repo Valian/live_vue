@@ -2,6 +2,10 @@
 
 Deploying a LiveVue app is similar to deploying a regular Phoenix app, with one key requirement: **Node.js version 19 or later must be installed** in your production environment.
 
+> #### SSR Configuration {: .tip}
+>
+> For detailed SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr). This guide focuses on deployment-specific setup.
+
 ## General Requirements
 
 1. Node.js 19+ installed in production
@@ -103,13 +107,7 @@ heroku buildpacks:add --index 1 heroku/nodejs
 If using your own Docker setup:
 1. Ensure Node.js 19+ is installed
 2. Follow standard Phoenix deployment practices
-3. Configure SSR in production:
-```elixir
-# config/prod.exs
-config :live_vue,
-  ssr_module: LiveVue.SSR.NodeJS,
-  ssr: true
-```
+3. Configure SSR for production (see [Configuration](configuration.html#production-ssr-setup))
 
 ### Custom Server
 
@@ -126,7 +124,7 @@ apt-get install -y nodejs
 
 - [ ] Node.js 19+ installed
 - [ ] Assets built (`mix assets.build`)
-- [ ] SSR configured properly
+- [ ] SSR configured properly (see [Configuration](configuration.html#production-ssr-setup))
 - [ ] Database configured
 - [ ] Environment variables set
 - [ ] SSL certificates configured (if needed)
@@ -139,7 +137,7 @@ apt-get install -y nodejs
 
 1. **SSR Not Working**
    - Verify Node.js installation
-   - Check SSR configuration
+   - Check SSR configuration (see [Configuration](configuration.html#ssr-troubleshooting))
    - Ensure server bundle exists in `priv/vue/server.js`
 
 2. **Asset Loading Issues**
@@ -148,14 +146,7 @@ apt-get install -y nodejs
    - Inspect network requests
 
 3. **Performance Issues**
-   - Consider adjusting NodeJS pool size:
-```elixir
-# in your application.ex
-children = [
-  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
-  # other children...
-]
-```
+   - Consider adjusting NodeJS pool size (see [Configuration](configuration.html#production-ssr-setup))
 
 ## Next Steps
 
