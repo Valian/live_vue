@@ -56,7 +56,14 @@ config :live_vue,
 
 ## Vue Application Setup
 
-Configure your Vue application in `assets/vue/index.js`:
+Configure your Vue application in `assets/vue/index.js`. You should use createLiveVue to provide two required functions:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `resolve` | `(name: string) => Component \| Promise<Component>` | Component resolution function |
+| `setup` | `(context: SetupContext) => VueApp` | Vue app setup function |
+
+Installation step provides a reasonable implementation of createLiveVue that you can use as a starting point.
 
 ### Basic Configuration
 
@@ -95,6 +102,21 @@ export default createLiveVue({
 })
 ```
 
+### SetupContext
+
+SetupContext is an object that is passed to the setup function.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `createApp` | `Function` | Vue's createApp or createSSRApp |
+| `component` | `Component` | The Vue component to render |
+| `props` | `object` | Props passed from LiveView |
+| `slots` | `object` | Slots passed from LiveView |
+| `plugin` | `Plugin` | LiveVue plugin (required) |
+| `el` | `HTMLElement` | Mount target element |
+| `ssr` | `boolean` | Whether this is SSR context |
+
+
 ### Component Resolution Options
 
 #### Eager Loading (Default)
@@ -116,8 +138,10 @@ const components = {
 }
 
 // Or using Vite's glob import
+// useful if we colocate Vue components with LiveView components and want to put each of them into a separate chunk
+// all shared components imported by top-level components will be included as well.
 const components = import.meta.glob(
-  './components/*.vue',
+  "../../lib/**/*.vue",
   { eager: false, import: 'default' }
 )
 ```
@@ -132,7 +156,7 @@ resolve: name => {
     'admin/Dashboard': () => import('./admin/Dashboard.vue')
   }
 
-  return componentMap[name] || findComponent(components, name)
+  return componentMap[name]
 }
 ```
 

@@ -71,7 +71,7 @@ Basic diagram of the flow:
 
 ![LiveVue flow](./images/lifecycle.png)
 
-If you want to understand how it works in depth, see [FAQ](faq.html#technical-details).
+If you want to understand how it works in depth, see [Architecture](architecture.html).
 
 
 > #### Good to know {: .info}
@@ -84,5 +84,7 @@ If you want to understand how it works in depth, see [FAQ](faq.html#technical-de
 ## Next Steps
 
 Now that you have your first component working, explore:
+- [Tutorial](tutorial.html) for a more comprehensive example
 - [Basic usage](basic_usage.html) for more examples
 - [FAQ](faq.html) for common questions and troubleshooting
+- [Troubleshooting](troubleshooting.html) for common issues
