@@ -34,8 +34,56 @@ defmodule LiveVue.MixProject do
         main: "readme",
         extras: [
           "README.md": [title: "LiveVue"],
-          "INSTALLATION.md": [title: "Installation"],
+
+          # Getting Started
+          "guides/installation.md": [title: "Installation"],
+          "guides/getting_started.md": [title: "Getting Started"],
+
+          # Core Usage
+          "guides/basic_usage.md": [title: "Basic Usage"],
+          "guides/configuration.md": [title: "Configuration"],
+
+          # Reference
+          "guides/component_reference.md": [title: "Component Reference"],
+          "guides/client_api.md": [title: "Client-Side API"],
+
+          # Advanced Topics
+          "guides/architecture.md": [title: "How LiveVue Works"],
+          "guides/testing.md": [title: "Testing"],
+          "guides/deployment.md": [title: "Deployment"],
+
+          # Help & Troubleshooting
+          "guides/faq.md": [title: "FAQ"],
+          "guides/troubleshooting.md": [title: "Troubleshooting"],
+          "guides/comparison.md": [title: "LiveVue vs Alternatives"],
           "CHANGELOG.md": [title: "Changelog"]
+        ],
+        extra_section: "GUIDES",
+        groups_for_extras: [
+          Introduction: ["README.md"],
+          "Getting Started": [
+            "guides/installation.md",
+            "guides/getting_started.md"
+          ],
+          "Core Usage": [
+            "guides/basic_usage.md",
+            "guides/configuration.md"
+          ],
+          Reference: [
+            "guides/component_reference.md",
+            "guides/client_api.md"
+          ],
+          "Advanced Topics": [
+            "guides/architecture.md",
+            "guides/testing.md",
+            "guides/deployment.md"
+          ],
+          "Help & Troubleshooting": [
+            "guides/faq.md",
+            "guides/troubleshooting.md",
+            "guides/comparison.md"
+          ],
+          Other: ["CHANGELOG.md"]
         ],
         links: %{
           "GitHub" => @repo_url
@@ -83,12 +131,14 @@ defmodule LiveVue.MixProject do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test}
+      {:excoveralls, "~> 0.18", only: :test},
+      {:makeup_html, "~> 0.1.0", only: :dev, runtime: false}
     ]
   end
 
   defp aliases do
     [
+      docs: ["docs", &copy_images/1],
       setup: ["deps.get", "cmd npm install"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
@@ -96,5 +146,10 @@ defmodule LiveVue.MixProject do
       "release.minor": ["assets.build", "expublish.minor --branch=main --disable-publish"],
       "release.major": ["assets.build", "expublish.major --branch=main --disable-publish"]
     ]
+  end
+
+  defp copy_images(_) do
+    File.mkdir_p!("./doc/images")
+    File.cp_r("./guides/images", "./doc/images")
   end
 end
