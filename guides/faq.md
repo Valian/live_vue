@@ -87,6 +87,47 @@ Important notes:
 
 For complete SSR configuration, see [Configuration](configuration.html#server-side-rendering-ssr).
 
+### Can I nest LiveVue components inside each other?
+
+No, it is not possible to nest a `<.vue>` component rendered by LiveView inside another `<.vue>` component's slot.
+
+**Why?**
+
+This limitation exists because of how slots are handled. The content you place inside a component's slot in your `.heex` template is rendered into raw HTML on the server *before* being sent to the client. When the parent Vue component is mounted on the client, it receives this HTML as a simple string.
+
+Since the nested component's HTML is just inert markup at that point, Phoenix LiveView's hooks (including the `VueHook` that powers LiveVue) cannot be attached to it, and the nested Vue component will never be initialized.
+
+**Workarounds:**
+
+1.  **Adjacent Components:** The simplest approach is to restructure your UI to use adjacent components instead of nested ones.
+
+    ```elixir
+    # Instead of this:
+    <.Card v-socket={@socket}>
+      <.UserProfile user={@user} v-socket={@socket} />
+    </.Card>
+
+    # Do this:
+    <.Card v-socket={@socket} />
+    <.UserProfile user={@user} v-socket={@socket} />
+    ```
+
+2.  **Standard Vue Components:** You can nest standard (non-LiveVue) Vue components inside a LiveVue component. These child components are defined entirely within the parent's Vue template and do not have a corresponding `<.vue>` tag in LiveView. They can receive props from their LiveVue parent and manage their own state as usual.
+
+    ```html
+    <!-- Parent: MyLiveVueComponent.vue -->
+    <script setup>
+    import StandardChild from './StandardChild.vue';
+    defineProps(['someData']);
+    </script>
+    <template>
+      <div>
+        <h1>Data from LiveView: {{ someData }}</h1>
+        <StandardChild :data-from-parent="someData" />
+      </div>
+    </template>
+    ```
+
 ## Development
 
 ### How Do I Use TypeScript?

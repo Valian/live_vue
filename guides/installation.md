@@ -184,6 +184,8 @@ children = [
 
 14. (Optional) Enable [stateful hot reload](https://twitter.com/jskalc/status/1788308446007132509) for LiveViews:
 
+This provides a superior development experience by preserving the LiveView's state (e.g., form data, temporary assigns) while Vite instantly updates the Vue component's code on the client. You get the best of both worlds: state persistence from the server and immediate UI updates from the client.
+
 ```elixir
 # config/dev.exs
 config :my_app, MyAppWeb.Endpoint,

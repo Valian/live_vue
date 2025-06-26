@@ -233,6 +233,41 @@ live.uploadTo("#profile-form", "avatar", files)
 </script>
 ```
 
+## Built-in Components
+
+### Link
+
+The `Link` component provides a convenient wrapper around Phoenix LiveView's navigation capabilities, making it easy to perform `patch` and `navigate` actions from within your Vue components.
+
+```html
+<script setup>
+import { Link } from 'live_vue'
+</script>
+
+<template>
+  <!-- Basic link -->
+  <Link href="/regular-link">Regular Link</Link>
+
+  <!-- `live_patch` to the same LiveView -->
+  <Link patch="/posts/1/edit">Edit Post</Link>
+
+  <!-- `live_redirect` to a different LiveView -->
+  <Link navigate="/posts">Back to Posts</Link>
+
+  <!-- Replace the current history entry -->
+  <Link patch="/posts/1/edit" replace>Edit (replace history)</Link>
+</template>
+```
+
+#### Props
+
+| Prop | Type | Description |
+|---|---|---|
+| `href` | `string` | A standard link that causes a full page reload. |
+| `patch` | `string` | Navigates to a new URL within the same LiveView by calling `handle_params`. |
+| `navigate` | `string` | Navigates to a different LiveView, replacing the current one without a full page reload. |
+| `replace` | `boolean` | If `true`, the browser's history entry is replaced instead of a new one being pushed. |
+
 ## Utility Functions
 
 ### createLiveVue(config)
@@ -241,21 +276,32 @@ Creates a LiveVue application instance. For complete configuration options, see 
 
 ### findComponent(components, name)
 
-Helper function to resolve components by name or path.
+A flexible helper function to resolve a component from a map of available components. It finds a component by checking if the key ends with either `name.vue` or `name/index.vue`.
+
+This is particularly useful when using Vite's `import.meta.glob` to import all components, as it allows for a simple and conventional way to organize and resolve them.
 
 ```typescript
 import { findComponent } from 'live_vue'
 
-// Finds component by suffix matching
-const component = findComponent(components, 'UserProfile')
-// Matches: './components/UserProfile.vue', './admin/UserProfile.vue', './admin/UserProfile/index.vue'
+// Given a components map from Vite:
+const components = import.meta.glob(["./**/*.vue", "../../lib/**/*.vue"]);
+
+// It can resolve the following:
+// 1. By component name: `findComponent(components, 'UserProfile')`
+//    -> Matches: `./components/UserProfile.vue`
+// 2. By path: `findComponent(components, 'admin/Dashboard')`
+//    -> Matches: `./components/admin/Dashboard.vue`
+// 3. By directory with an index file: `findComponent(components, 'forms/Button')`
+//    -> Matches: `./components/forms/Button/index.vue`
 ```
 
-**Parameters:**
-- `components` (object): Component map - name to Vue Component
-- `name` (string): Component name to find
+If the component is not found, it will throw a helpful error listing all available components.
 
-**Returns:** Component or undefined
+**Parameters:**
+- `components` (object): A map of component paths to component modules, typically from `import.meta.glob`.
+- `name` (string): The name or path of the component to find.
+
+**Returns:** The resolved Vue component, or throws an error if not found.
 
 ### getHooks(liveVueApp)
 

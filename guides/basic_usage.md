@@ -102,6 +102,31 @@ live.handleEvent("response", (payload) => { console.log(payload) })
 
 The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
 
+### LiveView Navigation
+
+For navigation, LiveVue provides a built-in `Link` component that makes using `live_patch` and `live_redirect` as easy as using a standard `<a>` tag.
+
+```html
+<script setup>
+import { Link } from "live_vue"
+</script>
+
+<template>
+  <nav>
+    <!-- Behaves like a normal link -->
+    <Link href="/about">About</Link>
+
+    <!-- Performs a `live_patch` -->
+    <Link patch="/users?sort=name">Sort by Name</Link>
+
+    <!-- Performs a `live_redirect` -->
+    <Link navigate="/dashboard">Dashboard</Link>
+  </nav>
+</template>
+```
+
+For a complete API reference, see [Client-Side API](client_api.html#link).
+
 ### Vue Events
 
 If you want to create reusable Vue components where you'd like to define what happens when Vue emits an event, you can use the `v-on:` syntax with `JS` [module helpers](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.JS.html#module-client-utility-commands).
@@ -213,6 +238,22 @@ end
 ```
 
 This approach is great when you want to keep everything in one file or when prototyping components quickly.
+
+### How it Works and When to Use It
+
+The `~V` sigil is a powerful macro that compiles the string content into a full-fledged Vue component at compile time. It automatically passes all of the LiveView's `assigns` as props to the component, making it a seamless way to co-locate client-side logic.
+
+**When to use the `~V` sigil:**
+
+*   **Prototyping:** Quickly build and iterate on new components without creating new files.
+*   **Single-use components:** Ideal for components that are tightly coupled to a specific LiveView and won't be reused.
+*   **Co-location:** Keep server-side and client-side logic for a piece of functionality within a single file.
+
+**When to use `.vue` files instead:**
+
+*   **Reusability:** When you need to use the same component in multiple LiveViews.
+*   **Large components:** For complex components, a dedicated file improves organization and editor support.
+*   **Collaboration:** Separate files are often easier for teams to work on simultaneously.
 
 ## Next Steps
 

@@ -151,6 +151,10 @@ LiveVue minimizes data transmission by tracking only modified props, slots, and 
 
 Server-side rendering is intelligently applied only during initial page loads (dead renders), can be configured per component, and is skipped during live navigation for better performance.
 
+### Automatic Preloading
+
+During server-side rendering, LiveVue automatically uses the Vite-generated manifest file to inject resource preload links (`<link rel="modulepreload">` and others) for all the assets required by a component. This ensures that the browser can download necessary JavaScript and CSS files earlier in the page load process, improving perceived performance and reducing the time to an interactive page.
+
 ### Memory Management
 
 Automatic cleanup prevents memory leaks through proper hook lifecycle management. Vue apps are unmounted when hooks are destroyed, with special handling for Phoenix navigation events and automatic removal of event listeners:
