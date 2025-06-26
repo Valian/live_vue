@@ -81,6 +81,27 @@ All standard Phoenix event handlers work inside Vue components:
 
 They will be pushed directly to LiveView, exactly as happens with `HEEX` components.
 
+### Programmatic access to hook instance
+
+Access Phoenix hooks from Vue components using `useLiveVue`:
+
+```html
+<script setup>
+import {useLiveVue} from "live_vue"
+
+const live = useLiveVue()
+live.pushEvent("hello", {value: "world"})
+live.handleEvent("response", (payload) => { console.log(payload) })
+</script>
+
+<template>
+  <!-- Can be used from template as well -->
+  <button @click="live.pushEvent('hello', {value: 'world'})">Click me</button>
+</template>
+```
+
+The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
+
 ### Vue Events
 
 If you want to create reusable Vue components where you'd like to define what happens when Vue emits an event, you can use the `v-on:` syntax with `JS` [module helpers](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.JS.html#module-client-utility-commands).
@@ -192,22 +213,6 @@ end
 ```
 
 This approach is great when you want to keep everything in one file or when prototyping components quickly.
-
-## Client-Side Hooks
-
-Access Phoenix hooks from Vue components using `useLiveVue`:
-
-```html
-<script setup>
-import {useLiveVue} from "live_vue"
-
-const live = useLiveVue()
-live.pushEvent("hello", {value: "world"})
-live.handleEvent("response", (payload) => { console.log(payload) })
-</script>
-```
-
-The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
 
 ## Next Steps
 

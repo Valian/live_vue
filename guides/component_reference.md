@@ -117,7 +117,7 @@ Vue components can receive slots from LiveView templates.
 </.vue>
 ```
 
-```vue
+```html
 <!-- Card.vue -->
 <template>
   <div class="card">
@@ -143,7 +143,7 @@ Vue components can receive slots from LiveView templates.
 </.vue>
 ```
 
-```vue
+```html
 <!-- Modal.vue -->
 <template>
   <div class="modal">
@@ -201,13 +201,13 @@ Use `v-on:` for handling Vue component events:
 />
 ```
 
-For client-side event handling within Vue components, see [Client-Side API](client_api.html#uselive-vue).
+For client-side event handling within Vue components, see [Client-Side API](client_api.html#uselivevue).
 
 ### Event Payload Handling
 
 When using `JS.push()` without a value, the emit payload is automatically used:
 
-```vue
+```html
 <!-- Vue component -->
 <button @click="$emit('save', { data: formData })">Save</button>
 ```
@@ -307,7 +307,7 @@ For complete SSR configuration options, see [Configuration](configuration.html#s
 />
 ```
 
-```vue
+```html
 <!-- Vue component -->
 <script setup>
 const props = defineProps<{

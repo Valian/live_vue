@@ -63,7 +63,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
    <.vue user_name={@user.name} v-component="Profile" v-socket={@socket} />
    ```
 
-   ```vue
+   ```html
    <!-- Client side - prop names must match exactly -->
    <script setup>
    const props = defineProps<{
@@ -140,7 +140,7 @@ const props = defineProps<Props>()
    ```
 
 2. **Verify event names match**
-   ```vue
+   ```html
    <!-- Vue component -->
    <button @click="$emit('increment', {amount: 1})">+1</button>
    ```
@@ -301,7 +301,7 @@ For production SSR setup details, see [Configuration](configuration.html#product
 ### Memory Leaks
 
 **Clean up event listeners:**
-```vue
+```html
 <script setup>
 import { onUnmounted } from 'vue'
 import { useLiveVue } from 'live_vue'
@@ -317,7 +317,7 @@ onUnmounted(() => {
 ```
 
 **Clear timers and intervals:**
-```vue
+```html
 <script setup>
 import { onUnmounted } from 'vue'
 
@@ -344,7 +344,7 @@ window.liveVueDebug = true
 
 1. **Use Vue DevTools browser extension**
 2. **Add debug logging:**
-   ```vue
+   ```html
    <script setup>
    import { watch } from 'vue'
 

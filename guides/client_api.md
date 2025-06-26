@@ -12,10 +12,14 @@ This guide documents all client-side utilities, composables, and APIs available 
 
 The primary composable for interacting with Phoenix LiveView from Vue components.
 
-```typescript
+```html
+<script setup>
 import { useLiveVue } from 'live_vue'
 
+// under the hood it's using Provide / Inject feature from Vue, so has to be used in setup function
+// more: https://vuejs.org/guide/components/provide-inject
 const live = useLiveVue()
+</script>
 ```
 
 #### Methods
@@ -24,7 +28,11 @@ const live = useLiveVue()
 
 Push an event to the LiveView server.
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
 // Basic usage - increment a counter
 live.pushEvent("increment", { amount: 1 })
 
@@ -42,10 +50,11 @@ live.pushEvent("save_user", {
 
 // Simple refresh without payload
 live.pushEvent("refresh")
+</script>
 ```
 
 **Real-world example - Auto-save draft:**
-```vue
+```html
 <script setup>
 import { watch, debounce } from 'vue'
 import { useLiveVue } from 'live_vue'
@@ -73,7 +82,11 @@ watch(content, debouncedSave)
 
 Listen for events pushed from the LiveView server.
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
 // Listen for server-sent notifications
 live.handleEvent("notification", (payload) => {
   showToast(payload.message, payload.type)
@@ -84,10 +97,11 @@ live.handleEvent("data_updated", (data) => {
   // Update local reactive state
   localData.value = data
 })
+</script>
 ```
 
 **Real-world example - Live chat:**
-```vue
+```html
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useLiveVue } from 'live_vue'
@@ -117,16 +131,22 @@ onMounted(() => {
 
 Push an event to a specific LiveView component.
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
 // Push to specific form component
 live.pushEventTo("#user-form", "validate", formData)
 
 // Target component by data attribute
 live.pushEventTo("[data-component='UserProfile']", "refresh")
+
+</script>
 ```
 
 **Real-world example - Multi-component dashboard:**
-```vue
+```html
 <script setup>
 const live = useLiveVue()
 
@@ -142,7 +162,11 @@ const refreshWidget = (widgetId) => {
 
 Handle file uploads to LiveView.
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
 // Handle file upload
 const fileInput = ref<HTMLInputElement>()
 
@@ -151,10 +175,11 @@ const handleUpload = () => {
     live.upload("avatar", fileInput.value.files)
   }
 }
+</script>
 ```
 
 **Real-world example - Drag & drop upload:**
-```vue
+```html
 <script setup>
 import { ref } from 'vue'
 import { useLiveVue } from 'live_vue'
@@ -199,8 +224,13 @@ const handleDragOver = (event) => {
 
 Upload files to a specific LiveView component.
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
 live.uploadTo("#profile-form", "avatar", files)
+</script>
 ```
 
 ## Utility Functions
@@ -331,8 +361,12 @@ export const useFileUpload = (uploadName: string) => {
 
 ### Debounced Events
 
-```typescript
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
 import { debounce } from 'lodash-es'
+
+const live = useLiveVue()
 
 // Debounce search input
 const debouncedSearch = debounce((query: string) => {
@@ -340,17 +374,34 @@ const debouncedSearch = debounce((query: string) => {
 }, 300)
 
 watch(searchQuery, debouncedSearch)
+</script>
 ```
 
 ### Event Cleanup
 
-```typescript
-// Always clean up event listeners
-onUnmounted(() => {
-  // Remove specific listeners
-  const removeListener = live.handleEvent("data_update", handler)
-  removeListener()
-})
+```html
+<script setup lang="ts">
+import { useLiveVue } from 'live_vue'
+import { onMounted, onUnmounted } from 'vue'
+
+const live = useLiveVue()
+
+// Helper function to clean up event listeners
+// will likely be added to LiveVue in the future
+export function useLiveEvent(event, callback) {
+  let callbackRef = null
+  onMounted(() => {
+    callbackRef = live.handleEvent(event, callback)
+  })
+  onUnmounted(() => {
+    if (callbackRef) live.removeHandleEvent(callbackRef)
+    callbackRef = null
+  })
+}
+
+
+useLiveEvent("data_update", (data) => console.log("Data updated:", data))
+</script>
 ```
 
 ## Next Steps

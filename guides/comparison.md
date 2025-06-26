@@ -207,7 +207,7 @@ LiveVue provides seamless Vue.js integration with Phoenix LiveView.
 />
 ```
 
-```vue
+```html
 <!-- Counter.vue -->
 <template>
   <div>
