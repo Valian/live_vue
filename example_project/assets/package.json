@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host -l warn",
+    "lint": "vue-tsc --noEmit",
     "build": "vue-tsc && vite build",
     "build-server": "vue-tsc && vite build --ssr js/server.js --out-dir ../priv/vue --minify esbuild --ssrManifest && echo '{\"type\": \"module\" } ' > ../priv/vue/package.json"
   },
