@@ -20,7 +20,7 @@
     "vue": "^3.5.10"
   },
   "main": "priv/static/index.js",
-  "types": "priv/static/types.d.ts",
+  "types": "priv/static/index.d.ts",
   "exports": {
     "./vitePlugin": {
       "import": "./priv/static/vitePlugin.js",
