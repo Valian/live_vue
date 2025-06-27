@@ -51,6 +51,43 @@ useLiveEvent("notification", (payload) => {
 </script>
 ```
 
+### `useLiveNavigation()`
+
+A composable for programmatic navigation that mirrors the functionality of `live_patch` and `live_redirect` in Phoenix LiveView. It returns an object with `patch` and `navigate` functions.
+
+This is useful for scenarios where you need to trigger navigation from your script logic, such as after a form submission or a modal action.
+
+**Returns:**
+- `patch(hrefOrQueryParams, { replace: boolean })`: Patches the current LiveView, similar to `live_patch`.
+- `navigate(href, { replace: boolean })`: Navigates to a new LiveView, similar to `live_redirect`.
+
+**Example: Navigating after a successful action**
+
+```html
+<template>
+  <div>
+    <button @click="goToSettings">Go to Settings</button>
+  </div>
+</template>
+
+<script setup>
+import { useLiveNavigation } from 'live_vue';
+import { useLiveEvent } from 'live_vue';
+
+const { patch, navigate } = useLiveNavigation();
+
+useLiveEvent("user_created", (payload) => {
+  // Redirect to the new user's page
+  navigate(`/users/${payload.id}`);
+})
+
+function goToSettings() {
+  // Update the URL with new query params
+  patch({ tab: 'settings', page: 1 });
+}
+</script>
+```
+
 ## Low-Level API
 
 While composables are recommended for most component-based use cases, you can also access the underlying hook instance for more control or for use outside of components.
@@ -194,19 +231,6 @@ live.pushEventTo("#user-form", "validate", formData)
 // Target component by data attribute
 live.pushEventTo("[data-component='UserProfile']", "refresh")
 
-</script>
-```
-
-**Real-world example - Multi-component dashboard:**
-```html
-<script setup>
-const live = useLiveVue()
-
-const refreshWidget = (widgetId) => {
-  live.pushEventTo(`#widget-${widgetId}`, "refresh", {
-    timestamp: Date.now()
-  })
-}
 </script>
 ```
 
