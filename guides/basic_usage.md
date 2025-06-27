@@ -83,22 +83,34 @@ They will be pushed directly to LiveView, exactly as happens with `HEEX` compone
 
 ### Programmatic access to hook instance
 
-Access Phoenix hooks from Vue components using `useLiveVue`:
+There are two ways to access the Phoenix LiveView hook instance from your Vue components:
 
-```html
-<script setup>
-import {useLiveVue} from "live_vue"
+1.  **`useLiveVue()` Composable (in `<script setup>`):**
 
-const live = useLiveVue()
-live.pushEvent("hello", {value: "world"})
-live.handleEvent("response", (payload) => { console.log(payload) })
-</script>
+    Use the `useLiveVue()` composable when you need to access the hook instance for logic within your `<script setup>` block, such as setting up watchers or handling events programmatically.
 
-<template>
-  <!-- Can be used from template as well -->
-  <button @click="live.pushEvent('hello', {value: 'world'})">Click me</button>
-</template>
-```
+    ```html
+    <script setup>
+    import { useLiveVue } from "live_vue"
+
+    const live = useLiveVue()
+
+    // Example: listening for a server event
+    live.handleEvent("response", (payload) => { console.log(payload) })
+    </script>
+    ```
+
+2.  **`$live` Property (in `<template>`):**
+
+    For convenience, the hook instance is also available directly in your template as the `$live` property. This is the preferred method for simple, one-off event pushes directly from the template, as it avoids the need to import and call `useLiveVue()`.
+
+    ```html
+    <template>
+      <button @click="$live.pushEvent('hello', { value: 'world' })">
+        Click me
+      </button>
+    </template>
+    ```
 
 The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
 

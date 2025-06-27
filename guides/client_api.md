@@ -6,23 +6,42 @@ This guide documents all client-side utilities, composables, and APIs available 
 >
 > New to LiveVue? Check out [Basic Usage](basic_usage.html) for fundamental patterns before diving into the API details.
 
-## Core Composables
+## Accessing the LiveView Hook
 
-### useLiveVue()
+There are two primary ways to interact with the LiveView instance from your Vue component:
 
-The primary composable for interacting with Phoenix LiveView from Vue components.
+### 1. `useLiveVue()` Composable
+
+The `useLiveVue()` composable is the standard way to get access to the LiveView hook instance within your component's `<script setup>` block. This is the method you should use when you need to call hook methods from your script logic (e.g., in watchers, lifecycle hooks, or other functions).
 
 ```html
 <script setup>
 import { useLiveVue } from 'live_vue'
 
-// under the hood it's using Provide / Inject feature from Vue, so has to be used in setup function
-// more: https://vuejs.org/guide/components/provide-inject
+// Must be called inside setup
 const live = useLiveVue()
+
+// Now you can use `live` anywhere in your script
+live.pushEvent("some_event")
 </script>
 ```
 
-#### Methods
+### 2. `$live` Global Property
+
+For convenience, the LiveView hook instance is also exposed directly to your Vue templates as a global property named `$live`. This is ideal for simple, one-off calls directly from an element's event handler, as it saves you from importing and calling `useLiveVue()` when you don't need the instance in your script.
+
+```html
+<template>
+  <!-- No script setup needed for this simple case -->
+  <button @click="$live.pushEvent('button_clicked')">
+    Click Me
+  </button>
+</template>
+```
+
+Both `useLiveVue()` and `$live` return the same hook instance, which is fully typed and provides access to the methods below.
+
+## Hook Methods
 
 ##### pushEvent(event, payload?, callback?)
 

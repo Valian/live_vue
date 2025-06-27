@@ -77,7 +77,12 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveHookInternal => 
       component,
       props,
       slots,
-      plugin: { install: (app: App) => app.provide(liveInjectKey, this) },
+      plugin: {
+        install: (app: App) => {
+          app.provide(liveInjectKey, this)
+          app.config.globalProperties.$live = this
+        },
+      },
       el: this.el,
       ssr: false,
     })
