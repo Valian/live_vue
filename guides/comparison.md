@@ -16,7 +16,7 @@ LiveVue is part of a growing ecosystem of libraries that integrate modern fronte
 | **Slots Support** | ✅ | ✅ | ✅ | ❌ |
 | **TypeScript Support** | ✅ | ✅ | ✅ | ✅ |
 | **Build System** | Vite | Custom esbuild | Vite | Any |
-| **Sigil DSL** | ✅ (`~V`) | ✅ (`~V`) | ❌ | ❌ |
+| **Sigil DSL** | ✅ (`~VUE`) | ✅ (`~V`) | ❌ | ❌ |
 | **Embeddable Apps** | ❌ | ❌ | ❌ | ✅ |
 | **Real-time Updates** | ✅ | ✅ | ✅ | ✅ |
 | **Event Handling** | ✅ | ✅ | ✅ | ✅ |

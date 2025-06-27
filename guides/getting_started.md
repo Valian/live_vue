@@ -170,7 +170,7 @@ If you want to understand how it works in depth, see [Architecture](architecture
 ## Next Steps
 
 Now that you have your first component working, explore:
-- [Basic Usage](basic_usage.html) for more patterns and the ~V sigil
+- [Basic Usage](basic_usage.html) for more patterns and the ~VUE sigil
 - [Component Reference](component_reference.html) for complete syntax documentation
 - [FAQ](faq.html) for common questions and troubleshooting
 - [Troubleshooting](troubleshooting.html) for common issues

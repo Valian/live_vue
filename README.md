@@ -19,7 +19,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   ⚡ **End-To-End Reactivity** with LiveView
 -   🔋 **Server-Side Rendered** (SSR) Vue
 -   🐌 **Lazy-loading** Vue Components
--   🪄 **Sigil** as an [Alternative LiveView DSL](#using-v-sigil-to-inline-vue-components)
+-   🪄 **Sigil** as an [Alternative LiveView DSL](#using-vue-sigil-to-inline-vue-components)
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
 -   🦥 **Slot Interoperability**
@@ -97,7 +97,7 @@ See [Installation](guides/installation.md).
  - [Getting Started](guides/getting_started.md) - Create your first Vue component with transitions
 
 ### Core Usage
- - [Basic Usage](guides/basic_usage.md) - Fundamental patterns, ~V sigil, and common examples
+ - [Basic Usage](guides/basic_usage.md) - Fundamental patterns, ~VUE sigil, and common examples
  - [Configuration](guides/configuration.md) - Advanced setup, SSR, and customization options
 
 ### Reference
@@ -179,7 +179,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
 - [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [ ] optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props
-- [ ] VS code extension highlighting `~V` sigil
+- [ ] VS code extension highlighting `~VUE` sigil
 - [ ] Add support for Phoenix streams as props
 
 ## Credits
