@@ -32,3 +32,43 @@ export function useLiveEvent<T>(event: string, callback: (data: T) => void) {
     callbackRef = null
   })
 }
+
+/**
+ * A composable for navigation.
+ * It uses the LiveSocket instance to navigate to a new location.
+ * Works in the same way as the `live_patch` and `live_redirect` functions in LiveView.
+ * @returns An object with `patch` and `navigate` functions.
+ */
+export const useLiveNavigation = () => {
+  const live = useLiveVue()
+  const liveSocket = live.liveSocket
+  if (!liveSocket) throw new Error("LiveSocket not initialized")
+
+  /**
+   * Patches the current LiveView.
+   * @param hrefOrQueryParams - The URL or query params to navigate to.
+   * @param opts - The options for the navigation.
+   */
+  const patch = (hrefOrQueryParams: string | Record<string, string>, opts: { replace?: boolean } = {}) => {
+    let href = typeof hrefOrQueryParams === "string" ? hrefOrQueryParams : window.location.pathname
+    if (typeof hrefOrQueryParams === "object") {
+      const queryParams = new URLSearchParams(hrefOrQueryParams)
+      href = `${href}?${queryParams.toString()}`
+    }
+    liveSocket.pushHistoryPatch(new Event("click"), href, opts.replace ? "replace" : "push", null)
+  }
+
+  /**
+   * Navigates to a new location.
+   * @param href - The URL to navigate to.
+   * @param opts - The options for the navigation.
+   */
+  const navigate = (href: string, opts: { replace?: boolean } = {}) => {
+    liveSocket.historyRedirect(new Event("click"), href, opts.replace ? "replace" : "push", null, null)
+  }
+
+  return {
+    patch,
+    navigate,
+  }
+}
