@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build and test ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -19,29 +19,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: '1.13'
-            otp: '23.3'
           - elixir: '1.15'
             otp: '25.3'
           - elixir: '1.17'
             otp: '27.1'
+          - elixir: "1.18.4-otp-27"
+            otp: "28.0"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.2.2
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
       - name: Restore dependency cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v4.2.0
         id: deps-cache
         with:
           path: deps
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-
       - name: Restore build cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v4
         with:
           path: _build
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-build-${{ hashFiles('**/mix.lock') }}
