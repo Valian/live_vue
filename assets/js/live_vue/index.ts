@@ -1,6 +1,6 @@
 export type { LiveVueApp, LiveVueOptions, SetupContext, VueComponent, LiveHook, ComponentMap } from "./types.js"
 export { createLiveVue } from "./app.js"
 export { getHooks } from "./hooks.js"
-export { useLiveVue } from "./use.js"
+export { useLiveVue, useLiveEvent } from "./use.js"
 export { findComponent } from "./utils.js"
 export { default as Link } from "./link.js"

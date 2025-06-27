@@ -6,11 +6,11 @@ This guide documents all client-side utilities, composables, and APIs available 
 >
 > New to LiveVue? Check out [Basic Usage](basic_usage.html) for fundamental patterns before diving into the API details.
 
-## Accessing the LiveView Hook
+## Composables
 
-There are two primary ways to interact with the LiveView instance from your Vue component:
+LiveVue provides several Vue Composables to make interacting with the LiveView instance from your components easier and more declarative. These should be your first choice when working inside `.vue` files.
 
-### 1. `useLiveVue()` Composable
+### `useLiveVue()`
 
 The `useLiveVue()` composable is the standard way to get access to the LiveView hook instance within your component's `<script setup>` block. This is the method you should use when you need to call hook methods from your script logic (e.g., in watchers, lifecycle hooks, or other functions).
 
@@ -26,7 +26,44 @@ live.pushEvent("some_event")
 </script>
 ```
 
-### 2. `$live` Global Property
+### `useLiveEvent(event, callback)`
+
+The `useLiveEvent` composable is the recommended way to listen for server-pushed events within a component. It automatically registers an event handler when the component is mounted and cleans it up when the component is unmounted.
+
+It is a wrapper around `useLiveVue().handleEvent()` that saves you the boilerplate of using `onMounted` and `onUnmounted`.
+
+**Parameters:**
+- `event` (string): Event name to listen for
+- `callback` (function): Handler function that receives the payload from the server.
+
+**Example: Showing Notifications**
+
+```html
+<script setup>
+import { useLiveEvent } from 'live_vue'
+import { useToast } from 'primevue/usetoast'; // example toast library
+
+const toast = useToast();
+
+useLiveEvent("notification", (payload) => {
+  toast.add({ severity: payload.type, summary: payload.message, life: 3000 });
+})
+</script>
+```
+
+## Low-Level API
+
+While composables are recommended for most component-based use cases, you can also access the underlying hook instance for more control or for use outside of components.
+
+### Accessing the Hook Instance
+
+There are two primary ways to interact with the LiveView instance from your Vue component:
+
+#### 1. `useLiveVue()` Composable
+
+As seen above, `useLiveVue()` returns the raw hook instance.
+
+#### 2. `$live` Global Property
 
 For convenience, the LiveView hook instance is also exposed directly to your Vue templates as a global property named `$live`. This is ideal for simple, one-off calls directly from an element's event handler, as it saves you from importing and calling `useLiveVue()` when you don't need the instance in your script.
 
@@ -42,6 +79,8 @@ For convenience, the LiveView hook instance is also exposed directly to your Vue
 Both `useLiveVue()` and `$live` return the same hook instance, which is fully typed and provides access to the methods below.
 
 ## Hook Methods
+
+The hook instance (returned by `useLiveVue()` or accessed via `$live`) provides the following methods:
 
 ##### pushEvent(event, payload?, callback?)
 
@@ -101,41 +140,23 @@ watch(content, debouncedSave)
 
 Listen for events pushed from the LiveView server.
 
+> **Note:** When using this inside a Vue component, prefer the [`useLiveEvent`](#useliveevent) composable for automatic cleanup. Use `handleEvent` when you need to manually manage the listener's lifecycle.
+
 ```html
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 import { useLiveVue } from 'live_vue'
+
 const live = useLiveVue()
 
 // Listen for server-sent notifications
-live.handleEvent("notification", (payload) => {
+const callbackRef = live.handleEvent("notification", (payload) => {
   showToast(payload.message, payload.type)
 })
 
-// Handle real-time data updates
-live.handleEvent("data_updated", (data) => {
-  // Update local reactive state
-  localData.value = data
-})
-</script>
-```
-
-**Real-world example - Live chat:**
-```html
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useLiveVue } from 'live_vue'
-
-const live = useLiveVue()
-const messages = ref([])
-
-onMounted(() => {
-  // Listen for new messages
-  const callbackRef = live.handleEvent("new_message", (message) => {
-    messages.value.push(message)
-  })
-
-  // Clean up on unmount
-  onUnmounted(() => live.removeHandleEvent(callbackRef))
+// Clean up on unmount to prevent memory leaks
+onUnmounted(() => {
+  live.removeHandleEvent(callbackRef)
 })
 </script>
 ```
@@ -144,7 +165,19 @@ onMounted(() => {
 - `event` (string): Event name to listen for
 - `callback` (function): Handler function receiving the payload
 
-**Returns:** Function to remove the event listener
+**Returns:** A reference to the callback that can be used with `removeHandleEvent`.
+
+##### removeHandleEvent(callbackRef)
+
+Removes an event listener that was previously registered with `handleEvent`.
+
+```js
+// callbackRef is the value returned from a `handleEvent` call
+live.removeHandleEvent(callbackRef)
+```
+
+**Parameters:**
+- `callbackRef`: The reference returned by `handleEvent`.
 
 ##### pushEventTo(selector, event, payload?, callback?)
 

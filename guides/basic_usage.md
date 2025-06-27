@@ -87,16 +87,30 @@ There are two ways to access the Phoenix LiveView hook instance from your Vue co
 
 1.  **`useLiveVue()` Composable (in `<script setup>`):**
 
-    Use the `useLiveVue()` composable when you need to access the hook instance for logic within your `<script setup>` block, such as setting up watchers or handling events programmatically.
+    Use the `useLiveVue()` composable when you need to access the hook instance for logic within your `<script setup>` block. It's ideal for pushing events programmatically.
 
     ```html
     <script setup>
     import { useLiveVue } from "live_vue"
+    import { ref } from "vue"
 
     const live = useLiveVue()
+    const name = ref("")
+
+    function save() {
+      live.pushEvent("save", { name: name.value })
+    }
+    </script>
+    ```
+
+    To listen for events from the server, the easiest way is to use the `useLiveEvent` composable, which will automatically handle cleanup for you.
+
+    ```html
+    <script setup>
+    import { useLiveEvent } from "live_vue"
 
     // Example: listening for a server event
-    live.handleEvent("response", (payload) => { console.log(payload) })
+    useLiveEvent("response", (payload) => { console.log(payload) })
     </script>
     ```
 
