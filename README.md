@@ -89,31 +89,30 @@ LiveVue allows to create hybrid apps, where part of the session state is on the 
 
 ## Installation
 
-See [Installation](docs/installation.md).
+See [Installation](guides/installation.md).
 
 ## Guides
 
 ### Getting Started
- - [Installation](docs/installation.md) - Set up LiveVue in your Phoenix app
- - [Getting Started](docs/getting_started.md) - Create your first Vue component with transitions
+ - [Getting Started](guides/getting_started.md) - Create your first Vue component with transitions
 
 ### Core Usage
- - [Basic Usage](docs/basic_usage.md) - Fundamental patterns, ~V sigil, and common examples
- - [Configuration](docs/configuration.md) - Advanced setup, SSR, and customization options
+ - [Basic Usage](guides/basic_usage.md) - Fundamental patterns, ~V sigil, and common examples
+ - [Configuration](guides/configuration.md) - Advanced setup, SSR, and customization options
 
 ### Reference
- - [Component Reference](docs/component_reference.md) - Complete syntax documentation
- - [Client-Side API](docs/client_api.md) - Vue composables and utilities
+ - [Component Reference](guides/component_reference.md) - Complete syntax documentation
+ - [Client-Side API](guides/client_api.md) - Vue composables and utilities
 
 ### Advanced Topics
- - [Architecture](docs/architecture.md) - How LiveVue works under the hood
- - [Testing](docs/testing.md) - Testing Vue components in LiveView
- - [Deployment](docs/deployment.md) - Production deployment guide
+ - [Architecture](guides/architecture.md) - How LiveVue works under the hood
+ - [Testing](guides/testing.md) - Testing Vue components in LiveView
+ - [Deployment](guides/deployment.md) - Production deployment guide
 
 ### Help & Troubleshooting
- - [FAQ](docs/faq.md) - Common questions and comparisons
- - [Troubleshooting](docs/troubleshooting.md) - Debug common issues
- - [Comparison](docs/comparison.md) - LiveVue vs other solutions
+ - [FAQ](guides/faq.md) - Common questions and comparisons
+ - [Troubleshooting](guides/troubleshooting.md) - Debug common issues
+ - [Comparison](guides/comparison.md) - LiveVue vs other solutions
 
 ## Relation to LiveSvelte
 
