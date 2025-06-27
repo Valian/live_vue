@@ -245,8 +245,20 @@ defmodule LiveVue do
   end
 
   @doc false
-  defmacro sigil_V({:<<>>, _meta, [string]}, []) do
-    path = "./assets/vue/_build/#{__CALLER__.module}.vue"
+  @deprecated "~V sigil is deprecated, please use ~VUE instead."
+  defmacro sigil_V(term, modifiers) do
+    do_sigil(term, modifiers, __CALLER__)
+  end
+
+  @doc """
+  Inlines a Vue single-file component inside a LiveView. This is the new recommended way over the `~V` sigil.
+  """
+  defmacro sigil_VUE(term, modifiers) do
+    do_sigil(term, modifiers, __CALLER__)
+  end
+
+  defp do_sigil({:<<>>, _meta, [string]}, [], caller) do
+    path = "./assets/vue/_build/#{caller.module}.vue"
 
     with :ok <- File.mkdir_p(Path.dirname(path)) do
       File.write!(path, string)

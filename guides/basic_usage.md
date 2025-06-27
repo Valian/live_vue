@@ -255,16 +255,20 @@ Components can be used in both contexts:
   - `v-socket={@socket}` not required
   - SSR still works for initial render
 
-## Using ~V Sigil
+## Using ~VUE Sigil
 
-The `~V` sigil provides an alternative to the standard LiveView DSL, allowing you to write Vue components directly in your LiveView:
+The `~VUE` sigil provides an alternative to the standard LiveView DSL, allowing you to write Vue components directly in your LiveView:
+
+> #### Deprecation Notice {: .warning}
+>
+> The `~V` sigil is deprecated in favor of `~VUE`. It will be removed in future versions.
 
 ```elixir
 defmodule MyAppWeb.CounterLive do
   use MyAppWeb, :live_view
 
   def render(assigns) do
-    ~V"""
+    ~VUE"""
     <script setup lang="ts">
     import {ref} from "vue"
     const props = defineProps<{count: number}>()
@@ -293,13 +297,9 @@ defmodule MyAppWeb.CounterLive do
 end
 ```
 
-This approach is great when you want to keep everything in one file or when prototyping components quickly.
+The `~VUE` sigil is a powerful macro that compiles the string content into a full-fledged Vue component at compile time. It automatically passes all of the LiveView's `assigns` as props to the component, making it easy to create reactive components.
 
-### How it Works and When to Use It
-
-The `~V` sigil is a powerful macro that compiles the string content into a full-fledged Vue component at compile time. It automatically passes all of the LiveView's `assigns` as props to the component, making it a seamless way to co-locate client-side logic.
-
-**When to use the `~V` sigil:**
+**When to use the `~VUE` sigil:**
 
 *   **Prototyping:** Quickly build and iterate on new components without creating new files.
 *   **Single-use components:** Ideal for components that are tightly coupled to a specific LiveView and won't be reused.

@@ -2,7 +2,7 @@ defmodule LiveVueExamplesWeb.LiveSigil do
   use LiveVueExamplesWeb, :live_view
 
   def render(assigns) do
-    ~V"""
+    ~VUE"""
     <script setup lang="ts">
     import {ref} from "vue"
     const props = defineProps<{count: number}>()
