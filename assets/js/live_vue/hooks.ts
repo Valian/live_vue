@@ -1,6 +1,6 @@
 import { createApp, createSSRApp, h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
-import { ComponentMap, LiveHookInternal, LiveVueApp, LiveVueOptions } from "./types.js"
+import { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
 import { mapValues } from "./utils.js"
 
@@ -63,7 +63,7 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
   ...getHandlers(el, liveSocket),
 })
 
-export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveHookInternal => ({
+export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
     const componentName = this.el.getAttribute("data-name") as string
     const component = await resolve(componentName)
@@ -110,7 +110,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): LiveHookInternal => 
  * @param options - The options for the LiveVue app.
  * @returns The hooks for the LiveVue app.
  */
-type VueHooks = { VueHook: LiveHookInternal }
+type VueHooks = { VueHook: Hook }
 type getHooksAppFn = (app: LiveVueApp) => VueHooks
 type getHooksComponentsOptions = { initializeApp?: LiveVueOptions["setup"] }
 type getHooksComponentsFn = (components: ComponentMap, options?: getHooksComponentsOptions) => VueHooks
