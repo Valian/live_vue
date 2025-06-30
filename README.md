@@ -6,7 +6,7 @@
 
 Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
-![logo](https://github.com/Valian/live_vue/blob/main/logo.png?raw=true)
+![logo](https://github.com/Valian/live_vue/blob/main/live_vue_logo.png?raw=true)
 
 ## Resources
 
