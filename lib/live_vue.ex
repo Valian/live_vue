@@ -84,17 +84,14 @@ defmodule LiveVue do
     {props, props_changed?} = extract(assigns, :props)
     {slots, slots_changed?} = extract(assigns, :slots)
     {handlers, handlers_changed?} = extract(assigns, :handlers)
-
-    if props_changed? do
-      old_props = for {k, _v} <- props, into: %{}, do: {k, assigns.__changed__[k]}
-      IO.inspect(Jsonpatch.diff(old_props, props), label: "props")
-    end
+    {props_diff, props_diff_changed?} = calculate_props_diff(props, assigns)
 
     assigns =
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, props)
+      |> Map.put(:props_diff, props_diff)
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, if(slots_changed?, do: Slots.rendered_slot_map(slots), else: %{}))
 
@@ -103,10 +100,11 @@ defmodule LiveVue do
 
     computed_changed =
       %{
-        props: props_changed?,
+        props: props_changed? and not props_diff_changed?,
         slots: slots_changed?,
         handlers: handlers_changed?,
-        ssr_render: render_ssr?
+        ssr_render: render_ssr?,
+        props_diff: props_diff_changed?
       }
 
     assigns =
@@ -123,6 +121,7 @@ defmodule LiveVue do
       id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
       data-props={"#{json(@props)}"}
+      data-props-diff={"#{json(@props_diff)}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
@@ -132,6 +131,17 @@ defmodule LiveVue do
       class={@class}
     ><%= raw(@ssr_render[:html]) %></div>
     """
+  end
+
+  defp calculate_props_diff(props, %{__changed__: changed}) do
+    props
+    |> Map.new(fn {k, _v} -> {k, changed[k]} end)
+    |> Jsonpatch.diff(props)
+    |> then(&{&1, true})
+  end
+
+  defp calculate_props_diff(_props, %{}) do
+    {[], false}
   end
 
   defp extract(assigns, type) do
