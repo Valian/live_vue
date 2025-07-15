@@ -143,10 +143,9 @@ defmodule LiveVue do
   # For complex values (maps, lists), uses Jsonpatch.diff to find minimal changes.
   # Uses LiveVue.Encoder to safely encode structs before diffing.
   defp calculate_props_diff(changed_props, %{__changed__: changed}) do
-    changed_props
     # For simple types: changed[k] == true
     # For complex types: changed[k] is the old value
-    |> Enum.flat_map(fn {k, new_value} ->
+    Enum.flat_map(changed_props, fn {k, new_value} ->
       case changed[k] do
         nil ->
           []
@@ -157,12 +156,12 @@ defmodule LiveVue do
 
         # For complex types, use Jsonpatch to find minimal diff
         old_value ->
-          encoded_old = Encoder.encode(old_value)
-          encoded_new = Encoder.encode(new_value)
+          new_value = Encoder.encode(new_value)
 
-          encoded_old
-          |> Jsonpatch.diff(encoded_new)
-          |> update_in([Access.all(), :path], &"/#{k}#{&1}")
+          old_value
+          |> Encoder.encode()
+          |> Jsonpatch.diff(new_value)
+          |> update_in([Access.all(), :path], fn path -> "/#{k}#{path}" end)
       end
     end)
   end

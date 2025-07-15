@@ -6,6 +6,8 @@ defprotocol LiveVue.Encoder do
   calculating JSON patches. It ensures that struct fields are explicitly
   exposed and prevents accidental exposure of sensitive data.
 
+  It's very similar to Jason.Encoder, but it's converting structs to maps instead of strings.
+
   ## Deriving
 
   The protocol allows leveraging Elixir's `@derive` feature to simplify protocol
@@ -47,6 +49,24 @@ defprotocol LiveVue.Encoder do
       defmodule User do
         defstruct [:name, :email, :password]
       end
+
+  ## Deriving outside of the module
+
+  If you don't own the struct you want to encode, you may use Protocol.derive/3 placed outside of any module:
+
+  Protocol.derive(LiveVue.Encoder, User, only: [...])
+
+  ## Custom implementations
+
+  You may define your own implementation for the struct:
+
+  defimpl LiveVue.Encoder, for: User do
+    def encode(struct, opts) do
+      struct
+      |> Map.take([:first, :second])
+      |> LiveVue.Encoder.encode(opts)
+    end
+  end
   """
 
   @type t :: term
@@ -122,6 +142,9 @@ defimpl LiveVue.Encoder, for: Any do
       description: """
       LiveVue.Encoder protocol must always be explicitly implemented.
 
+      It's used to encode structs to JSON for LiveVue. It's very similar to Jason.Encoder,
+      but it's converting structs to maps so LiveVue can diff them correctly.
+
       If you own the struct, you can derive the implementation specifying \
       which fields should be encoded:
 
@@ -139,11 +162,21 @@ defimpl LiveVue.Encoder, for: Any do
             defstruct ...
           end
 
-      Finally, if you don't own the struct you want to encode, \
+      If you don't own the struct you want to encode, \
       you may use Protocol.derive/3 placed outside of any module:
 
           Protocol.derive(LiveVue.Encoder, #{inspect(module)}, only: [...])
           Protocol.derive(LiveVue.Encoder, #{inspect(module)})
+
+      Nothing prevents you from defining your own implementation for the struct:
+
+      defimpl LiveVue.Encoder, for: #{inspect(module)} do
+        def encode(struct, opts) do
+          struct
+          |> Map.take([:first, :second])
+          |> LiveVue.Encoder.encode(opts)
+        end
+      end
       """
   end
 
