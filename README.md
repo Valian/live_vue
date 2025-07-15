@@ -1,10 +1,10 @@
 <div align="center">
     <img src="https://github.com/Valian/live_vue/blob/main/live_vue_logo_rounded.png?raw=true" alt="Description" height="256px">
-
-[![Hex.pm](https://img.shields.io/hexpm/v/live_vue.svg)](https://hex.pm/packages/live_vue)
-[![Hexdocs.pm](https://img.shields.io/badge/docs-hexdocs.pm-purple)](https://hexdocs.pm/live_vue)
-[![GitHub](https://img.shields.io/github/stars/Valian/live_vue?style=social)](https://github.com/Valian/live_vue)
-
+<br>
+<a href="https://hex.pm/packages/live_vue"><img src="https://img.shields.io/hexpm/v/live_vue.svg" alt="Hex.pm"></a>
+<a href="https://hexdocs.pm/live_vue"><img src="https://img.shields.io/badge/docs-hexdocs.pm-purple" alt="Hexdocs.pm"></a>
+<a href="https://github.com/Valian/live_vue"><img src="https://img.shields.io/github/stars/Valian/live_vue?style=social" alt="GitHub"></a>
+<br><br>
 Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 </div>
 
