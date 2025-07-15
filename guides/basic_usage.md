@@ -69,6 +69,36 @@ Props can be passed in three equivalent ways:
 <.Counter count={@count} max={123} v-socket={@socket} />
 ```
 
+### Custom Structs as Props
+
+When passing custom structs as props, you must implement the `LiveVue.Encoder` protocol:
+
+```elixir
+defmodule User do
+  @derive LiveVue.Encoder
+  defstruct [:name, :email, :age]
+end
+
+# Use in your LiveView
+def render(assigns) do
+  ~H"""
+  <.vue
+    user={@current_user}
+    v-component="UserProfile"
+    v-socket={@socket}
+  />
+  """
+end
+```
+
+The encoder protocol ensures that only specified fields are sent to the client, sensitive data is protected, and props can be efficiently diffed for updates.
+
+For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+
+> #### Protocol.UndefinedError {: .warning}
+>
+> If you get a `Protocol.UndefinedError` when passing structs as props, it means you need to implement the `LiveVue.Encoder` protocol for that struct. This is a safety feature to prevent accidental exposure of sensitive data.
+
 ## Handling Events
 
 ### Phoenix Events

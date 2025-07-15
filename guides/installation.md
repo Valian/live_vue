@@ -260,6 +260,20 @@ npm install typescript@5.5.4 vue-tsc@2.10.0
 
 This issue has been documented in [LiveVue issue #43](https://github.com/Valian/live_vue/issues/43#issuecomment-2501152160).
 
+### Protocol.UndefinedError with Custom Structs
+
+If you encounter a `Protocol.UndefinedError` mentioning `LiveVue.Encoder` when passing custom structs as props, you need to implement the encoder protocol:
+
+```elixir
+# Add this to your struct definitions
+defmodule User do
+  @derive LiveVue.Encoder
+  defstruct [:name, :email, :age]
+end
+```
+
+This is a safety feature to prevent accidental exposure of sensitive data. For more details, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+
 ## Next Steps
 
 Now that you have LiveVue installed, check out our [Getting Started Guide](getting_started.html) to create your first Vue component!

@@ -159,6 +159,32 @@ Basic diagram of the flow:
 
 If you want to understand how it works in depth, see [Architecture](architecture.html).
 
+### Working with Custom Structs
+
+When you start passing more complex data structures as props, you'll need to implement the `LiveVue.Encoder` protocol:
+
+```elixir
+# For any custom structs you want to pass as props
+defmodule User do
+  @derive LiveVue.Encoder
+  defstruct [:name, :email, :age]
+end
+
+# Use in your LiveView
+def render(assigns) do
+  ~H"""
+  <.vue user={@current_user} v-component="UserProfile" v-socket={@socket} />
+  """
+end
+```
+
+This protocol ensures that:
+- Only specified fields are sent to the client
+- Sensitive data is protected from accidental exposure
+- Props can be efficiently diffed for optimal performance
+
+For more details, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+
 
 > #### Good to know {: .info}
 >

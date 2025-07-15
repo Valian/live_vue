@@ -29,24 +29,24 @@ defprotocol LiveVue.Encoder do
   If we were to call `@derive LiveVue.Encoder` just before `defstruct`, an
   implementation would be generated that encodes all fields except `:__struct__`:
 
-      @derive LiveVue.Encoder
       defmodule User do
+        @derive LiveVue.Encoder
         defstruct [:name, :email, :password]
       end
 
   If we called `@derive {LiveVue.Encoder, only: [:name, :email]}`, only the
   specified fields would be encoded:
 
-      @derive {LiveVue.Encoder, only: [:name, :email]}
       defmodule User do
+        @derive {LiveVue.Encoder, only: [:name, :email]}
         defstruct [:name, :email, :password]
       end
 
   If we called `@derive {LiveVue.Encoder, except: [:password]}`, all fields
   except the specified ones would be encoded:
 
-      @derive {LiveVue.Encoder, except: [:password]}
       defmodule User do
+        @derive {LiveVue.Encoder, except: [:password]}
         defstruct [:name, :email, :password]
       end
 
@@ -148,17 +148,8 @@ defimpl LiveVue.Encoder, for: Any do
       If you own the struct, you can derive the implementation specifying \
       which fields should be encoded:
 
-          @derive {LiveVue.Encoder, only: [...]}
           defmodule #{inspect(module)} do
-            defstruct ...
-          end
-
-      It is also possible to encode all fields, although this should be \
-      used carefully to avoid accidentally leaking private information \
-      when new fields are added:
-
-          @derive LiveVue.Encoder
-          defmodule #{inspect(module)} do
+            @derive {LiveVue.Encoder, only: [...]}
             defstruct ...
           end
 

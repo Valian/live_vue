@@ -68,9 +68,36 @@ LiveVue implements several performance optimizations:
    ```
    String interpolation prevents sending `data-props=` on each update
 
-3. **Coming Soon**:
+3. **Struct Encoding and Diffing**:
+   - Uses `LiveVue.Encoder` protocol to convert structs to maps
+   - Enables efficient JSON patch calculations (using [Jsonpatch](https://github.com/corka149/jsonpatch) library)
+   - Reduces payload sizes by sending only changed fields
+
+4. **Coming Soon**:
    - Sending only updated props
-   - Deep-diff of props (similar to LiveJson)
+
+### What is the LiveVue.Encoder Protocol?
+
+The `LiveVue.Encoder` protocol is a crucial part of LiveVue's architecture that safely converts Elixir structs to maps before JSON serialization. It serves several important purposes:
+
+**Why it's needed:**
+- **Security**: Prevents accidental exposure of sensitive struct fields
+- **Performance**: Enables efficient JSON patch diffing by providing consistent data structures
+- **Explicit Control**: Forces developers to be intentional about what data is sent to the client
+
+**How to use it:**
+```elixir
+defmodule User do
+  @derive LiveVue.Encoder
+  defstruct [:name, :email, :age]
+end
+```
+
+For complete implementation details including field selection, custom implementations, and third-party structs, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+
+Without implementing this protocol, you'll get a `Protocol.UndefinedError` when trying to pass custom structs as props. This is by design - it's a safety feature to prevent accidental data exposure.
+
+The protocol is similar to `Jason.Encoder` but converts structs to maps instead of JSON strings, which allows LiveVue to calculate minimal diffs and send only changed data over WebSocket connections.
 
 ### Why is SSR Useful?
 
