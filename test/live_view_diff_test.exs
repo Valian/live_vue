@@ -34,7 +34,7 @@ defmodule LiveViewDiffTest do
 
       assert vue.component == "TestComponent"
       assert vue.props == %{"name" => "John", "age" => 30, "active" => true}
-      assert vue.props_diff == []
+      assert_patches_equal(vue.props_diff, [])
     end
 
     @tag :wip
@@ -49,9 +49,9 @@ defmodule LiveViewDiffTest do
       assigns = assign(assigns, :name, "Jane")
       vue = render_vue_assigns(assigns)
 
-      assert vue.props_diff == [
-               %{"op" => "replace", "path" => "/name", "value" => "Jane"}
-             ]
+      assert_patches_equal(vue.props_diff, [
+        %{"op" => "replace", "path" => "/name", "value" => "Jane"}
+      ])
     end
 
     test "multiple simple prop changes create multiple replace operations" do
@@ -120,7 +120,7 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       # Only changed props should appear in diff
-      assert vue.props_diff == [%{"op" => "replace", "path" => "/name", "value" => "Bob"}]
+      assert_patches_equal(vue.props_diff, [%{"op" => "replace", "path" => "/name", "value" => "Bob"}])
     end
 
     test "no changes result in empty diff" do
@@ -132,7 +132,7 @@ defmodule LiveViewDiffTest do
       }
 
       vue = render_vue_assigns(assigns)
-      assert vue.props_diff == []
+      assert_patches_equal(vue.props_diff, [])
     end
 
     test "changes to non-prop fields do not affect props_diff" do
@@ -159,7 +159,7 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       # Props_diff should be empty since no actual props changed
-      assert vue.props_diff == []
+      assert_patches_equal(vue.props_diff, [])
 
       # But props should still contain the unchanged prop values
       assert vue.props == %{}
@@ -259,10 +259,10 @@ defmodule LiveViewDiffTest do
       assigns = assign(assigns, :user, %User{name: "Alice", age: 25})
       vue = render_vue_assigns(assigns)
 
-      assert vue.props_diff == [
-               %{"op" => "replace", "path" => "/user/age", "value" => 25},
-               %{"op" => "replace", "path" => "/user/name", "value" => "Alice"}
-             ]
+      assert_patches_equal(vue.props_diff, [
+        %{"op" => "replace", "path" => "/user/age", "value" => 25},
+        %{"op" => "replace", "path" => "/user/name", "value" => "Alice"}
+      ])
     end
 
     test "struct with sensitive fields is safely encoded" do
@@ -297,7 +297,7 @@ defmodule LiveViewDiffTest do
 
       # Props should be encoded as plain maps
       assert vue.props == %{"user" => %{"name" => "John", "age" => 30}}
-      assert vue.props_diff == []
+      assert_patches_equal(vue.props_diff, [])
     end
 
     test "structs in lists are handled correctly" do
@@ -320,9 +320,9 @@ defmodule LiveViewDiffTest do
 
       vue = render_vue_assigns(assigns)
 
-      assert vue.props_diff == [
-               %{"op" => "add", "path" => "/users/2", "value" => %{"name" => "Bob", "age" => 35}}
-             ]
+      assert_patches_equal(vue.props_diff, [
+        %{"op" => "add", "path" => "/users/2", "value" => %{"name" => "Bob", "age" => 35}}
+      ])
     end
 
     test "structs in maps are handled correctly" do
@@ -441,7 +441,7 @@ defmodule LiveViewDiffTest do
       }
 
       assert vue.props == expected_props
-      assert vue.props_diff == []
+      assert_patches_equal(vue.props_diff, [])
     end
 
     test "deriving with except option handles changes properly" do
