@@ -94,7 +94,8 @@ defmodule LiveVue.Test do
         handlers: extract_handlers(attr(vue, "data-handlers")),
         slots: extract_base64_slots(attr(vue, "data-slots")),
         ssr: attr(vue, "data-ssr") |> String.to_existing_atom(),
-        class: attr(vue, "class")
+        class: attr(vue, "class"),
+        props_diff: Jason.decode!(attr(vue, "data-props-diff"))
       }
     else
       raise "Floki is not installed. Add {:floki, \">= 0.30.0\", only: :test} to your dependencies to use LiveVue.Test"

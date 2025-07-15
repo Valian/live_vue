@@ -272,6 +272,76 @@ For complete SSR configuration options, see [Configuration](configuration.html#s
 | `map` | `object` | `user={%{name: "John"}}` |
 | `nil` | `null` | `optional={nil}` |
 
+### Custom Structs with LiveVue.Encoder
+
+When passing custom structs as props, you must implement the `LiveVue.Encoder` protocol to ensure they are properly serialized and can be diffed efficiently. This protocol is similar to `Jason.Encoder` but converts structs to maps instead of JSON strings.
+
+#### Deriving the Protocol
+
+The simplest way to implement the protocol is by deriving it:
+
+```elixir
+# Encode all fields except :__struct__
+defmodule User do
+  @derive LiveVue.Encoder
+  defstruct [:name, :email, :age]
+end
+
+# Encode only specific fields
+defmodule User do
+  @derive {LiveVue.Encoder, only: [:name, :email]}
+  defstruct [:name, :email, :password, :admin_notes]
+end
+
+# Encode all fields except sensitive ones
+defmodule User do
+  @derive {LiveVue.Encoder, except: [:password, :secret_key]}
+  defstruct [:name, :email, :password, :secret_key]
+end
+```
+
+#### Custom Implementation
+
+For more control, implement the protocol manually:
+
+```elixir
+defmodule User do
+  defstruct [:name, :email, :password, :profile]
+end
+
+defimpl LiveVue.Encoder, for: User do
+  def encode(user, opts) do
+    %{
+      name: user.name,
+      email: user.email,
+      # Transform nested data as needed
+      profile: Map.take(user.profile, [:avatar, :bio])
+    }
+    |> LiveVue.Encoder.encode(opts)
+  end
+end
+```
+
+#### For Third-Party Structs
+
+If you don't own the struct, use `Protocol.derive/3`:
+
+```elixir
+# In your application startup or module
+Protocol.derive(LiveVue.Encoder, SomeLibrary.User, only: [:id, :name])
+```
+
+#### Why LiveVue.Encoder is Required
+
+The encoder protocol serves several important purposes:
+
+1. **Security**: Prevents accidental exposure of sensitive fields
+2. **Performance**: Enables efficient JSON patch diffing by converting structs to maps
+3. **Explicit Control**: Forces developers to be intentional about what data is sent to the client
+4. **Optimization**: Allows LiveVue to calculate minimal diffs for prop updates
+
+Without implementing this protocol, you'll get a `Protocol.UndefinedError` when trying to pass custom structs as props.
+
 ### Complex Data Structures
 
 ```elixir

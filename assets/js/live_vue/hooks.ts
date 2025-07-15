@@ -3,6 +3,7 @@ import { migrateToLiveVueApp } from "./app.js"
 import { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
 import { mapValues } from "./utils.js"
+import { applyPatch, type Operation } from "./jsonPatch.js"
 
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
@@ -92,7 +93,8 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     this.vue = { props, slots, app }
   },
   updated() {
-    Object.assign(this.vue.props ?? {}, getProps(this.el, this.liveSocket))
+    const propsDiff = getAttributeJson(this.el, "data-props-diff") as Operation[]
+    applyPatch(this.vue.props, propsDiff)
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
   destroyed() {

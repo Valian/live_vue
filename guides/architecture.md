@@ -82,6 +82,53 @@ updated() {
 }
 ```
 
+#### Props Diff Construction (Server-Side)
+
+LiveVue implements an efficient diffing system that minimizes data transmission by sending only changed properties as JSON patches. Here's how it works:
+
+**1. Change Detection**
+LiveView's `__changed__` tracking system identifies which assigns have been modified since the last render. For simple value changes, `__changed__` contains `true` for the changed key. For complex data structures (maps, lists, structs), it stores the previous value to enable deep diffing.
+
+**2. Struct Encoding**
+Before diffing can occur, any custom structs are converted to maps using the `LiveVue.Encoder` protocol. This ensures consistent data structures that can be reliably compared and serialized.
+
+**3. Diff Calculation**
+The system processes each changed prop differently based on its complexity:
+
+- **Simple values** (strings, numbers, booleans): Generate a direct "replace" operation since the entire value has changed
+- **Complex values** (maps, lists, structs): Use the Jsonpatch library to calculate minimal differences between the old and new encoded values
+
+**4. Path Construction**
+Each diff operation includes a JSON Pointer path that precisely identifies where the change should be applied. For nested changes, paths are constructed hierarchically (e.g., `/user/email` for changing a user's email field).
+
+**5. Serialization**
+The resulting diff operations are JSON-encoded and embedded in the `data-props-diff` attribute of the component's wrapper div. This attribute is only present when there are actual changes to apply.
+
+#### Props Diff Consumption (Client-Side)
+
+On the client side, the Vue hook processes these diffs efficiently:
+
+**1. Diff Extraction**
+When the `updated()` hook fires, it reads the `data-props-diff` attribute and parses the JSON array of patch operations.
+
+**2. Patch Application**
+The system applies each patch operation to the reactive props object using a JSON Patch implementation. This directly modifies the existing props object rather than replacing it entirely.
+
+**3. Reactivity Triggering**
+Since the props object is reactive (created with Vue's `reactive()` function), any changes automatically trigger Vue's reactivity system. Components re-render only the parts of the template that depend on the changed data.
+
+**4. Efficient Updates**
+This approach means that even for large, complex data structures, only the specific fields that changed are updated in the DOM. For example, changing a user's email in a large user object only updates the email display, not the entire user profile.
+
+**Performance Benefits**
+This diff-based approach provides several advantages:
+- Minimal network payload (only changed data is transmitted)
+- Efficient client-side updates (only changed reactive properties trigger re-renders)
+- Reduced memory pressure (existing objects are patched rather than replaced)
+- Faster UI updates (smaller changes mean less work for Vue's virtual DOM)
+
+The combination of server-side diff calculation and client-side patch application ensures that LiveVue can handle complex, nested data structures efficiently while maintaining real-time reactivity.
+
 ## Data Flow
 
 ### Props Flow (Server → Client)
@@ -92,15 +139,51 @@ The server-side extraction logic in `live_vue.ex` ensures efficient updates:
 
 ```elixir
 defp extract(assigns, type) do
-  Enum.reduce(assigns, {%{}, false}, fn {key, value}, {acc, changed} ->
+  Enum.reduce(assigns, %{}, fn {key, value}, acc ->
     case normalize_key(key, value) do
-      ^type -> {Map.put(acc, key, value), changed || key_changed(assigns, key)}
-      {^type, k} -> {Map.put(acc, k, value), changed || key_changed(assigns, key)}
-      _ -> {acc, changed}
+      ^type -> Map.put(acc, key, value)
+      {^type, k} -> Map.put(acc, k, value)
+      _ -> acc
     end
   end)
 end
 ```
+
+#### Struct Encoding with LiveVue.Encoder
+
+Before props are serialized and sent to the client, custom structs must be encoded using the `LiveVue.Encoder` protocol. This protocol:
+
+1. **Converts structs to maps** for JSON serialization
+2. **Enables efficient diffing** by providing a consistent data structure
+3. **Ensures security** by requiring explicit field exposure
+4. **Optimizes performance** by allowing minimal JSON patches
+
+```elixir
+# Example: User struct with encoder protocol
+defmodule User do
+  @derive {LiveVue.Encoder, except: [:password]}
+  defstruct [:name, :email, :password, :created_at]
+end
+
+# When passed as props:
+<.vue user={@current_user} v-component="Profile" v-socket={@socket} />
+
+# The encoder converts the struct to:
+%{
+  name: "John Doe",
+  email: "john@example.com",
+  created_at: ~U[2023-01-01 12:00:00Z]
+  # password field is excluded for security
+}
+```
+
+The encoding happens in the `vue/1` component function:
+
+```elixir
+changed_props = extract(changed, :props) |> Encoder.encode()
+```
+
+This ensures that all props are in a format suitable for JSON serialization and efficient diffing.
 
 ### Event Flow (Client → Server)
 
@@ -146,6 +229,35 @@ Props and slots are made reactive using Vue's reactivity system, enabling effici
 ### Selective Updates
 
 LiveVue minimizes data transmission by tracking only modified props, slots, and handlers. The JSON encoding is optimized to prevent redundant work, and Phoenix updates only specific data attributes rather than re-rendering entire elements.
+
+#### Efficient Struct Diffing
+
+The `LiveVue.Encoder` protocol enables efficient diffing of complex data structures:
+
+```elixir
+# For complex types, use Jsonpatch to find minimal diff
+old_value ->
+  old_value
+  |> Encoder.encode()
+  |> Jsonpatch.diff(new_value)
+  |> update_in([Access.all(), :path], fn path -> "/#{k}#{path}" end)
+```
+
+By converting structs to consistent map representations, LiveVue can:
+- Calculate minimal JSON patches for prop updates
+- Avoid sending unchanged nested data
+- Reduce WebSocket payload sizes
+- Improve client-side rendering performance
+
+For example, when only a user's email changes:
+
+```elixir
+# Instead of sending the entire user struct
+%{user: %{name: "John", email: "new@example.com", created_at: ~U[...]}}
+
+# LiveVue sends only the changed field
+[%{op: "replace", path: "/user/email", value: "new@example.com"}]
+```
 
 ### SSR Optimization
 

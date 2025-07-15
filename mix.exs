@@ -8,6 +8,7 @@ defmodule LiveVue.MixProject do
     [
       app: :live_vue,
       version: @version,
+      consolidate_protocols: Mix.env() != :test,
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -128,6 +129,7 @@ defmodule LiveVue.MixProject do
       {:phoenix_live_view, ">= 0.18.0"},
       {:floki, ">= 0.30.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
+      {:jsonpatch, "~> 2.2"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},

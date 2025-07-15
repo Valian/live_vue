@@ -41,6 +41,7 @@ defmodule LiveVue do
   import Phoenix.HTML
 
   alias Phoenix.LiveView
+  alias LiveVue.Encoder
   alias LiveVue.Slots
   alias LiveVue.SSR
 
@@ -80,28 +81,34 @@ defmodule LiveVue do
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
     render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
 
-    # we manually compute __changed__ for the computed props and slots so it's not sent without reason
-    {props, props_changed?} = extract(assigns, :props)
-    {slots, slots_changed?} = extract(assigns, :slots)
-    {handlers, handlers_changed?} = extract(assigns, :handlers)
+    changed = Enum.filter(assigns, fn {k, _v} -> key_changed(assigns, k) end)
+    changed_props = extract(changed, :props) |> Encoder.encode()
+    changed_slots = extract(changed, :slots)
+    changed_handlers = extract(changed, :handlers)
+    changed_props_diff = calculate_props_diff(changed_props, assigns)
+    rendered_slots = if changed_slots != %{}, do: Slots.rendered_slot_map(changed_slots), else: %{}
 
     assigns =
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
-      |> Map.put(:props, props)
-      |> Map.put(:handlers, handlers)
-      |> Map.put(:slots, if(slots_changed?, do: Slots.rendered_slot_map(slots), else: %{}))
+      |> Map.put(:props, changed_props)
+      |> Map.put(:props_diff, changed_props_diff)
+      |> Map.put(:handlers, changed_handlers)
+      |> Map.put(:slots, rendered_slots)
 
     assigns =
       Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns), else: nil))
 
     computed_changed =
       %{
-        props: props_changed?,
-        slots: slots_changed?,
-        handlers: handlers_changed?,
-        ssr_render: render_ssr?
+        # we send initial props only on initial render, later we send only changed props
+        props: init or dead,
+        ssr_render: render_ssr?,
+        slots: changed_slots != %{},
+        handlers: changed_handlers != %{},
+        # we want to send props_diff always but not on initial render
+        props_diff: not init and not dead
       }
 
     assigns =
@@ -118,6 +125,7 @@ defmodule LiveVue do
       id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
       data-props={"#{json(@props)}"}
+      data-props-diff={"#{json(@props_diff)}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
@@ -129,17 +137,47 @@ defmodule LiveVue do
     """
   end
 
-  defp extract(assigns, type) do
-    Enum.reduce(assigns, {%{}, false}, fn {key, value}, {acc, changed} ->
-      case normalize_key(key, value) do
-        ^type -> {Map.put(acc, key, value), changed || key_changed(assigns, key)}
-        {^type, k} -> {Map.put(acc, k, value), changed || key_changed(assigns, key)}
-        _ -> {acc, changed}
+  # Calculates minimal JSON Patch operations for changed props only.
+  # Uses Phoenix LiveView's __changed__ tracking to identify what props have changed.
+  # For simple values, generates direct replace operations.
+  # For complex values (maps, lists), uses Jsonpatch.diff to find minimal changes.
+  # Uses LiveVue.Encoder to safely encode structs before diffing.
+  defp calculate_props_diff(encoded_changed_props, %{__changed__: changed}) do
+    # For simple types: changed[k] == true
+    # For complex types: changed[k] is the old value
+    Enum.flat_map(encoded_changed_props, fn {k, new_value} ->
+      case changed[k] do
+        nil ->
+          []
+
+        # For simple types, generate replace operation
+        true ->
+          [%{op: "replace", path: "/#{k}", value: new_value}]
+
+        # For complex types, use Jsonpatch to find minimal diff
+        old_value ->
+          old_value
+          |> Encoder.encode()
+          |> Jsonpatch.diff(new_value)
+          |> update_in([Access.all(), :path], fn path -> "/#{k}#{path}" end)
       end
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a, do: :special
+  defp extract(assigns, type) do
+    Enum.reduce(assigns, %{}, fn {key, value}, acc ->
+      case normalize_key(key, value) do
+        ^type -> Map.put(acc, key, value)
+        {^type, k} -> Map.put(acc, k, value)
+        _ -> acc
+      end
+    end)
+  end
+
+  defp normalize_key(key, _val)
+       when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a,
+       do: :special
+
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
   defp normalize_key("v-on:" <> key, _val), do: {:handlers, key}

@@ -89,6 +89,43 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
    Check if the component is receiving the correct props.
    Check if the component is re-rendering when the props change.
 
+### LiveVue.Encoder Protocol Issues
+
+**Symptoms:**
+- `Protocol.UndefinedError` when passing structs as props
+- Component doesn't render with custom struct props
+- Error mentions "LiveVue.Encoder protocol must always be explicitly implemented"
+
+**Solutions:**
+
+1. **Implement the encoder protocol for your structs**
+   ```elixir
+   defmodule User do
+     @derive LiveVue.Encoder
+     defstruct [:name, :email, :age]
+   end
+   ```
+
+2. **For third-party structs, use Protocol.derive/3**
+   ```elixir
+   # In your application.ex or relevant module
+   Protocol.derive(LiveVue.Encoder, SomeLibrary.User, only: [:id, :name])
+   ```
+
+3. **Debug encoder issues**
+   ```elixir
+   # Test your encoder implementation
+   iex> user = %User{name: "John", email: "john@example.com"}
+   iex> LiveVue.Encoder.encode(user)
+   %{name: "John", email: "john@example.com"}
+   ```
+
+For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+
+**Common Causes:**
+- Passing structs without implementing the encoder protocol
+- Nested structs where some don't have the protocol implemented
+- Third-party library structs that need protocol derivation
 
 ### TypeScript Errors
 
