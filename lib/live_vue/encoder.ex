@@ -115,7 +115,8 @@ end
 # Date and time types - Jason encoder handles them
 defimpl LiveVue.Encoder, for: [Date, Time, NaiveDateTime, DateTime] do
   def encode(value, _opts) do
-    value
+    # otherwise diff is comparing tuples, and that's not what we want
+    @for.to_iso8601(value)
   end
 end
 
