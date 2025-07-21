@@ -23,6 +23,15 @@ const getSlots = (el: HTMLElement): Record<string, () => any> => {
   return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
 }
 
+const getPropsDiff = (el: HTMLElement): Operation[] => {
+  const dataPropsDiff = getAttributeJson(el, "data-props-diff") || []
+  return dataPropsDiff.map(([op, path, value]: [string, string, any]) => ({
+    op,
+    path,
+    value,
+  }))
+}
+
 /**
  * Parses the event handlers from the element's attributes and returns them as a record.
  * The handlers are parsed from the "data-handlers" attribute.
@@ -93,7 +102,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     this.vue = { props, slots, app }
   },
   updated() {
-    const propsDiff = getAttributeJson(this.el, "data-props-diff") as Operation[]
+    const propsDiff = getPropsDiff(this.el)
     applyPatch(this.vue.props, propsDiff)
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },

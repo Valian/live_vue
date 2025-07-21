@@ -120,7 +120,7 @@ defmodule LiveVue do
     # optimizing diffs by using string interpolation
     # https://elixirforum.com/t/heex-attribute-value-in-quotes-send-less-data-than-values-in-braces/63274
     ~H"""
-    <%= raw(@ssr_render[:preloadLinks]) %>
+    {raw(@ssr_render[:preloadLinks])}
     <div
       id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
@@ -157,12 +157,21 @@ defmodule LiveVue do
         # For complex types, use Jsonpatch to find minimal diff
         old_value ->
           old_value
-          |> Encoder.encode()
-          |> Jsonpatch.diff(new_value)
-          |> update_in([Access.all(), :path], fn path -> "/#{k}#{path}" end)
+          |> LiveVue.Diff.diff(new_value,
+            ancestor_path: "/#{k}",
+            prepare_struct: &Encoder.encode/1,
+            object_hash: &object_hash/1
+          )
+          # let's compress it a little bit, and decompress it on the client side
+          |> Enum.map(&compress_diff/1)
       end
     end)
   end
+
+  defp object_hash(%__struct__{id: id}), do: id
+  defp object_hash(_), do: nil
+
+  defp compress_diff(diff), do: [diff[:op], diff[:path], diff[:value]]
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, %{}, fn {key, value}, acc ->
