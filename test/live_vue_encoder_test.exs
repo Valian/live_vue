@@ -310,10 +310,10 @@ defmodule LiveVue.EncoderTest do
       naive_datetime = ~N[2023-01-01 12:00:00]
       datetime = DateTime.from_naive!(naive_datetime, "Etc/UTC")
 
-      assert Encoder.encode(date) == date
-      assert Encoder.encode(time) == time
-      assert Encoder.encode(naive_datetime) == naive_datetime
-      assert Encoder.encode(datetime) == datetime
+      assert Encoder.encode(date) == Date.to_iso8601(date)
+      assert Encoder.encode(time) == Time.to_iso8601(time)
+      assert Encoder.encode(naive_datetime) == NaiveDateTime.to_iso8601(naive_datetime)
+      assert Encoder.encode(datetime) == DateTime.to_iso8601(datetime)
     end
 
     test "encodes tuples as tuples" do

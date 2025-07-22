@@ -152,7 +152,7 @@ defmodule LiveVue do
 
         # For simple types, generate replace operation
         true ->
-          [%{op: "replace", path: "/#{k}", value: new_value}]
+          [compress_diff(%{op: "replace", path: "/#{k}", value: new_value})]
 
         # For complex types, use Jsonpatch to find minimal diff
         old_value ->
@@ -168,10 +168,16 @@ defmodule LiveVue do
     end)
   end
 
-  defp object_hash(%__struct__{id: id}), do: id
+  # this function tells which field of the struct should be used as a key for the diff
+  # right now it's hardcoded as id, maybe in the future I'll add a way to configure it,
+  # depending on the user's needs
+  defp object_hash(%{id: id}), do: id
   defp object_hash(_), do: nil
 
-  defp compress_diff(diff), do: [diff[:op], diff[:path], diff[:value]]
+  # we compress the diff to make it smaller, so it's faster to send to the client
+  # then, it's decompressed on the client side
+  defp compress_diff(%{op: op, path: path, value: value}), do: [op, path, value]
+  defp compress_diff(%{op: op, path: path}), do: [op, path]
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, %{}, fn {key, value}, acc ->

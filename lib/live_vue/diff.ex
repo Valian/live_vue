@@ -64,12 +64,12 @@ defmodule LiveVue.Diff do
             %{} = item ->
               # unable to hash non-map
               case hash_fn.(item) do
-                nil -> throw(:nil_hash)
+                nil -> throw(:hash_not_implemented)
                 hash -> hash
               end
 
             _item ->
-              nil
+              throw(:hash_not_implemented)
           end
 
           {:object_hash, safe_hash_fn}
@@ -83,7 +83,7 @@ defmodule LiveVue.Diff do
         do_map_diff(destination, source, opts[:ancestor_path], [], opts)
 
       is_list(source) and is_list(destination) ->
-        do_list_diff(destination, source, opts[:ancestor_path], [], 0, opts)
+        do_list_diff(destination, source, opts[:ancestor_path], [], opts)
 
       true ->
         []
@@ -95,7 +95,7 @@ defmodule LiveVue.Diff do
 
   defp do_diff(dest, source, path, key, patches, opts) when are_unequal_lists(dest, source) do
     # uneqal lists, let's use a specialized function for that
-    do_list_diff(dest, source, "#{path}/#{escape(key)}", patches, 0, opts)
+    do_list_diff(dest, source, "#{path}/#{escape(key)}", patches, opts)
   end
 
   defp do_diff(dest, source, path, key, patches, opts) when are_unequal_maps(dest, source) do
@@ -148,15 +148,15 @@ defmodule LiveVue.Diff do
     do_map_diff(rest, source, ancestor_path, patches, [key | checked_keys], opts)
   end
 
-  defp do_list_diff(destination, source, ancestor_path, patches, idx, opts) do
+  defp do_list_diff(destination, source, ancestor_path, patches, opts) do
     if opts[:object_hash] do
       do_hash_list_diff(destination, source, ancestor_path, patches, opts)
     else
-      do_pairwise_list_diff(destination, source, ancestor_path, patches, idx, opts)
+      do_pairwise_list_diff(destination, source, ancestor_path, patches, 0, opts)
     end
   catch
     # happens if we've got a nil hash or we tried to hash a non-map
-    :nil_hash -> do_pairwise_list_diff(destination, source, ancestor_path, patches, idx, opts)
+    :hash_not_implemented -> do_pairwise_list_diff(destination, source, ancestor_path, patches, 0, opts)
   end
 
   defp do_pairwise_list_diff(destination, source, ancestor_path, patches, idx, opts)
@@ -311,7 +311,8 @@ defmodule LiveVue.Diff do
   @compile {:inline, index_by: 2}
   defp index_by(list, hash_fn) do
     Enum.reduce(list, {%{}, 0}, fn item, {map, idx} ->
-      {Map.put(map, hash_fn.(item), idx), idx + 1}
+      # if we have a hash collision, we throw an error and handle as if the hash is not implemented
+      {Map.update(map, hash_fn.(item), idx, fn _ -> throw(:hash_not_implemented) end), idx + 1}
     end)
     |> elem(0)
   end

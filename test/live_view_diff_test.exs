@@ -14,7 +14,12 @@ defmodule LiveViewDiffTest do
 
   # Utility function to assert JSON patches are equal by sorting both by path
   defp assert_patches_equal(actual, expected) do
-    actual_sorted = Enum.sort_by(actual, & &1["path"])
+    actual_uncompressed =
+      Enum.map(actual, fn patch ->
+        %{"op" => Enum.at(patch, 0), "path" => Enum.at(patch, 1), "value" => Enum.at(patch, 2)}
+      end)
+
+    actual_sorted = Enum.sort_by(actual_uncompressed, & &1["path"])
     expected_sorted = Enum.sort_by(expected, & &1["path"])
     assert actual_sorted == expected_sorted
   end
@@ -106,6 +111,7 @@ defmodule LiveViewDiffTest do
       assert_patches_equal(vue.props_diff, expected_result)
     end
 
+    @tag :wip
     test "unchanged props do not appear in diff" do
       assigns = %{
         name: "John",
@@ -118,7 +124,6 @@ defmodule LiveViewDiffTest do
       # Only change the name, leave age and active unchanged
       assigns = assign(assigns, :name, "Bob")
       vue = render_vue_assigns(assigns)
-
       # Only changed props should appear in diff
       assert_patches_equal(vue.props_diff, [%{"op" => "replace", "path" => "/name", "value" => "Bob"}])
     end
@@ -176,17 +181,17 @@ defmodule LiveViewDiffTest do
       # Test removal
       assigns_remove = assign(assigns, :items, ["apple", "banana"])
       vue_remove = render_vue_assigns(assigns_remove)
-      assert vue_remove.props_diff == [%{"op" => "remove", "path" => "/items/2"}]
+      assert_patches_equal(vue_remove.props_diff, [%{"op" => "remove", "path" => "/items/2", "value" => nil}])
 
       # Test addition
       assigns_add = assign(assigns, :items, ["apple", "banana", "cherry", "date"])
       vue_add = render_vue_assigns(assigns_add)
-      assert vue_add.props_diff == [%{"op" => "add", "path" => "/items/3", "value" => "date"}]
+      assert_patches_equal(vue_add.props_diff, [%{"op" => "add", "path" => "/items/3", "value" => "date"}])
 
       # Test replacement
       assigns_replace = assign(assigns, :items, ["apple", "orange", "cherry"])
       vue_replace = render_vue_assigns(assigns_replace)
-      assert vue_replace.props_diff == [%{"op" => "replace", "path" => "/items/1", "value" => "orange"}]
+      assert_patches_equal(vue_replace.props_diff, [%{"op" => "replace", "path" => "/items/1", "value" => "orange"}])
     end
 
     test "nested structure changes generate minimal diffs" do
@@ -221,6 +226,54 @@ defmodule LiveViewDiffTest do
       ]
 
       assert_patches_equal(vue.props_diff, expected_result)
+    end
+
+    test "lists are diffed based on id field" do
+      assigns = %{
+        items: [
+          %{id: 1, name: "Alice"},
+          %{id: 2, name: "Bob"},
+          %{
+            id: 3,
+            name: "Charlie",
+            friends: [
+              %{id: 4, name: "Diana"},
+              %{id: 5, name: "Eve", favorite_colors: ["blue", "green"]}
+            ]
+          }
+        ],
+        "v-component": "TestComponent",
+        __changed__: %{}
+      }
+
+      assigns =
+        assign(assigns, :items, [
+          # new user
+          %{id: 8, name: "Fred"},
+          %{id: 1, name: "Alice"},
+          # updated user
+          %{id: 2, name: "New Bob"},
+          %{
+            id: 3,
+            name: "Charlie",
+            friends: [
+              %{id: 5, name: "New Eve", favorite_colors: ["blue", "red"]},
+              # It's a new user because it has new id. So it should be removeal plus addition
+              %{id: 6, name: "Diana"}
+            ]
+          }
+        ])
+
+      vue = render_vue_assigns(assigns)
+
+      assert_patches_equal(vue.props_diff, [
+        %{"op" => "add", "path" => "/items/0", "value" => %{"id" => 8, "name" => "Fred"}},
+        %{"op" => "replace", "path" => "/items/2/name", "value" => "New Bob"},
+        %{"op" => "remove", "path" => "/items/3/friends/0", "value" => nil},
+        %{"op" => "replace", "path" => "/items/3/friends/0/favorite_colors/1", "value" => "red"},
+        %{"op" => "replace", "path" => "/items/3/friends/0/name", "value" => "New Eve"},
+        %{"op" => "add", "path" => "/items/3/friends/1", "value" => %{"id" => 6, "name" => "Diana"}}
+      ])
     end
 
     defmodule User do
