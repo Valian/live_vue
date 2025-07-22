@@ -79,4 +79,5 @@ config :phoenix_live_view,
 config :live_vue,
   vite_host: "http://localhost:5173",
   ssr_module: LiveVue.SSR.ViteJS,
-  ssr_filepath: "./vue/server.ts"
+  ssr_filepath: "./vue/server.ts",
+  enable_props_diff: false

@@ -1,7 +1,5 @@
 defmodule LiveVue.Diff do
-  @moduledoc """
-  Taken from Jsonpatch library, will remove after all the upstream changes are merged.
-  """
+  @moduledoc false
 
   alias Jsonpatch.Types
 

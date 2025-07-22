@@ -14,4 +14,8 @@ config :live_vue,
 
   # it's relative to LiveVue.SSR.NodeJS.server_path, so "priv" directory
   # that file is created by Vite "build-server" command
-  ssr_filepath: "./vue/server.js"
+  ssr_filepath: "./vue/server.js",
+
+  # if false, we will always update full props and not send diffs
+  # defaults to true as it greatly reduces payload size
+  enable_props_diff: true

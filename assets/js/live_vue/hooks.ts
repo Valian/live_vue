@@ -102,8 +102,11 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     this.vue = { props, slots, app }
   },
   updated() {
-    const propsDiff = getPropsDiff(this.el)
-    applyPatch(this.vue.props, propsDiff)
+    if (this.el.getAttribute("data-use-diff") === "true") {
+      applyPatch(this.vue.props, getPropsDiff(this.el))
+    } else {
+      Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
+    }
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
   destroyed() {

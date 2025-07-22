@@ -36,6 +36,7 @@ For practical examples of different rendering patterns, see [Basic Usage](basic_
 | `id` | `string` | auto-generated | Explicit wrapper element ID |
 | `class` | `string` | `nil` | CSS classes for wrapper element |
 | `v-ssr` | `boolean` | `true` | Enable/disable server-side rendering |
+| `v-diff` | `boolean` | `true` | Enable/disable props diffing for this component |
 
 ### Event Handlers
 
@@ -248,6 +249,50 @@ For complete SSR configuration options, see [Configuration](configuration.html#s
 <!-- Use global default -->
 <.vue v-component="RegularComponent" v-socket={@socket} />
 ```
+
+## Props Diffing
+
+LiveVue optimizes performance by sending only prop changes (diffs) instead of complete props on every update. This behavior can be controlled both globally and per-component.
+
+### Global Configuration
+
+For complete diffing configuration, see [Configuration - Testing Configuration](configuration.html#testing-configuration).
+
+```elixir
+# config/config.exs
+config :live_vue,
+  enable_props_diff: true  # Default: true
+```
+
+### Per-Component Diff Control
+
+Override global diffing settings for specific components:
+
+```elixir
+<!-- Enable diffing for this component (default) -->
+<.vue v-component="OptimizedComponent" v-diff={true} v-socket={@socket} />
+
+<!-- Disable diffing - always send full props -->
+<.vue v-component="TestComponent" v-diff={false} v-socket={@socket} />
+
+<!-- Use global default -->
+<.vue v-component="RegularComponent" v-socket={@socket} />
+```
+
+### When to Disable Diffing
+
+Consider disabling diffing for:
+- **Testing scenarios** where you need complete props state inspection
+- **Debugging complex prop updates** to see full component state
+- **Components with simple prop structures** where diffing overhead isn't beneficial
+- **Development troubleshooting** when diffing behavior is suspected of causing issues
+
+### Performance Impact
+
+| Setting | Network Payload | Memory Usage | Update Speed |
+|---------|----------------|--------------|--------------|
+| `v-diff={true}` | Minimal (only changes) | Lower | Faster |
+| `v-diff={false}` | Larger (full props) | Higher | Slightly slower |
 
 ### SSR Behavior
 

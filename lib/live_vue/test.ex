@@ -38,6 +38,24 @@ defmodule LiveVue.Test do
       # SSR status and styling
       assert vue.ssr == true
       assert vue.class == "my-custom-class"
+
+  ## Configuration
+
+  ### enable_props_diff
+
+  When set to `false` in your config, LiveVue will always send full props and not send diffs.
+  This is useful for testing scenarios where you need to inspect the complete props state
+  rather than just the changes.
+
+  ```elixir
+  # config/test.exs
+  config :live_vue,
+    enable_props_diff: false
+  ```
+
+  When disabled, the `props` field returned by `get_vue/2` will always contain
+  the complete props state, making it easier to write comprehensive tests that verify the
+  full component state rather than just the incremental changes.
   """
 
   @compile {:no_warn_undefined, Floki}
@@ -94,6 +112,7 @@ defmodule LiveVue.Test do
         handlers: extract_handlers(attr(vue, "data-handlers")),
         slots: extract_base64_slots(attr(vue, "data-slots")),
         ssr: vue |> attr("data-ssr") |> String.to_existing_atom(),
+        use_diff: vue |> attr("data-use-diff") |> String.to_existing_atom(),
         class: attr(vue, "class"),
         props_diff: Jason.decode!(attr(vue, "data-props-diff"))
       }

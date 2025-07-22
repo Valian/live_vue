@@ -4,6 +4,8 @@ defmodule LiveVue.Slots do
   import Phoenix.Component
 
   @doc false
+  def rendered_slot_map(assigns) when assigns == %{}, do: %{}
+
   def rendered_slot_map(assigns) do
     for(
       {key, [%{__slot__: _}] = slot} <- assigns,

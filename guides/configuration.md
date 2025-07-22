@@ -25,7 +25,12 @@ config :live_vue,
 
   # SSR server bundle path (relative to priv directory)
   # Created by Vite "build-server" command
-  ssr_filepath: "./vue/server.js"
+  ssr_filepath: "./vue/server.js",
+
+  # Testing configuration
+  # When false, we will always update full props and not send diffs
+  # Useful for testing scenarios where you need complete props state
+  enable_props_diff: true
 ```
 
 ### Environment-Specific Configuration
@@ -306,6 +311,28 @@ Override global settings for specific components:
 <!-- Use global default -->
 <.vue v-component="RegularComponent" v-socket={@socket} />
 ```
+
+## Testing Configuration
+
+LiveVue provides testing-specific configuration options to help with component testing and debugging.
+
+### enable_props_diff
+
+By default, LiveVue optimizes performance by only sending prop changes (diffs) to the client. However, during testing, you may need access to the complete props state rather than just the incremental changes.
+
+```elixir
+# config/test.exs
+config :live_vue,
+  enable_props_diff: false
+```
+
+When disabled:
+- LiveVue will always send full props and not send diffs
+- The `props` field returned by `LiveVue.Test.get_vue/2` will contain the complete props state
+- This makes it easier to write comprehensive tests that verify the full component state
+- Useful for debugging component behavior and ensuring all props are correctly passed
+
+**Note**: This option is primarily intended for testing scenarios. In production, the default behavior (sending only diffs) provides better performance.
 
 ### SSR Performance
 

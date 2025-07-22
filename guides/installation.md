@@ -18,6 +18,11 @@ If you don't need SSR, you can easily disable it with one line of configuration.
 
 ## Setup Steps
 
+> #### Installation with Igniter {: .tip}
+>
+> I'm aware that installation process takes a moment to complete, but it's worth it! 🫣
+> There's also ongoing work to create an igniter installer for LiveVue, should be ready in the next version 🤞
+
 1. Add LiveVue to your dependencies:
 
 ```elixir

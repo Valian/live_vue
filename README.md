@@ -13,6 +13,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   ⚡ **End-To-End Reactivity** with LiveView
 -   🔋 **Server-Side Rendered** (SSR) Vue
 -   🐌 **Lazy-loading** Vue Components
+-   📦 **Efficient Props Diffing** - Only changed data is sent over WebSocket
 -   🪄 **Sigil** as an [Alternative LiveView DSL](#using-v-sigil-to-inline-vue-components)
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
@@ -179,7 +180,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
 - [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
-- [ ] optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props
+- [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
 - [ ] VS code extension highlighting `~V` sigil
 - [ ] Add support for Phoenix streams as props
 

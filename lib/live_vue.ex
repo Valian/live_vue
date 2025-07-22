@@ -49,6 +49,7 @@ defmodule LiveVue do
   require Logger
 
   @ssr_default Application.compile_env(:live_vue, :ssr, true)
+  @diff_default Application.compile_env(:live_vue, :enable_props_diff, true)
 
   defmacro __using__(_opts) do
     quote do
@@ -80,24 +81,32 @@ defmodule LiveVue do
   def vue(assigns) do
     init = assigns.__changed__ == nil
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
+    use_diff = Map.get(assigns, :"v-diff", @diff_default)
     render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
 
-    changed = Enum.filter(assigns, fn {k, _v} -> key_changed(assigns, k) end)
-    changed_props = extract(changed, :props)
-    changed_slots = extract(changed, :slots)
-    changed_handlers = extract(changed, :handlers)
-    changed_props_diff = calculate_props_diff(changed_props, assigns)
-    rendered_slots = if changed_slots == %{}, do: %{}, else: Slots.rendered_slot_map(changed_slots)
+    # if we enable diffs, we use only changed props for all the remaining calculations
+    base_assigns =
+      if use_diff do
+        Enum.filter(assigns, fn {k, _v} -> key_changed(assigns, k) end)
+      else
+        assigns
+      end
+
+    props = extract(base_assigns, :props)
+    slots = extract(base_assigns, :slots)
+    handlers = extract(base_assigns, :handlers)
+    props_diff = if use_diff, do: calculate_props_diff(props, assigns), else: []
 
     assigns =
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
-      |> Map.put(:props, changed_props)
+      |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
-      |> Map.put(:props_diff, Enum.map(changed_props_diff, &compress_diff/1))
-      |> Map.put(:handlers, changed_handlers)
-      |> Map.put(:slots, rendered_slots)
+      |> Map.put(:props_diff, Enum.map(props_diff, &compress_diff/1))
+      |> Map.put(:handlers, handlers)
+      |> Map.put(:slots, Slots.rendered_slot_map(slots))
+      |> Map.put(:use_diff, use_diff)
 
     assigns =
       Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns)))
@@ -105,12 +114,12 @@ defmodule LiveVue do
     computed_changed =
       %{
         # we send initial props only on initial render, later we send only changed props
-        props: init or dead,
+        props: init or dead or not use_diff,
         ssr_render: render_ssr?,
-        slots: changed_slots != %{},
-        handlers: changed_handlers != %{},
+        slots: slots != %{},
+        handlers: handlers != %{},
         # we want to send props_diff always but not on initial render
-        props_diff: not init and not dead
+        props_diff: not init and not dead and use_diff
       }
 
     assigns =
@@ -129,6 +138,7 @@ defmodule LiveVue do
       data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
+      data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
       phx-update="ignore"
@@ -144,10 +154,10 @@ defmodule LiveVue do
   # For simple values, generates direct replace operations.
   # For complex values (maps, lists), uses Jsonpatch.diff to find minimal changes.
   # Uses LiveVue.Encoder to safely encode structs before diffing.
-  defp calculate_props_diff(encoded_changed_props, %{__changed__: changed}) do
+  defp calculate_props_diff(props, %{__changed__: changed}) do
     # For simple types: changed[k] == true
     # For complex types: changed[k] is the old value
-    Enum.flat_map(encoded_changed_props, fn {k, new_value} ->
+    Enum.flat_map(props, fn {k, new_value} ->
       case changed[k] do
         nil ->
           []
@@ -158,6 +168,7 @@ defmodule LiveVue do
 
         # For complex types, use Jsonpatch to find minimal diff
         old_value ->
+          # TODO - replace by Jsonpatch library when all PRs are merged
           LiveVue.Diff.diff(old_value, new_value,
             ancestor_path: "/#{k}",
             prepare_struct: &Encoder.encode/1,
@@ -188,7 +199,8 @@ defmodule LiveVue do
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a, do: :special
+  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket __changed__ __given__"a,
+    do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)

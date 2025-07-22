@@ -60,9 +60,9 @@ defmodule LiveVueExamplesWeb.LiveHome do
           <p class="text-sm">Seamless integration with Tailwind CSS for styling</p>
         </div>
         <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
-          <div class="text-3xl mb-2">💀</div>
-          <h3 class="text-xl font-semibold mb-2">Dead View Support</h3>
-          <p class="text-sm">Use Vue components in both live and dead views</p>
+          <div class="text-3xl mb-2">📦</div>
+          <h3 class="text-xl font-semibold mb-2">Efficient Props Diffing</h3>
+          <p class="text-sm">Only changed data is sent over WebSocket using JSON patches</p>
         </div>
         <div class="rounded-lg bg-gray-700 p-4 sm:p-6">
           <div class="text-3xl mb-2">🦥</div>

@@ -8,6 +8,20 @@ Testing LiveVue components differs from traditional Phoenix LiveView testing in 
 - Traditional LiveView testing uses `render_component/2` to get final HTML
 - LiveVue testing provides helpers to inspect the Vue component configuration before client-side rendering
 
+## Testing Configuration
+
+For comprehensive testing, you should disable props diffing in your test environment to ensure `LiveVue.Test.get_vue/2` always returns complete props data:
+
+```elixir
+# config/test.exs
+config :live_vue,
+  enable_props_diff: false
+```
+
+When props diffing is enabled (the default), LiveVue only sends changed properties to optimize performance. However, during testing, you typically want to inspect the complete component state rather than just the incremental changes. Disabling diffing ensures that all props are always available for testing assertions.
+
+This configuration should be set globally for the test environment rather than per-component, as it affects the behavior of the testing helpers.
+
 ## Basic Component Testing
 
 Let's start with a simple component test:

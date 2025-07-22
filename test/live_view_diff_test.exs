@@ -6,6 +6,25 @@ defmodule LiveViewDiffTest do
   alias LiveVue.Test
   alias Phoenix.LiveView.JS
 
+  defmodule Company do
+    @moduledoc false
+    @derive LiveVue.Encoder
+    defstruct [:name, :owner]
+  end
+
+  defmodule Team do
+    @moduledoc false
+    @derive LiveVue.Encoder
+    defstruct [:name, :members, :lead]
+  end
+
+  # Test struct with sensitive fields that should be excluded
+  defmodule SecureUser do
+    @moduledoc false
+    @derive {LiveVue.Encoder, except: [:password, :secret_key]}
+    defstruct [:name, :age, :email, :password, :secret_key]
+  end
+
   # Utility function to render Vue assigns and get parsed Vue properties
   defp render_vue_assigns(assigns) do
     rendered = LiveVue.vue(assigns)
@@ -40,10 +59,10 @@ defmodule LiveViewDiffTest do
 
       assert vue.component == "TestComponent"
       assert vue.props == %{"name" => "John", "age" => 30, "active" => true}
+      assert vue.use_diff == true
       assert_patches_equal(vue.props_diff, [])
     end
 
-    @tag :wip
     test "single simple prop change creates replace operation" do
       assigns = %{
         name: "John",
@@ -112,7 +131,6 @@ defmodule LiveViewDiffTest do
       assert_patches_equal(vue.props_diff, expected_result)
     end
 
-    @tag :wip
     test "unchanged props do not appear in diff" do
       assigns = %{
         name: "John",
@@ -277,6 +295,22 @@ defmodule LiveViewDiffTest do
       ])
     end
 
+    test "it's possible to disable diffs" do
+      assigns = %{
+        user: %{name: "John", age: 30},
+        "v-component": "TestComponent",
+        "v-diff": false,
+        __changed__: %{}
+      }
+
+      assigns = assign(assigns, :user, %{name: "Jane", age: 25})
+      vue = render_vue_assigns(assigns)
+
+      assert vue.use_diff == false
+      assert vue.props == %{"user" => %{"name" => "Jane", "age" => 25}}
+      assert_patches_equal(vue.props_diff, [])
+    end
+
     defmodule User do
       @moduledoc false
       @derive LiveVue.Encoder
@@ -287,25 +321,6 @@ defmodule LiveViewDiffTest do
       @moduledoc false
       @derive LiveVue.Encoder
       defstruct [:name, :age, :password]
-    end
-
-    defmodule Company do
-      @moduledoc false
-      @derive LiveVue.Encoder
-      defstruct [:name, :owner]
-    end
-
-    defmodule Team do
-      @moduledoc false
-      @derive LiveVue.Encoder
-      defstruct [:name, :members, :lead]
-    end
-
-    # Test struct with sensitive fields that should be excluded
-    defmodule SecureUser do
-      @moduledoc false
-      @derive {LiveVue.Encoder, except: [:password, :secret_key]}
-      defstruct [:name, :age, :email, :password, :secret_key]
     end
 
     test "for structs uses protocol to convert to map" do

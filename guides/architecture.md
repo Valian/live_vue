@@ -129,6 +129,9 @@ This diff-based approach provides several advantages:
 
 The combination of server-side diff calculation and client-side patch application ensures that LiveVue can handle complex, nested data structures efficiently while maintaining real-time reactivity.
 
+**Disabling Diffs**
+For testing scenarios or debugging purposes, diffing can be disabled globally via the `enable_props_diff: false` configuration option, or per-component using the `v-diff={false}` attribute. When disabled, complete props are always sent instead of diffs, which can be useful for comprehensive testing or troubleshooting complex prop updates. See [Configuration](configuration.html#testing-configuration) for details.
+
 ## Data Flow
 
 ### Props Flow (Server → Client)
