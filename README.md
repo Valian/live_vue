@@ -175,13 +175,14 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 
 ## Roadmap 🎯
 
-- [ ] Add a default handler for Vue emits to eg. automatically push them to the server without explicit `v-on` handlers.
+
+- [x] `useLiveEvent` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
+- [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
+- [ ] shared props automatically included in all components
+- [ ] VS code extension highlighting `~VUE` sigil
 - [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
-- [ ] `useEventHandler` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
-- [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
-- [ ] VS code extension highlighting `~VUE` sigil
 - [ ] Add support for Phoenix streams as props
 
 ## Credits
