@@ -29,6 +29,7 @@ defmodule LiveVue.MixProject do
       name: "LiveVue",
       docs: [
         name: "LiveVue",
+        logo: "live_vue_logo_rounded.png",
         source_ref: "v#{@version}",
         source_url: @repo_url,
         homepage_url: @repo_url,
