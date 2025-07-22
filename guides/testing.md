@@ -28,11 +28,10 @@ Let's start with a simple component test:
 
 ```elixir
 defmodule MyAppWeb.CounterTest do
-  use ExUnit.Case
-  import Phoenix.LiveViewTest
+  use MyAppWeb.ConnCase
   alias LiveVue.Test
 
-  test "renders counter component with initial props" do
+  test "renders counter component with initial props", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/counter")
     vue = Test.get_vue(view)
 
