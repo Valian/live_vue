@@ -7,6 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.6.0 - 2025-07-22
+
+### ✨ Features and Improvements
+
+*   **JSON Patch Diffs for Props**: LiveVue now uses JSON Patch operations to send only the minimal differences when props change, dramatically reducing WebSocket payload sizes. Instead of sending entire prop objects, only the specific fields that changed are transmitted using RFC 6902 JSON Patch format. This optimization works seamlessly with complex nested structures, lists, and custom structs through the `LiveVue.Encoder` protocol. It's possible to skip diffs by setting `v-diff` to `false` on the component or by setting `config :live_vue, enable_props_diff: false` in your config. ([#60](https://github.com/Valian/live_vue/pull/60))
+*   **New `useLiveNavigation` Composable**: A new `useLiveNavigation` composable has been added for programmatic navigation, mirroring the functionality of `live_patch` and `live_redirect`. ([#59](https://github.com/Valian/live_vue/pull/59)).
+*   **New `useLiveEvent` Composable**: A new `useLiveEvent` composable has been added to simplify listening to server-pushed events. It automatically manages event listener lifecycle, reducing boilerplate and preventing memory leaks ([#58](https://github.com/Valian/live_vue/pull/58)).
+*   **New `Link` Component**: A new `<Link>` Vue component has been added to simplify `live_patch` and `live_redirect` navigation within your Vue components. ([#47](https://github.com/Valian/live_vue/pull/47)).
+*   **TypeScript by Default**: The client-side entrypoint at `assets/vue/index.ts` is now a TypeScript file by default, improving type safety and the development experience out of the box.
+*   **`$live` Template Property**: The LiveView hook instance is now automatically available in all Vue templates as the `$live` property, providing a convenient alternative to `useLiveVue()`. The property is now also fully typed, providing autocompletion and type checking in your editor. ([#56](https://github.com/Valian/live_vue/pull/56)).
+*   **Documentation Overhaul**: The documentation has been completely rewritten and expanded. It now includes comprehensive guides on architecture, basic and advanced usage, a full client-side API reference, a component reference, and much more. ([#49](https://github.com/Valian/live_vue/pull/49))
+*   **Testing Utilities**: The new `LiveVue.Test` module provides helpers to inspect Vue component configuration (props, slots, event handlers) within your LiveView tests, making it easier to write assertions. ([#46](https://github.com/Valian/live_vue/pull/46))
+*   **GitHub CI**: A new GitHub Actions workflow has been added to run tests automatically.
+
+### ⬆️ Migration Guide
+
+This version transitions the default client-side setup to TypeScript and renames ~V sigil to ~VUE. If you have an existing `assets/vue/index.js`, follow these steps to upgrade:
+
+1.  **Rename and replace `index.js`**:
+    *   Delete your existing `assets/vue/index.js`.
+    *   Create a new file at `assets/vue/index.ts` with the following content:
+
+    ```typescript
+    // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
+    import "vite/modulepreload-polyfill"
+    import { Component, h } from "vue"
+    import { createLiveVue, findComponent, type LiveHook, type ComponentMap } from "live_vue"
+
+    // needed to make $live available in the Vue component
+    declare module "vue" {
+      interface ComponentCustomProperties {
+        $live: LiveHook
+      }
+    }
+
+    export default createLiveVue({
+      // name will be passed as-is in v-component of the .vue HEEX component
+      resolve: name => {
+        // we're importing from ../../lib to allow collocating Vue files with LiveView files
+        // eager: true disables lazy loading - all these components will be part of the app.js bundle
+        // more: https://vite.dev/guide/features.html#glob-import
+        const components = {
+          ...import.meta.glob("./**/*.vue", { eager: true }),
+          ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
+        } as ComponentMap
+
+        // finds component by name or path suffix and gives a nice error message.
+        // `path/to/component/index.vue` can be found as `path/to/component` or simply `component`
+        // `path/to/Component.vue` can be found as `path/to/Component` or simply `Component`
+        return findComponent(components as ComponentMap, name)
+      },
+      // it's a default implementation of creating and mounting vue app, you can easily extend it to add your own plugins, directives etc.
+      setup: ({ createApp, component, props, slots, plugin, el }) => {
+        const app = createApp({ render: () => h(component as Component, props, slots) })
+        app.use(plugin)
+        // add your own plugins here
+        // app.use(pinia)
+        app.mount(el)
+        return app
+      },
+    })
+    ```
+
+2.  **Update `tsconfig.json`**:
+    Add `vue/index.ts` to the `include` array in your `assets/tsconfig.json` file. The final result should look similar to this:
+
+    ```json
+    {
+      "compilerOptions": {
+        // ...
+      },
+      "include": ["js/**/*.ts", "js/**/*.js", "js/**/*.tsx", "vue/**/*.vue", "vue/index.ts"]
+    }
+    ```
+
+### 🐛 Bug Fixes
+
+*   **SSR Attribute Rendering**: Fixed a bug where the `data-ssr` attribute was not being rendered correctly as a boolean `true` or `false` in the final HTML.
+
+### Housekeeping
+
+*   **Optional Floki Dependency**: `floki` is now an optional dependency, only required if you use the new testing utilities.
+*   **Dependency Updates**: NPM dependencies have been updated to address security vulnerabilities.
+*   **Dropped Elixir 1.12 Support**: Support for Elixir 1.12 has been removed to align with Phoenix LiveView's supported versions.
+
+
 ## 0.5.7 - 2024-12-04
 
 ### Fixes
