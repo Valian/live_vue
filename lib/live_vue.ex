@@ -93,7 +93,8 @@ defmodule LiveVue do
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, changed_props)
-      |> Map.put(:props_diff, changed_props_diff)
+      # let's compress it a little bit, and decompress it on the client side
+      |> Map.put(:props_diff, Enum.map(changed_props_diff, &compress_diff/1))
       |> Map.put(:handlers, changed_handlers)
       |> Map.put(:slots, rendered_slots)
 
@@ -152,18 +153,15 @@ defmodule LiveVue do
 
         # For simple types, generate replace operation
         true ->
-          [compress_diff(%{op: "replace", path: "/#{k}", value: new_value})]
+          [%{op: "replace", path: "/#{k}", value: new_value}]
 
         # For complex types, use Jsonpatch to find minimal diff
         old_value ->
-          old_value
-          |> LiveVue.Diff.diff(new_value,
+          LiveVue.Diff.diff(old_value, new_value,
             ancestor_path: "/#{k}",
             prepare_struct: &Encoder.encode/1,
             object_hash: &object_hash/1
           )
-          # let's compress it a little bit, and decompress it on the client side
-          |> Enum.map(&compress_diff/1)
       end
     end)
   end
