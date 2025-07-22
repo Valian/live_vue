@@ -3,7 +3,6 @@ defmodule LiveVue.Diff do
   Taken from Jsonpatch library, will remove after all the upstream changes are merged.
   """
 
-  alias Jsonpatch
   alias Jsonpatch.Types
 
   @doc """
@@ -103,9 +102,9 @@ defmodule LiveVue.Diff do
     do_map_diff(dest, source, "#{path}/#{escape(key)}", patches, opts)
   end
 
-  defp do_diff(dest, source, path, key, patches, _opts) when dest != source do
+  defp do_diff(dest, source, path, key, patches, opts) when dest != source do
     # scalar values or change of type (map -> list etc), let's just make a replace patch
-    [%{op: "replace", path: "#{path}/#{escape(key)}", value: dest} | patches]
+    [%{op: "replace", path: "#{path}/#{escape(key)}", value: maybe_prepare_struct(dest, opts)} | patches]
   end
 
   defp do_diff(_dest, _source, _path, _key, patches, _opts) do
@@ -140,8 +139,11 @@ defmodule LiveVue.Diff do
     # normal iteration through list of map {k, v} tuples. We track seen keys to later remove not seen keys.
     patches =
       case Map.fetch(source, key) do
-        {:ok, source_val} -> do_diff(val, source_val, ancestor_path, key, patches, opts)
-        :error -> [%{op: "add", path: "#{ancestor_path}/#{escape(key)}", value: val} | patches]
+        {:ok, source_val} ->
+          do_diff(val, source_val, ancestor_path, key, patches, opts)
+
+        :error ->
+          [%{op: "add", path: "#{ancestor_path}/#{escape(key)}", value: maybe_prepare_struct(val, opts)} | patches]
       end
 
     # Diff next value of same level
@@ -169,24 +171,17 @@ defmodule LiveVue.Diff do
     do_pairwise_list_diff([], source_rest, ancestor_path, patches, idx + 1, opts)
   end
 
-  defp do_pairwise_list_diff(items, [], ancestor_path, patches, idx, _opts) do
+  defp do_pairwise_list_diff(items, [], ancestor_path, patches, idx, opts) do
     # we have to do it without recursion, because we have to keep the order of the items
     items
     |> Enum.map_reduce(idx, fn val, idx ->
-      {%{op: "add", path: "#{ancestor_path}/#{idx}", value: val}, idx + 1}
+      {%{op: "add", path: "#{ancestor_path}/#{idx}", value: maybe_prepare_struct(val, opts)}, idx + 1}
     end)
     |> elem(0)
     |> Kernel.++(patches)
   end
 
-  defp do_pairwise_list_diff(
-         [val | rest],
-         [source_val | source_rest],
-         ancestor_path,
-         patches,
-         idx,
-         opts
-       ) do
+  defp do_pairwise_list_diff([val | rest], [source_val | source_rest], ancestor_path, patches, idx, opts) do
     # case when there's an item in both desitation and source. Let's just compare them
     patches = do_diff(val, source_val, ancestor_path, idx, patches, opts)
     do_pairwise_list_diff(rest, source_rest, ancestor_path, patches, idx + 1, opts)
@@ -231,7 +226,7 @@ defmodule LiveVue.Diff do
 
       tuple_size(source) == source_idx ->
         # we're at the end of the source tuple, let's add all remaining destination items
-        additions = add_additions(dest_idx, tuple_size(dest) - 1, path, dest, additions)
+        additions = add_additions(dest_idx, tuple_size(dest) - 1, path, dest, additions, opts)
         {Enum.reverse(additions), modifications, removals}
 
       true ->
@@ -271,7 +266,7 @@ defmodule LiveVue.Diff do
             )
 
           removals = add_removals(source_idx, next_source_idx - 1, path, removals)
-          additions = add_additions(dest_idx, next_dest_idx - 1, path, dest, additions)
+          additions = add_additions(dest_idx, next_dest_idx - 1, path, dest, additions, opts)
 
           greedy_find_additions_modifications_removals(
             dest,
@@ -310,7 +305,8 @@ defmodule LiveVue.Diff do
 
   @compile {:inline, index_by: 2}
   defp index_by(list, hash_fn) do
-    Enum.reduce(list, {%{}, 0}, fn item, {map, idx} ->
+    list
+    |> Enum.reduce({%{}, 0}, fn item, {map, idx} ->
       # if we have a hash collision, we throw an error and handle as if the hash is not implemented
       {Map.update(map, hash_fn.(item), idx, fn _ -> throw(:hash_not_implemented) end), idx + 1}
     end)
@@ -324,23 +320,24 @@ defmodule LiveVue.Diff do
     end)
   end
 
-  @compile {:inline, add_additions: 5}
-  defp add_additions(from_idx, to_idx, path, dest_tuple, additions) do
+  @compile {:inline, add_additions: 6}
+  defp add_additions(from_idx, to_idx, path, dest_tuple, additions, opts) do
     Enum.reduce(from_idx..to_idx//1, additions, fn idx, additions ->
-      [%{op: "add", path: "#{path}/#{idx}", value: elem(dest_tuple, idx)} | additions]
+      value = dest_tuple |> elem(idx) |> maybe_prepare_struct(opts)
+      [%{op: "add", path: "#{path}/#{idx}", value: value} | additions]
     end)
   end
 
   @compile {:inline, escape: 1}
   defp escape(fragment) when is_binary(fragment) do
     fragment =
-      if :binary.match(fragment, "~") != :nomatch,
-        do: String.replace(fragment, "~", "~0"),
-        else: fragment
+      if :binary.match(fragment, "~") == :nomatch,
+        do: fragment,
+        else: String.replace(fragment, "~", "~0")
 
-    if :binary.match(fragment, "/") != :nomatch,
-      do: String.replace(fragment, "/", "~1"),
-      else: fragment
+    if :binary.match(fragment, "/") == :nomatch,
+      do: fragment,
+      else: String.replace(fragment, "/", "~1")
   end
 
   defp escape(fragment), do: fragment
