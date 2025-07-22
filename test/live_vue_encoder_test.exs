@@ -1,5 +1,6 @@
 defmodule LiveVue.EncoderTest do
   use ExUnit.Case
+
   alias LiveVue.Encoder
 
   describe "primitive types" do
@@ -73,57 +74,68 @@ defmodule LiveVue.EncoderTest do
   end
 
   defmodule TestUser do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:name, :age, :email]
   end
 
   defmodule TestUserWithPassword do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:name, :password, :email]
   end
 
   defmodule TestAccount do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:user, :balance]
   end
 
   defmodule Company do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:name, :employees, :config]
   end
 
   defmodule Employee do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:name, :role, :skills]
   end
 
   defmodule EmptyStruct do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct []
   end
 
   defmodule AtomStruct do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:status, :type]
   end
 
   # Test structs with deriving
   defmodule DerivedUser do
-    @derive LiveVue.Encoder
+    @moduledoc false
+    @derive Encoder
     defstruct [:name, :age, :email]
   end
 
   defmodule DerivedUserOnly do
-    @derive {LiveVue.Encoder, only: [:name, :age]}
+    @moduledoc false
+    @derive {Encoder, only: [:name, :age]}
     defstruct [:name, :age, :email, :password]
   end
 
   defmodule DerivedUserExcept do
-    @derive {LiveVue.Encoder, except: [:password]}
+    @moduledoc false
+    @derive {Encoder, except: [:password]}
     defstruct [:name, :age, :email, :password]
   end
 
   defmodule NotDerivedUser do
+    @moduledoc false
     defstruct [:name, :age, :email, :password]
   end
 

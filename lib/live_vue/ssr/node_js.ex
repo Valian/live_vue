@@ -28,7 +28,7 @@ defmodule LiveVue.SSR.NodeJS do
     end
   end
 
-  def server_path() do
+  def server_path do
     {:ok, path} = :application.get_application()
     Application.app_dir(path, "/priv")
   end

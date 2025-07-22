@@ -4,6 +4,7 @@ defmodule LiveViewDiffTest do
   import Phoenix.Component
 
   alias LiveVue.Test
+  alias Phoenix.LiveView.JS
 
   # Utility function to render Vue assigns and get parsed Vue properties
   defp render_vue_assigns(assigns) do
@@ -146,7 +147,7 @@ defmodule LiveViewDiffTest do
         age: 30,
         class: "old-class",
         id: "old-id",
-        "v-on:click": Phoenix.LiveView.JS.push("click"),
+        "v-on:click": JS.push("click"),
         "v-ssr": true,
         "v-component": "TestComponent",
         "v-socket": %Phoenix.LiveView.Socket{transport_pid: self()},
@@ -158,7 +159,7 @@ defmodule LiveViewDiffTest do
         assigns
         |> assign(:class, "new-class")
         |> assign(:id, "new-id")
-        |> assign(:"v-on:click", Phoenix.LiveView.JS.push("test"))
+        |> assign(:"v-on:click", JS.push("test"))
         |> assign(:"v-ssr", false)
 
       vue = render_vue_assigns(assigns)
@@ -168,7 +169,7 @@ defmodule LiveViewDiffTest do
 
       # But props should still contain the unchanged prop values
       assert vue.props == %{}
-      assert vue.handlers == %{"click" => %Phoenix.LiveView.JS{ops: [["push", %{event: "test"}]]}}
+      assert vue.handlers == %{"click" => %JS{ops: [["push", %{event: "test"}]]}}
     end
 
     test "list operations generate correct JSON Patch operations" do
@@ -277,27 +278,32 @@ defmodule LiveViewDiffTest do
     end
 
     defmodule User do
+      @moduledoc false
       @derive LiveVue.Encoder
       defstruct [:name, :age]
     end
 
     defmodule UserWithPassword do
+      @moduledoc false
       @derive LiveVue.Encoder
       defstruct [:name, :age, :password]
     end
 
     defmodule Company do
+      @moduledoc false
       @derive LiveVue.Encoder
       defstruct [:name, :owner]
     end
 
     defmodule Team do
+      @moduledoc false
       @derive LiveVue.Encoder
       defstruct [:name, :members, :lead]
     end
 
     # Test struct with sensitive fields that should be excluded
     defmodule SecureUser do
+      @moduledoc false
       @derive {LiveVue.Encoder, except: [:password, :secret_key]}
       defstruct [:name, :age, :email, :password, :secret_key]
     end

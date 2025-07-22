@@ -2,6 +2,6 @@
 [
   import_deps: [:phoenix],
   line_length: 120,
-  plugins: [Phoenix.LiveView.HTMLFormatter],
-  inputs: ["{mix,.formatter}.exs", "{config,lib,test,example_project}/**/*.{ex,exs}"]
+  plugins: [Phoenix.LiveView.HTMLFormatter, Styler],
+  inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"]
 ]

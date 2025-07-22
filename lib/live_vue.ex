@@ -38,12 +38,13 @@ defmodule LiveVue do
   """
 
   use Phoenix.Component
+
   import Phoenix.HTML
 
-  alias Phoenix.LiveView
   alias LiveVue.Encoder
   alias LiveVue.Slots
   alias LiveVue.SSR
+  alias Phoenix.LiveView
 
   require Logger
 
@@ -82,11 +83,11 @@ defmodule LiveVue do
     render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
 
     changed = Enum.filter(assigns, fn {k, _v} -> key_changed(assigns, k) end)
-    changed_props = extract(changed, :props) |> Encoder.encode()
+    changed_props = extract(changed, :props)
     changed_slots = extract(changed, :slots)
     changed_handlers = extract(changed, :handlers)
     changed_props_diff = calculate_props_diff(changed_props, assigns)
-    rendered_slots = if changed_slots != %{}, do: Slots.rendered_slot_map(changed_slots), else: %{}
+    rendered_slots = if changed_slots == %{}, do: %{}, else: Slots.rendered_slot_map(changed_slots)
 
     assigns =
       assigns
@@ -99,7 +100,7 @@ defmodule LiveVue do
       |> Map.put(:slots, rendered_slots)
 
     assigns =
-      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns), else: nil))
+      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns)))
 
     computed_changed =
       %{
@@ -125,7 +126,7 @@ defmodule LiveVue do
     <div
       id={assigns[:id] || id(@__component_name)}
       data-name={@__component_name}
-      data-props={"#{json(@props)}"}
+      data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
@@ -187,9 +188,7 @@ defmodule LiveVue do
     end)
   end
 
-  defp normalize_key(key, _val)
-       when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a,
-       do: :special
+  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-component v-socket __changed__ __given__"a, do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
@@ -200,21 +199,19 @@ defmodule LiveVue do
   defp key_changed(%{__changed__: changed}, key), do: changed[key] != nil
 
   defp ssr_render(assigns) do
-    try do
-      name = assigns[:"v-component"]
+    name = assigns[:"v-component"]
 
-      case SSR.render(name, assigns.props, assigns.slots) do
-        {:error, message} ->
-          Logger.error("Vue SSR error: #{message}")
-          nil
-
-        %{preloadLinks: links, html: html} ->
-          %{preloadLinks: links, html: html}
-      end
-    rescue
-      SSR.NotConfigured ->
+    case SSR.render(name, assigns.props, assigns.slots) do
+      {:error, message} ->
+        Logger.error("Vue SSR error: #{message}")
         nil
+
+      %{preloadLinks: links, html: html} ->
+        %{preloadLinks: links, html: html}
     end
+  rescue
+    SSR.NotConfigured ->
+      nil
   end
 
   defp json(data), do: Jason.encode!(data, escape: :html_safe)

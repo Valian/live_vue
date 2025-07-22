@@ -28,7 +28,7 @@ defmodule LiveVue.Slots do
   defp render(assigns) do
     ~H"""
     <%= if assigns[:slot] do %>
-      <%= render_slot(@slot) %>
+      {render_slot(@slot)}
     <% end %>
     """
     |> Phoenix.HTML.Safe.to_iodata()

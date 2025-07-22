@@ -5,8 +5,8 @@ defmodule LiveVueTest do
   import Phoenix.Component
   import Phoenix.LiveViewTest
 
-  alias Phoenix.LiveView.JS
   alias LiveVue.Test
+  alias Phoenix.LiveView.JS
 
   doctest LiveVue
 
@@ -200,7 +200,7 @@ defmodule LiveVueTest do
 
       # Get raw data-slots attribute to verify base64 encoding
       doc = Floki.parse_fragment!(html)
-      slots_attr = Floki.attribute(doc, "data-slots") |> hd()
+      slots_attr = doc |> Floki.attribute("data-slots") |> hd()
 
       # JSON encoded map
       assert slots_attr =~ ~r/^\{.*\}$/
@@ -208,8 +208,7 @@ defmodule LiveVueTest do
       slots =
         slots_attr
         |> Jason.decode!()
-        |> Enum.map(fn {key, value} -> {key, Base.decode64!(value)} end)
-        |> Enum.into(%{})
+        |> Map.new(fn {key, value} -> {key, Base.decode64!(value)} end)
 
       assert slots == %{
                "default" => "Default content",

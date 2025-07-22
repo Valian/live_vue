@@ -93,7 +93,7 @@ defmodule LiveVue.Test do
         id: attr(vue, "id"),
         handlers: extract_handlers(attr(vue, "data-handlers")),
         slots: extract_base64_slots(attr(vue, "data-slots")),
-        ssr: attr(vue, "data-ssr") |> String.to_existing_atom(),
+        ssr: vue |> attr("data-ssr") |> String.to_existing_atom(),
         class: attr(vue, "class"),
         props_diff: Jason.decode!(attr(vue, "data-props-diff"))
       }
@@ -105,15 +105,13 @@ defmodule LiveVue.Test do
   defp extract_handlers(handlers) do
     handlers
     |> Jason.decode!()
-    |> Enum.map(fn {k, v} -> {k, extract_js_ops(v)} end)
-    |> Enum.into(%{})
+    |> Map.new(fn {k, v} -> {k, extract_js_ops(v)} end)
   end
 
   defp extract_base64_slots(slots) do
     slots
     |> Jason.decode!()
-    |> Enum.map(fn {key, value} -> {key, Base.decode64!(value)} end)
-    |> Enum.into(%{})
+    |> Map.new(fn {key, value} -> {key, Base.decode64!(value)} end)
   end
 
   defp extract_js_ops(ops) do
@@ -127,10 +125,7 @@ defmodule LiveVue.Test do
   end
 
   defp find_component!(components, opts) do
-    available =
-      components
-      |> Enum.map(&"#{attr(&1, "data-name")}##{attr(&1, "id")}")
-      |> Enum.join(", ")
+    available = Enum.map_join(components, ", ", &"#{attr(&1, "data-name")}##{attr(&1, "id")}")
 
     components =
       Enum.reduce(opts, components, fn

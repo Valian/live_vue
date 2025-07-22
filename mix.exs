@@ -94,7 +94,7 @@ defmodule LiveVue.MixProject do
     ]
   end
 
-  defp package() do
+  defp package do
     [
       maintainers: ["Jakub Skalecki"],
       licenses: ["MIT"],
@@ -134,7 +134,8 @@ defmodule LiveVue.MixProject do
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
-      {:makeup_html, "~> 0.1.0", only: :dev, runtime: false}
+      {:makeup_html, "~> 0.1.0", only: :dev, runtime: false},
+      {:styler, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 

@@ -106,7 +106,7 @@ end
 
 defimpl LiveVue.Encoder, for: Map do
   def encode(map, opts) do
-    Enum.into(map, %{}, fn {key, value} ->
+    Map.new(map, fn {key, value} ->
       {key, LiveVue.Encoder.encode(value, opts)}
     end)
   end

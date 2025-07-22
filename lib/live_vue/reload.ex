@@ -26,7 +26,7 @@ defmodule LiveVue.Reload do
       <script :for={path <- @javascripts} type="module" src={LiveVue.SSR.ViteJS.vite_path(path)}>
       </script>
     <% else %>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     <% end %>
     """
   end

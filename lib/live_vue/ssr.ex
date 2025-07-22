@@ -5,8 +5,6 @@ defmodule LiveVue.SSR.NotConfigured do
 end
 
 defmodule LiveVue.SSR do
-  require Logger
-
   @moduledoc """
   A behaviour for rendering Vue components server-side.
 
@@ -16,6 +14,8 @@ defmodule LiveVue.SSR do
 
   Exposes a telemetry span for each render under key `[:live_vue, :ssr]`
   """
+
+  require Logger
 
   @type component_name :: String.t()
   @type props :: %{optional(String.t() | atom) => any}
