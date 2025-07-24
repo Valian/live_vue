@@ -82,6 +82,10 @@ defmodule LiveVue.Diff do
       is_list(source) and is_list(destination) ->
         do_list_diff(destination, source, opts[:ancestor_path], [], opts)
 
+      # type of value changed, eg set to nil
+      source != destination ->
+        [%{op: "replace", path: opts[:ancestor_path], value: maybe_prepare_struct(destination, opts)}]
+
       true ->
         []
     end

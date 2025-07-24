@@ -552,5 +552,32 @@ defmodule LiveViewDiffTest do
 
       assert_patches_equal(vue.props_diff, expected_result)
     end
+
+    test "assigning nil to complex value creates replace operation" do
+      assigns = %{
+        user: %{name: "John", age: 30, settings: %{theme: "dark"}},
+        items: [1, 2, 3],
+        config: %{debug: true, timeout: 1000},
+        "v-component": "TestComponent",
+        __changed__: %{}
+      }
+
+      # Assign nil to complex values
+      assigns =
+        assigns
+        |> assign(:user, nil)
+        |> assign(:items, 0)
+        |> assign(:config, nil)
+
+      vue = render_vue_assigns(assigns)
+
+      expected_result = [
+        %{"op" => "replace", "path" => "/config", "value" => nil},
+        %{"op" => "replace", "path" => "/items", "value" => 0},
+        %{"op" => "replace", "path" => "/user", "value" => nil}
+      ]
+
+      assert_patches_equal(vue.props_diff, expected_result)
+    end
   end
 end

@@ -166,7 +166,7 @@ defmodule LiveVue do
         true ->
           [%{op: "replace", path: "/#{k}", value: new_value}]
 
-        # For complex types, use Jsonpatch to find minimal diff
+        # For complex types which didn't change type, use Jsonpatch to find minimal diff
         old_value ->
           # TODO - replace by Jsonpatch library when all PRs are merged
           LiveVue.Diff.diff(old_value, new_value,
