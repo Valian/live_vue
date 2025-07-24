@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.6.1 - 2025-07-24
+
+### Fixes 🐛
+
+- correctly encode props in SSR mode
+- correctly handle diffs for nil values in props
+- added package version to the package.json
+
 ## 0.6.0 - 2025-07-22
 
 ### ✨ Features and Improvements
