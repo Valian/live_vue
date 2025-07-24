@@ -212,8 +212,9 @@ defmodule LiveVue do
 
   defp ssr_render(assigns) do
     name = assigns[:"v-component"]
+    encoded_props = Encoder.encode(assigns.props)
 
-    case SSR.render(name, assigns.props, assigns.slots) do
+    case SSR.render(name, encoded_props, assigns.slots) do
       {:error, message} ->
         Logger.error("Vue SSR error: #{message}")
         nil
