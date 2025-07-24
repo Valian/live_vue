@@ -1,5 +1,6 @@
-import { inject, onMounted, onUnmounted } from "vue"
-import type { LiveHook } from "./types.js"
+import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue } from "vue"
+import { MaybeRefOrGetter } from "vue"
+import type { LiveHook, UploadConfigClient, UploadEntryClient, UseLiveUploadReturn } from "./types.js"
 
 export const liveInjectKey = "_live_vue"
 
@@ -70,5 +71,164 @@ export const useLiveNavigation = () => {
   return {
     patch,
     navigate,
+  }
+}
+
+/**
+ * A composable for Phoenix LiveView file uploads.
+ * Provides a Vue-friendly API for handling file uploads with LiveView.
+ * @param uploadConfig - Reactive reference to the upload configuration from LiveView
+ * @returns An object with upload methods and reactive state
+ */
+export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>): UseLiveUploadReturn => {
+  const live = useLiveVue()
+  const inputEl = ref<HTMLInputElement | null>(null)
+
+  // Create and manage the hidden file input element with Phoenix upload attributes
+  onMounted(() => {
+    if (!inputEl.value) {
+      // Create a form to wrap the input, with phx-change="validate"
+      const uploadConfigValue = toValue(uploadConfig)
+      const form = document.createElement("form")
+      form.setAttribute("phx-change", "validate")
+      form.setAttribute("phx-submit", "save")
+      form.style.display = "none"
+
+      const input = document.createElement("input")
+      input.type = "file"
+      input.id = uploadConfigValue.ref
+      input.name = uploadConfigValue.name
+
+      // Phoenix LiveView upload attributes - these are critical for Phoenix to find and manage the input
+      input.setAttribute("data-phx-hook", "Phoenix.LiveFileUpload")
+      input.setAttribute("data-phx-update", "ignore")
+      input.setAttribute("data-phx-upload-ref", uploadConfigValue.ref)
+      form.appendChild(input)
+
+      // Set accept attribute if specified
+      if (uploadConfigValue.accept && typeof uploadConfigValue.accept === "string") {
+        input.accept = uploadConfigValue.accept
+      }
+
+      // Set auto_upload attribute if specified
+      if (uploadConfigValue.auto_upload) {
+        input.setAttribute("data-phx-auto-upload", "true")
+      }
+
+      // Set multiple attribute based on max_entries
+      if (uploadConfigValue.max_entries > 1) {
+        input.multiple = true
+      }
+
+      // Update entry refs attributes based on current entries
+      const updateEntryRefs = () => {
+        console.log("updateEntryRefs")
+        const config = toValue(uploadConfig)
+        const joinEntries = (entries: UploadEntryClient[]) => entries.map(e => e.ref).join(",")
+
+        input.setAttribute("data-phx-active-refs", joinEntries(config.entries))
+        input.setAttribute("data-phx-done-refs", joinEntries(config.entries.filter(e => e.done)))
+        input.setAttribute("data-phx-preflighted-refs", joinEntries(config.entries.filter(e => e.preflighted)))
+      }
+
+      const unwatchConfig = watchEffect(() => updateEntryRefs())
+
+      // Store unwatch function for cleanup
+      ;(input as any).__unwatchConfig = unwatchConfig
+
+      // Append to the LiveView element so Phoenix can find it
+      // Phoenix searches for upload inputs within the LiveView element
+      live.el.appendChild(form)
+      inputEl.value = input
+    }
+  })
+
+  // Clean up the input element when component unmounts
+  onUnmounted(() => {
+    if (inputEl.value) {
+      // Clean up the watcher
+      ;(inputEl.value as any).__unwatchConfig?.()
+      inputEl.value.form?.remove()
+      inputEl.value.remove()
+      inputEl.value = null
+    }
+  })
+
+  // Reactive entries from the upload config
+  const entries = computed(() => {
+    const uploadConfigValue = toValue(uploadConfig)
+    return uploadConfigValue.entries || []
+  })
+
+  // Calculate overall progress
+  const progress = computed(() => {
+    const allEntries = entries.value
+    if (allEntries.length === 0) return 0
+
+    const totalProgress = allEntries.reduce((sum: number, entry) => sum + (entry.progress || 0), 0)
+    return Math.round(totalProgress / allEntries.length)
+  })
+
+  // Open the native file picker dialog
+  const showFilePicker = () => {
+    if (inputEl.value) {
+      inputEl.value.click()
+    }
+  }
+
+  // Manually add files (e.g., from drag-and-drop or DataTransfer)
+  const addFiles = (input: (File | Blob)[] | DataTransfer) => {
+    if (!inputEl.value) return
+
+    if (input instanceof DataTransfer) {
+      inputEl.value.files = input.files
+    } else if (Array.isArray(input)) {
+      const dataTransfer = new DataTransfer()
+      input.forEach(f => dataTransfer.items.add(f as File))
+      inputEl.value.files = dataTransfer.files
+    }
+  }
+
+  // Submit all queued files (for non-auto uploads)
+  const submit = () => {
+    // For auto-upload configs, this is essentially a no-op since Phoenix handles it automatically
+    // For manual uploads, we could trigger a form submission or push an event
+    // But Phoenix's upload system handles this automatically when files are selected
+    if (inputEl.value) {
+      // Phoenix will handle the upload automatically based on the auto_upload setting
+      // We could push a manual upload event here if needed
+      inputEl.value.form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    }
+  }
+
+  // Cancel upload entries
+  const cancel = (ref?: string) => {
+    if (ref) {
+      // Cancel specific entry
+      live.pushEvent("cancel-upload", { ref })
+    } else {
+      // Cancel all entries
+      entries.value.forEach(entry => {
+        live.pushEvent("cancel-upload", { ref: entry.ref })
+      })
+    }
+  }
+
+  // Clear the input and reset state
+  const clear = () => {
+    if (inputEl.value) {
+      inputEl.value.value = ""
+    }
+  }
+
+  return {
+    entries,
+    showFilePicker,
+    addFiles,
+    submit,
+    cancel,
+    clear,
+    progress,
+    inputEl,
   }
 }

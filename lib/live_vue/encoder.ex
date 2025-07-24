@@ -209,3 +209,41 @@ defimpl LiveVue.Encoder, for: Any do
     end
   end
 end
+
+# Phoenix LiveView Upload structs
+# Explicit implementation of LiveVue.Encoder for UploadConfig
+defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadConfig do
+  def encode(%Phoenix.LiveView.UploadConfig{} = struct, opts) do
+    LiveVue.Encoder.encode(
+      %{
+        ref: struct.ref,
+        name: struct.name,
+        accept: struct.accept,
+        max_entries: struct.max_entries,
+        auto_upload: struct.auto_upload?,
+        entries: struct.entries,
+        errors: struct.errors
+      },
+      opts
+    )
+  end
+end
+
+# Explicit implementation of LiveVue.Encoder for UploadEntry
+defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadEntry do
+  def encode(%Phoenix.LiveView.UploadEntry{} = struct, opts) do
+    LiveVue.Encoder.encode(
+      %{
+        ref: struct.ref,
+        client_name: struct.client_name,
+        client_size: struct.client_size,
+        client_type: struct.client_type,
+        progress: struct.progress,
+        done: struct.done?,
+        valid: struct.valid?,
+        preflighted: struct.preflighted?
+      },
+      opts
+    )
+  end
+end
