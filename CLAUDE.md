@@ -83,6 +83,43 @@ The project uses two separate GitHub Actions workflows:
 
 Both workflows run on pushes to main and pull requests.
 
+## Commit Conventions
+
+This project follows lightweight conventional commits suitable for an Elixir OSS library:
+
+### Format
+```
+<type>: <description>
+
+- Bullet point details
+- Additional changes
+- Context or reasoning
+```
+
+### Types
+- `feat:` - New features or enhancements
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes
+- `test:` - Adding or updating tests
+- `refactor:` - Code refactoring without behavior changes
+- `chore:` - Maintenance tasks, dependency updates
+
+### Examples
+```
+feat: add comprehensive frontend testing suite
+
+- Add Vitest testing framework with jsdom environment
+- Create comprehensive test suite for jsonPatch.ts
+- Add separate GitHub Actions workflow for frontend testing
+```
+
+```
+fix: handle nil values in prop diffing
+
+- Correctly encode nil values in SSR mode
+- Add test cases for nil prop scenarios
+```
+
 ## Important Notes
 
 - This is a library, not an application - use `example_project/` for testing
