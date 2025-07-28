@@ -18,6 +18,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4.2.2
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.15'
+          otp-version: '26'
+      - name: Get Elixir dependencies
+        run: mix deps.get
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
