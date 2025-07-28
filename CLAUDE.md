@@ -120,6 +120,29 @@ fix: handle nil values in prop diffing
 - Add test cases for nil prop scenarios
 ```
 
+## Task Delegation Guidelines
+
+When working with Claude Code, use subagents strategically to parallelize execution and optimize context usage:
+
+### When to Use Subagents
+- **Clear, well-defined tasks** that can be described in detail and delegated
+- **Research tasks** like searching for specific code patterns, functions, or implementations
+- **File exploration** when you need to understand multiple files or codebases
+- **Independent subtasks** that don't require back-and-forth communication
+- **Context-heavy operations** to preserve main context for coordination
+
+### Examples
+- "Search for all error handling patterns in the codebase"
+- "Find and analyze the implementation of component registration"
+- "Research how Vue components are integrated with LiveView"
+- "Locate and examine all test files for a specific module"
+
+### Best Practices
+- Provide detailed, specific instructions to subagents
+- Use subagents for exploration before making changes
+- Delegate research while keeping implementation coordination in main context
+- Batch similar research tasks to single subagents when possible
+
 ## Important Notes
 
 - This is a library, not an application - use `example_project/` for testing
