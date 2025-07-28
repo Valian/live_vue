@@ -8,15 +8,21 @@
   "scripts": {
     "format": "npx prettier --write assets",
     "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
-    "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\""
+    "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\"",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@types/node": "^22.9.1",
     "@types/phoenix_live_view": "^0.20.0",
+    "@vitest/ui": "^3.2.4",
     "concurrently": "^9.0.1",
+    "jsdom": "^26.1.0",
     "prettier": "2.8.7",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
+    "vitest": "^3.2.4",
     "vue": "^3.5.10"
   },
   "main": "priv/static/index.js",
