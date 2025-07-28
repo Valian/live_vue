@@ -167,6 +167,7 @@ When working with Claude Code, use subagents strategically to parallelize execut
 
 #### Test Server (`test/e2e/test_helper.exs`)
 - **LiveVue.E2E.TestLive**: Basic LiveView with counter state and Vue component integration
+- **LiveVue.E2E.NavigationLive**: LiveView for testing navigation hooks with URL params and query params
 - **LiveVue.E2E.Endpoint**: Phoenix endpoint with static asset serving and WebSocket support
 - **LiveVue.E2E.Hooks**: Provides `sandbox:eval` functionality for executing Elixir code from tests
 - **Health Check**: `/health` endpoint for Playwright server readiness checks
@@ -175,8 +176,9 @@ When working with Claude Code, use subagents strategically to parallelize execut
 - `syncLV(page)` - Wait for LiveView connection and loading states to complete
 - `evalLV(page, code)` - Execute Elixir code within LiveView process from JavaScript
 
-#### Vue Components (`test/e2e/js/vue/`)
+#### Vue Components (`test/e2e/vue/`)
 - **counter.vue**: TypeScript Vue component with props and event emission
+- **navigation.vue**: Vue component demonstrating `useLiveNavigation` hook usage
 - Uses `$live.pushEvent()` to communicate with LiveView
 - Demonstrates bidirectional data flow between Vue and LiveView
 
@@ -186,6 +188,31 @@ When working with Claude Code, use subagents strategically to parallelize execut
 - ✅ Event emission from Vue to LiveView
 - ✅ LiveView/Vue state synchronization
 - ✅ Server-side code execution from tests
+- ✅ Navigation hook testing (patch and navigate functionality)
+
+### E2E Test Development Best Practices
+
+#### Component File Structure
+- Vue components for E2E tests must be placed in `test/e2e/vue/` directory (not `test/e2e/js/vue/`)
+- The build system uses `import.meta.glob("../vue/**/*.vue", { eager: true })` to discover components
+- Component names in the `v-component` attribute must match the file name (without .vue extension)
+
+#### LiveView Testing Patterns
+- Use `handle_params/3` to capture both route params and query params from URL
+- Use `assign(socket, key: value)` syntax, not `assign(socket, :key, value)`
+- Always include both route params and query params in component props for comprehensive testing
+
+#### Navigation Hook Testing
+- `patch()` can take either a URL string or a query params object
+- `navigate()` only accepts URL strings with query params included in the URL
+- Test both patch (same route, different query params) and navigate (different route) scenarios
+- Use relative URLs in tests (e.g., `/navigation/test1`) - the baseURL is configured in playwright.config.js
+
+#### Debugging E2E Test Issues
+- If `.phx-connected` element is hidden, check browser console for JavaScript errors
+- Verify Vue components are in the correct directory (`test/e2e/vue/`)
+- Ensure component names match between LiveView template and Vue file names
+- Use Playwright traces and screenshots on failure for debugging
 
 ## Important Notes
 
