@@ -1,0 +1,23 @@
+{
+  "name": "live_vue_e2e",
+  "version": "1.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "vite": "^6.2.0",
+    "vue": "^3.5.13"
+  },
+  "dependencies": {
+    "phoenix": "file:../../deps/phoenix",
+    "phoenix_html": "file:../../deps/phoenix_html",
+    "phoenix_live_view": "file:../../deps/phoenix_live_view",
+    "live_vue": "file:../.."
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "build": "vite build"
+  }
+}
