@@ -112,6 +112,7 @@ defmodule LiveVue.E2E.Router do
       pipe_through(:browser)
 
       live "/test", TestLive
+      live "/prop-diff-test", PropDiffTestLive
     end
   end
 
