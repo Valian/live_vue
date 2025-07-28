@@ -115,6 +115,7 @@ defmodule LiveVue.E2E.Router do
       live "/prop-diff-test", PropDiffTestLive
       live "/navigation/:page", NavigationLive
       live "/navigation/alt/:page", NavigationLive
+      live "/events", EventLive
     end
   end
 
