@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.7.0 - 2025-07-29
+
+### 🚀 New Composable: useLiveUpload
+
+- **File Upload Composable**: Added `useLiveUpload()` composable for seamless Vue integration with Phoenix LiveView file uploads
+  - Provides reactive upload state management with progress tracking and metadata
+  - Automatic DOM element management for file inputs
+  - Built-in support for drag-and-drop file handling
+  - Integration with LiveView's upload validation and submission system
+  - TypeScript support with full type definitions for upload configurations
+  - Simplifies complex upload workflows with a declarative Vue-friendly API
+
+### 🧪 Testing Improvements
+
+- **Frontend Test Suite**: Added comprehensive test suite for frontend TypeScript code using Vitest framework
+  - Tests for JSON Patch functionality (`assets/js/live_vue/jsonPatch.ts`) with 36 test cases covering all operations
+  - Test configuration with jsdom environment for DOM testing
+  - Coverage includes edge cases like escaped characters, deep cloning, and complex patch sequences
+- **End-to-End Test Suite**: Added comprehensive E2E test suite using Playwright framework ([#64](https://github.com/Valian/live_vue/pull/64))
+  - Tests for Vue component rendering, props passing, event emission, and LiveView/Vue synchronization
+  - 5 test suites covering basic functionality, navigation, events, prop diffs, and file uploads
+  - Test server setup with dedicated Phoenix endpoint for isolated testing
+  - Utilities for LiveView/Vue synchronization and server-side code execution
+- **Separate CI Workflows**: Split testing into dedicated workflows for better separation of concerns
+  - **Frontend CI**: Tests TypeScript code across Node.js versions 20, 22, and 24 (LTS and current stable)
+  - **Elixir CI**: Focused purely on Elixir/OTP matrix testing without redundant frontend test runs
+- **New Mix Commands**: Added `mix assets.test` alias for running frontend tests alongside existing npm scripts
+  - `npm test` - Run tests once
+  - `npm run test:watch` - Run tests in watch mode
+  - `npm run test:ui` - Run tests with interactive UI
+  - `npm run e2e:test` - Run E2E tests
+  - `npm run e2e:test:headed` - Run E2E tests with browser UI
+  - `npm run e2e:test:debug` - Run E2E tests in debug mode
+
+
 ## 0.6.1 - 2025-07-24
 
 ### Fixes 🐛
