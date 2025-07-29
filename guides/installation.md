@@ -28,7 +28,7 @@ If you don't need SSR, you can easily disable it with one line of configuration.
 ```elixir
 def deps do
   [
-    {:live_vue, "~> 0.6"}
+    {:live_vue, "~> 0.7"}
   ]
 end
 ```
