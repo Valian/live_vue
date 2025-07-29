@@ -1,5 +1,5 @@
 import type { LiveSocketInstanceInterface, ViewHook } from "../../../deps/phoenix_live_view/assets/js/types"
-import type { App, Component, createApp, createSSRApp, h, Plugin, Ref } from "vue"
+import type { App, Component, ComputedRef, createApp, createSSRApp, h, Plugin, Ref } from "vue"
 export type { Hook } from "../../../deps/phoenix_live_view/assets/js/types"
 
 export type ComponentOrComponentModule = Component | { default: Component }
@@ -31,6 +31,7 @@ export interface UploadEntryClient {
   done: boolean
   valid: boolean
   preflighted: boolean
+  errors: string[]
 }
 
 export interface UploadConfigClient {
@@ -40,7 +41,7 @@ export interface UploadConfigClient {
   max_entries: number
   auto_upload: boolean
   entries: UploadEntryClient[]
-  errors: Array<[string, string]>
+  errors: { ref: string; error: string }[]
 }
 
 export interface UseLiveUploadReturn {
@@ -59,7 +60,9 @@ export interface UseLiveUploadReturn {
   /** Overall progress 0-100 derived from entries */
   progress: Ref<number>
   /** The underlying hidden <input type=file> */
-  inputEl: Ref<HTMLInputElement | null>
+  inputEl: Ref<Element | null>
+  /** Whether the selected files are valid */
+  valid: ComputedRef<boolean>
 }
 
 export interface SetupContext {

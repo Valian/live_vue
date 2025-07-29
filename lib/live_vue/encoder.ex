@@ -214,6 +214,18 @@ end
 # Explicit implementation of LiveVue.Encoder for UploadConfig
 defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadConfig do
   def encode(%Phoenix.LiveView.UploadConfig{} = struct, opts) do
+    errors =
+      Enum.map(struct.errors, fn {key, value} ->
+        %{ref: key, error: LiveVue.Encoder.encode(value, opts)}
+      end)
+
+    entries =
+      Enum.map(struct.entries, fn entry ->
+        encoded = LiveVue.Encoder.encode(entry, opts)
+        entry_errors = errors |> Enum.filter(&(&1.ref == entry.ref)) |> Enum.map(& &1.error)
+        Map.put(encoded, :errors, entry_errors)
+      end)
+
     LiveVue.Encoder.encode(
       %{
         ref: struct.ref,
@@ -221,8 +233,8 @@ defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadConfig do
         accept: struct.accept,
         max_entries: struct.max_entries,
         auto_upload: struct.auto_upload?,
-        entries: struct.entries,
-        errors: struct.errors
+        entries: entries,
+        errors: errors
       },
       opts
     )

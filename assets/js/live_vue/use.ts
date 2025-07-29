@@ -1,4 +1,4 @@
-import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue } from "vue"
+import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef } from "vue"
 import { MaybeRefOrGetter } from "vue"
 import type { LiveHook, UploadConfigClient, UploadEntryClient, UseLiveUploadReturn } from "./types.js"
 
@@ -122,7 +122,6 @@ export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>
 
       // Update entry refs attributes based on current entries
       const updateEntryRefs = () => {
-        console.log("updateEntryRefs")
         const config = toValue(uploadConfig)
         const joinEntries = (entries: UploadEntryClient[]) => entries.map(e => e.ref).join(",")
 
@@ -221,6 +220,11 @@ export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>
     }
   }
 
+  const valid = computed(() => {
+    const uploadConfigValue = toValue(uploadConfig)
+    return Object.keys(uploadConfigValue.errors).length === 0
+  })
+
   return {
     entries,
     showFilePicker,
@@ -230,5 +234,6 @@ export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>
     clear,
     progress,
     inputEl,
+    valid,
   }
 }
