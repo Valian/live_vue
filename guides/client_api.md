@@ -331,36 +331,88 @@ live.pushEventTo("[data-component='UserProfile']", "refresh")
 </script>
 ```
 
-##### upload(name, entries) - Deprecated
+##### upload(name, entries)
 
-> #### Deprecation Notice {: .warning}
+Low-level method for handling file uploads to LiveView. This is part of the Phoenix LiveView hook interface and is always available.
+
+> #### Recommendation {: .tip}
 >
-> The `upload()` method is deprecated in favor of the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable, which provides better integration with Vue's reactivity system and handles the required DOM elements automatically. The low-level `upload()` method will be removed in a future version.
-
-For new projects, use the `useLiveUpload()` composable instead:
+> For Vue components, prefer the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable which provides better integration with Vue's reactivity system and handles the required DOM elements automatically.
 
 ```html
 <script setup>
-import { useLiveUpload } from 'live_vue'
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
 
-const props = defineProps<{ upload: UploadConfig }>()
-const { showFilePicker, entries } = useLiveUpload(() => props.upload, { submitEvent: "save" })
+// Handle file upload
+const fileInput = ref<HTMLInputElement>()
+
+const handleUpload = () => {
+  if (fileInput.value?.files) {
+    live.upload("avatar", fileInput.value.files)
+  }
+}
+</script>
+```
+
+**Real-world example - Drag & drop upload:**
+```html
+<script setup>
+import { ref } from 'vue'
+import { useLiveVue } from 'live_vue'
+
+const live = useLiveVue()
+const isDragging = ref(false)
+
+const handleDrop = (event) => {
+  event.preventDefault()
+  isDragging.value = false
+
+  const files = event.dataTransfer.files
+  if (files.length > 0) {
+    live.upload("documents", files)
+  }
+}
+
+const handleDragOver = (event) => {
+  event.preventDefault()
+  isDragging.value = true
+}
 </script>
 
 <template>
-  <button @click="showFilePicker">Select Files</button>
+  <div
+    @drop="handleDrop"
+    @dragover="handleDragOver"
+    @dragleave="isDragging = false"
+    :class="{ 'border-blue-500': isDragging }"
+    class="border-2 border-dashed border-gray-300 p-8 text-center"
+  >
+    Drop files here to upload
+  </div>
 </template>
 ```
 
-**Legacy Parameters:**
+**Parameters:**
 - `name` (string): Upload name (must match LiveView allow_upload)
 - `entries` (FileList): Files to upload
 
-##### uploadTo(selector, name, entries) - Deprecated
+##### uploadTo(selector, name, entries)
 
-> #### Deprecation Notice {: .warning}
+Upload files to a specific LiveView component. This is part of the Phoenix LiveView hook interface.
+
+> #### Recommendation {: .tip}
 >
-> The `uploadTo()` method is deprecated in favor of the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable. Use the new composable for better Vue integration.
+> For Vue components, prefer the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable for better Vue integration.
+
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+const live = useLiveVue()
+
+live.uploadTo("#profile-form", "avatar", files)
+</script>
+```
 
 ## Built-in Components
 
