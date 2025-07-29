@@ -148,7 +148,7 @@ defmodule LiveVue.MixProject do
   defp aliases do
     [
       docs: ["docs", &copy_images/1],
-      setup: ["deps.get", "cmd npm install"],
+      setup: ["deps.get", "cmd npm install", "assets.build"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
       "assets.test": ["cmd npm test"],

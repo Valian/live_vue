@@ -19,7 +19,7 @@ export default defineConfig(({ command }) => {
     build: {
       commonjsOptions: { transformMixedEsModules: true },
       target: "es2020",
-      outDir: "./priv/static/assets",
+      outDir: "./test/e2e/priv/static/assets",
       emptyOutDir: true,
       sourcemap: isDev,
       manifest: false,
