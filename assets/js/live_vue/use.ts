@@ -1,6 +1,6 @@
 import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef } from "vue"
 import { MaybeRefOrGetter } from "vue"
-import type { LiveHook, UploadConfigClient, UploadEntryClient, UploadOptions, UseLiveUploadReturn } from "./types.js"
+import type { LiveHook, UploadConfig, UploadEntry, UploadOptions, UseLiveUploadReturn } from "./types.js"
 
 export const liveInjectKey = "_live_vue"
 
@@ -82,7 +82,7 @@ export const useLiveNavigation = () => {
  * @returns An object with upload methods and reactive state
  */
 export const useLiveUpload = (
-  uploadConfig: MaybeRefOrGetter<UploadConfigClient>,
+  uploadConfig: MaybeRefOrGetter<UploadConfig>,
   options: UploadOptions
 ): UseLiveUploadReturn => {
   const live = useLiveVue()
@@ -127,7 +127,7 @@ export const useLiveUpload = (
       // Update entry refs attributes based on current entries
       const updateEntryRefs = () => {
         const config = toValue(uploadConfig)
-        const joinEntries = (entries: UploadEntryClient[]) => entries.map(e => e.ref).join(",")
+        const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(",")
 
         input.setAttribute("data-phx-active-refs", joinEntries(config.entries))
         input.setAttribute("data-phx-done-refs", joinEntries(config.entries.filter(e => e.done)))

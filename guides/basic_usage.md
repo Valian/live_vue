@@ -246,6 +246,164 @@ Important notes about slots:
 >
 > As a consequence, since `.vue` components rely on hooks, it's not possible to nest `.vue` components inside other `.vue` components.
 
+## File Uploads
+
+LiveVue provides seamless integration with Phoenix LiveView's file upload system through the `useLiveUpload()` composable. This handles all the complexity of managing upload state, progress tracking, and DOM elements automatically.
+
+### Server Setup
+
+First, configure your LiveView with `allow_upload`:
+
+```elixir
+defmodule MyAppWeb.UploadLive do
+  use MyAppWeb, :live_view
+
+  def mount(_params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:uploaded_files, [])
+     |> allow_upload(:documents,
+       accept: ~w(.pdf .txt .jpg .png),
+       max_entries: 3,
+       max_file_size: 5_000_000,  # 5MB
+       auto_upload: true          # Files upload immediately when selected
+     )}
+  end
+
+  def handle_event("validate", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("save", _params, socket) do
+    uploaded_files =
+      consume_uploaded_entries(socket, :documents, fn %{path: path}, entry ->
+        # Process your file here
+        dest = Path.join("uploads", entry.client_name)
+        File.cp!(path, dest)
+        {:ok, %{name: entry.client_name, size: entry.client_size}}
+      end)
+
+    {:noreply, update(socket, :uploaded_files, &(&1 ++ uploaded_files))}
+  end
+
+  def render(assigns) do
+    ~H"""
+    <div>
+      <.vue
+        upload={@uploads.documents}
+        uploaded_files={@uploaded_files}
+        v-component="FileUploader"
+        v-socket={@socket}
+      />
+    </div>
+    """
+  end
+end
+```
+
+### Vue Component
+
+Create a Vue component that uses `useLiveUpload()`:
+
+```html
+<!-- assets/vue/FileUploader.vue -->
+<script setup lang="ts">
+import { useLiveUpload, UploadConfig } from 'live_vue'
+
+interface Props {
+  upload: UploadConfig
+  uploadedFiles: { name: string; size: number }[]
+}
+
+const props = defineProps<Props>()
+
+const {
+  entries,
+  showFilePicker,
+  submit,
+  cancel,
+  progress,
+  valid
+} = useLiveUpload(() => props.upload, {
+  changeEvent: "validate",  // Optional: for file validation
+  submitEvent: "save"       // Required: for processing uploads
+})
+</script>
+
+<template>
+  <div class="upload-container">
+    <!-- Upload controls -->
+    <div class="controls">
+      <button @click="showFilePicker" class="btn-primary">
+        Choose Files
+      </button>
+
+      <!-- Manual upload for non-auto uploads -->
+      <button
+        v-if="!upload.auto_upload && entries.length > 0"
+        @click="submit"
+        class="btn-success"
+      >
+        Upload Files
+      </button>
+
+      <!-- Cancel all -->
+      <button
+        v-if="entries.length > 0"
+        @click="cancel()"
+        class="btn-danger"
+      >
+        Cancel All
+      </button>
+    </div>
+
+    <!-- Progress indicator -->
+    <div v-if="entries.length > 0" class="progress">
+      Overall Progress: {{ progress }}%
+    </div>
+
+    <!-- File list -->
+    <div class="file-list">
+      <div v-for="entry in entries" :key="entry.ref" class="file-entry">
+        <div class="file-info">
+          <span class="name">{{ entry.client_name }}</span>
+          <span class="size">{{ entry.client_size }} bytes</span>
+          <span class="progress">{{ entry.progress }}%</span>
+          <span :class="entry.done ? 'done' : 'pending'">
+            {{ entry.done ? 'Complete' : 'Uploading...' }}
+          </span>
+        </div>
+
+        <!-- Individual file errors -->
+        <div v-if="entry.errors?.length" class="errors">
+          <div v-for="error in entry.errors" :key="error">{{ error }}</div>
+        </div>
+
+        <button @click="cancel(entry.ref)" class="cancel-btn">×</button>
+      </div>
+    </div>
+
+    <!-- Uploaded files -->
+    <div v-if="uploadedFiles.length" class="uploaded-files">
+      <h3>Uploaded Files</h3>
+      <div v-for="file in uploadedFiles" :key="file.name">
+        {{ file.name }} ({{ file.size }} bytes)
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+### Key Features
+
+- **Automatic DOM management**: The composable creates and manages the required file input elements
+- **Progress tracking**: Real-time progress updates for individual files and overall progress
+- **Error handling**: Validation errors are automatically displayed
+- **Auto-upload support**: Files can upload immediately when selected, or manually triggered
+- **Drag & drop**: Use `addFiles()` method to support drag-and-drop functionality
+- **Cancellation**: Cancel individual files or all uploads
+
+For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.html#useliveuploadevent-callback).
 
 ## Dead Views vs Live Views
 

@@ -59,10 +59,10 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { useLiveUpload, UploadConfigClient } from "live_vue"
+import { useLiveUpload, UploadConfig } from "live_vue"
 
 interface Props {
-  upload: UploadConfigClient
+  upload: UploadConfig
   uploadedFiles: { name: string; size: number; type: string }[]
 }
 

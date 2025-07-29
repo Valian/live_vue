@@ -88,6 +88,103 @@ function goToSettings() {
 </script>
 ```
 
+### `useLiveUpload(uploadConfig, options)`
+
+The `useLiveUpload()` composable provides a Vue-friendly API for handling Phoenix LiveView file uploads. It manages the required DOM elements, upload state, and integrates seamlessly with LiveView's upload system.
+
+**Parameters:**
+
+- `uploadConfig` - Reactive reference to the upload configuration from LiveView (typically `() => props.upload`)
+- `options.changeEvent` - Optional event name for file validation (sent when files are selected)
+- `options.submitEvent` - Required event name for upload submission
+
+**Returns:**
+
+- `entries` - Reactive array of current upload entries with progress and metadata
+- `showFilePicker()` - Opens the native file picker dialog
+- `addFiles(files)` - Manually add files (useful for drag-and-drop)
+- `submit()` - Submit all queued files (for non-auto uploads)
+- `cancel(ref?)` - Cancel specific entry by ref, or all entries if ref omitted
+- `clear()` - Clear the input and reset state
+- `progress` - Overall progress percentage (0-100)
+- `inputEl` - Reference to the underlying hidden file input element
+- `valid` - Whether the current file selection is valid
+
+**Basic Example:**
+
+```html
+<script setup>
+import { useLiveUpload } from 'live_vue'
+
+interface Props {
+  upload: UploadConfig
+}
+
+const props = defineProps<Props>()
+
+const { entries, showFilePicker, submit, cancel, progress, valid } = useLiveUpload(
+  () => props.upload,
+  {
+    changeEvent: "validate", // Optional: event name for file validation
+    submitEvent: "save"      // Required: event name for upload submission
+  }
+)
+</script>
+
+<template>
+  <div>
+    <!-- File picker button -->
+    <button @click="showFilePicker">Select Files</button>
+
+    <!-- Manual upload button (for non-auto uploads) -->
+    <button v-if="!upload.auto_upload && entries.length > 0" @click="submit">
+      Upload Files
+    </button>
+
+    <!-- Progress display -->
+    <div v-if="entries.length > 0">Progress: {{ progress }}%</div>
+
+    <!-- File list -->
+    <div v-for="entry in entries" :key="entry.ref">
+      <span>{{ entry.client_name }} ({{ entry.progress }}%)</span>
+      <button @click="cancel(entry.ref)">Cancel</button>
+    </div>
+  </div>
+</template>
+```
+
+**Drag and Drop Example:**
+
+```html
+<script setup>
+import { useLiveUpload } from 'live_vue'
+
+const props = defineProps<{ upload: UploadConfig }>()
+const { addFiles, entries, showFilePicker } = useLiveUpload(() => props.upload, { submitEvent: "save" })
+
+const handleDrop = (event) => {
+  event.preventDefault()
+  const files = Array.from(event.dataTransfer.files)
+  addFiles(files)
+}
+</script>
+
+<template>
+  <div
+    @drop="handleDrop"
+    @dragover.prevent
+    class="border-dashed border-2 p-4"
+  >
+    Drop files here or <button @click="showFilePicker">browse</button>
+    <div v-for="entry in entries" :key="entry.ref">
+      {{ entry.client_name }} - {{ entry.progress }}%
+    </div>
+  </div>
+</template>
+```
+
+For a complete working example, see [Basic Usage - File Uploads](basic_usage.html#file-uploads).
+
 ## Low-Level API
 
 While composables are recommended for most component-based use cases, you can also access the underlying hook instance for more control or for use outside of components.
@@ -234,80 +331,36 @@ live.pushEventTo("[data-component='UserProfile']", "refresh")
 </script>
 ```
 
-##### upload(name, entries)
+##### upload(name, entries) - Deprecated
 
-Handle file uploads to LiveView.
+> #### Deprecation Notice {: .warning}
+>
+> The `upload()` method is deprecated in favor of the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable, which provides better integration with Vue's reactivity system and handles the required DOM elements automatically. The low-level `upload()` method will be removed in a future version.
+
+For new projects, use the `useLiveUpload()` composable instead:
 
 ```html
 <script setup>
-import { useLiveVue } from 'live_vue'
-const live = useLiveVue()
+import { useLiveUpload } from 'live_vue'
 
-// Handle file upload
-const fileInput = ref<HTMLInputElement>()
-
-const handleUpload = () => {
-  if (fileInput.value?.files) {
-    live.upload("avatar", fileInput.value.files)
-  }
-}
-</script>
-```
-
-**Real-world example - Drag & drop upload:**
-```html
-<script setup>
-import { ref } from 'vue'
-import { useLiveVue } from 'live_vue'
-
-const live = useLiveVue()
-const isDragging = ref(false)
-
-const handleDrop = (event) => {
-  event.preventDefault()
-  isDragging.value = false
-
-  const files = event.dataTransfer.files
-  if (files.length > 0) {
-    live.upload("documents", files)
-  }
-}
-
-const handleDragOver = (event) => {
-  event.preventDefault()
-  isDragging.value = true
-}
+const props = defineProps<{ upload: UploadConfig }>()
+const { showFilePicker, entries } = useLiveUpload(() => props.upload, { submitEvent: "save" })
 </script>
 
 <template>
-  <div
-    @drop="handleDrop"
-    @dragover="handleDragOver"
-    @dragleave="isDragging = false"
-    :class="{ 'border-blue-500': isDragging }"
-    class="border-2 border-dashed border-gray-300 p-8 text-center"
-  >
-    Drop files here to upload
-  </div>
+  <button @click="showFilePicker">Select Files</button>
 </template>
 ```
 
-**Parameters:**
+**Legacy Parameters:**
 - `name` (string): Upload name (must match LiveView allow_upload)
 - `entries` (FileList): Files to upload
 
-##### uploadTo(selector, name, entries)
+##### uploadTo(selector, name, entries) - Deprecated
 
-Upload files to a specific LiveView component.
-
-```html
-<script setup>
-import { useLiveVue } from 'live_vue'
-const live = useLiveVue()
-
-live.uploadTo("#profile-form", "avatar", files)
-</script>
-```
+> #### Deprecation Notice {: .warning}
+>
+> The `uploadTo()` method is deprecated in favor of the [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable. Use the new composable for better Vue integration.
 
 ## Built-in Components
 
@@ -422,6 +475,22 @@ const emit = defineEmits<{
 // useLiveVue typing
 const live = useLiveVue()
 // live is fully typed with all available methods
+
+// Upload types (imported from 'live_vue')
+import type { UploadConfig, UploadEntry } from 'live_vue'
+
+interface UploadProps {
+  upload: UploadConfig
+  uploadedFiles: Array<{ name: string; size: number }>
+}
+
+// Upload composable is fully typed
+const { entries, showFilePicker, submit } = useLiveUpload(() => props.upload, {
+  submitEvent: "save"
+})
+// entries: Ref<UploadEntry[]>
+// showFilePicker: () => void
+// submit: () => void
 ```
 
 ## Common Patterns
@@ -448,35 +517,45 @@ export const useRealtimeData = (dataType: string) => {
 }
 ```
 
-### File Upload Helper
+### File Upload Pattern
 
-```typescript
-// Composable for file uploads
-export const useFileUpload = (uploadName: string) => {
-  const live = useLiveVue()
-  const uploading = ref(false)
-  const progress = ref(0)
+For file uploads, use the built-in [`useLiveUpload()`](#useliveuploaduploadconfig-options) composable instead of creating custom helpers. It provides comprehensive upload management with progress tracking, error handling, and automatic DOM element management.
 
-  const upload = (files: FileList) => {
-    uploading.value = true
-    progress.value = 0
+```html
+<script setup>
+import { useLiveUpload } from 'live_vue'
 
-    // Listen for upload progress
-    live.handleEvent("upload_progress", ({ percentage }) => {
-      progress.value = percentage
-    })
+const props = defineProps<{ upload: UploadConfig }>()
 
-    // Listen for upload completion
-    live.handleEvent("upload_complete", () => {
-      uploading.value = false
-      progress.value = 100
-    })
+const {
+  entries,
+  showFilePicker,
+  submit,
+  cancel,
+  progress,
+  valid
+} = useLiveUpload(() => props.upload, {
+  changeEvent: "validate",
+  submitEvent: "save"
+})
 
-    live.upload(uploadName, files)
-  }
+// All upload state is handled automatically:
+// - entries: reactive list of files with progress
+// - progress: overall upload progress (0-100)
+// - valid: whether current selection is valid
+</script>
 
-  return { upload, uploading, progress }
-}
+<template>
+  <div>
+    <button @click="showFilePicker">Choose Files</button>
+    <div v-if="entries.length">Progress: {{ progress }}%</div>
+
+    <div v-for="entry in entries" :key="entry.ref">
+      {{ entry.client_name }} - {{ entry.progress }}%
+      <button @click="cancel(entry.ref)">×</button>
+    </div>
+  </div>
+</template>
 ```
 
 ## Performance Considerations

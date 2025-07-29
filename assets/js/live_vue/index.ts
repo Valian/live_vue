@@ -5,7 +5,9 @@ export type {
   VueComponent,
   LiveHook,
   ComponentMap,
-  UploadConfigClient,
+  UploadConfig,
+  UploadEntry,
+  UploadOptions,
 } from "./types.js"
 export { createLiveVue } from "./app.js"
 export { getHooks } from "./hooks.js"

@@ -22,7 +22,7 @@ export type VueArgs = {
 export type LiveHook = ViewHook & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
 
 // Phoenix LiveView Upload types for client-side use
-export interface UploadEntryClient {
+export interface UploadEntry {
   ref: string
   client_name: string
   client_size: number
@@ -34,13 +34,13 @@ export interface UploadEntryClient {
   errors: string[]
 }
 
-export interface UploadConfigClient {
+export interface UploadConfig {
   ref: string
   name: string
   accept: string | false
   max_entries: number
   auto_upload: boolean
-  entries: UploadEntryClient[]
+  entries: UploadEntry[]
   errors: { ref: string; error: string }[]
 }
 
@@ -51,7 +51,7 @@ export type UploadOptions = {
 
 export interface UseLiveUploadReturn {
   /** Reactive list of current entries coming from the server patch */
-  entries: Ref<UploadEntryClient[]>
+  entries: Ref<UploadEntry[]>
   /** Opens the native file-picker dialog */
   showFilePicker: () => void
   /** Manually enqueue external files (e.g. drag-drop) */

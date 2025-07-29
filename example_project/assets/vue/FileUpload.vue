@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import { useLiveUpload, UploadConfigClient } from "live_vue"
-import { UploadEntryClient } from "../../../priv/static/types"
+import { useLiveUpload, UploadConfig } from "live_vue"
+import { UploadEntry } from "../../../priv/static/types"
 
 // Props from LiveView - simplified typing
 const props = defineProps<{
-  upload: UploadConfigClient
+  upload: UploadConfig
   uploadedFiles: { name: string; size: number; type: string }[]
 }>()
 
@@ -131,7 +131,7 @@ const progressValue = computed(() => progress.value)
 
         <div class="space-y-3">
           <div
-            v-for="entry in entries as unknown as UploadEntryClient[]"
+            v-for="entry in entries as unknown as UploadEntry[]"
             :key="entry.ref"
             class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
           >
