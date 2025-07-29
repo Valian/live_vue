@@ -12,7 +12,7 @@ export default defineConfig({
     command: "cd ../.. && MIX_ENV=e2e mix run test/e2e/test_helper.exs",
     url: "http://127.0.0.1:4004/health",
     reuseExistingServer: !process.env.CI,
-    timeout: 5000,
+    timeout: 60_000,
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },

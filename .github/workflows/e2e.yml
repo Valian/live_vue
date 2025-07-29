@@ -1,0 +1,54 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-24.04
+
+    env:
+      MIX_ENV: e2e
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.15'
+          otp-version: '26'
+
+      - name: Restore Elixir dependency cache
+        uses: actions/cache@v4.2.0
+        id: deps-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Install Elixir dependencies
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install npm dependencies (root)
+        run: npm install
+
+      - name: Build LiveVue package
+        run: npm run build
+
+      - name: Install E2E dependencies and browsers
+        run: npm run e2e:install
+
+      - name: Run E2E tests
+        run: npm run e2e:test
