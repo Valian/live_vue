@@ -31,6 +31,18 @@ Additional test commands:
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:ui` - Run tests with interactive UI
 
+#### End-to-End Tests
+```bash
+npm run e2e:test
+```
+Runs Playwright E2E tests located in `test/e2e/`. These tests use a real Phoenix server with LiveView and Vue components.
+
+Additional E2E commands:
+- `npm run e2e:install` - Install E2E test dependencies
+- `npm run e2e:test:headed` - Run tests with browser UI visible
+- `npm run e2e:test:debug` - Run tests in debug mode with Playwright inspector
+- `npm run e2e:server` - Start E2E test server manually (runs on port 4004)
+
 ### Asset Watching (Development)
 ```bash
 mix assets.watch
@@ -143,9 +155,69 @@ When working with Claude Code, use subagents strategically to parallelize execut
 - Delegate research while keeping implementation coordination in main context
 - Batch similar research tasks to single subagents when possible
 
+## E2E Testing Architecture
+
+### Test Structure
+- **Playwright Configuration**: `test/e2e/playwright.config.js` - Configured for Chromium with trace and screenshot capture on failure
+- **Test Server**: Standalone Phoenix application (port 4004) with LiveView and Vue integration
+- **Test Utilities**: Custom utilities in `utils.js` for LiveView/Vue synchronization and testing
+- **Test Cases**: Located in `test/e2e/tests/` directory
+
+### Key Testing Components
+
+#### Test Server (`test/e2e/test_helper.exs`)
+- **LiveVue.E2E.TestLive**: Basic LiveView with counter state and Vue component integration
+- **LiveVue.E2E.NavigationLive**: LiveView for testing navigation hooks with URL params and query params
+- **LiveVue.E2E.Endpoint**: Phoenix endpoint with static asset serving and WebSocket support
+- **LiveVue.E2E.Hooks**: Provides `sandbox:eval` functionality for executing Elixir code from tests
+- **Health Check**: `/health` endpoint for Playwright server readiness checks
+
+#### Test Utilities (`test/e2e/utils.js`)
+- `syncLV(page)` - Wait for LiveView connection and loading states to complete
+- `evalLV(page, code)` - Execute Elixir code within LiveView process from JavaScript
+
+#### Vue Components (`test/e2e/vue/`)
+- **counter.vue**: TypeScript Vue component with props and event emission
+- **navigation.vue**: Vue component demonstrating `useLiveNavigation` hook usage
+- Uses `$live.pushEvent()` to communicate with LiveView
+- Demonstrates bidirectional data flow between Vue and LiveView
+
+### Test Coverage
+- ✅ Vue component rendering in LiveView
+- ✅ Props passing from LiveView to Vue
+- ✅ Event emission from Vue to LiveView
+- ✅ LiveView/Vue state synchronization
+- ✅ Server-side code execution from tests
+- ✅ Navigation hook testing (patch and navigate functionality)
+
+### E2E Test Development Best Practices
+
+#### Component File Structure
+- Vue components for E2E tests must be placed in `test/e2e/vue/` directory (not `test/e2e/js/vue/`)
+- The build system uses `import.meta.glob("../vue/**/*.vue", { eager: true })` to discover components
+- Component names in the `v-component` attribute must match the file name (without .vue extension)
+
+#### LiveView Testing Patterns
+- Use `handle_params/3` to capture both route params and query params from URL
+- Use `assign(socket, key: value)` syntax, not `assign(socket, :key, value)`
+- Always include both route params and query params in component props for comprehensive testing
+
+#### Navigation Hook Testing
+- `patch()` can take either a URL string or a query params object
+- `navigate()` only accepts URL strings with query params included in the URL
+- Test both patch (same route, different query params) and navigate (different route) scenarios
+- Use relative URLs in tests (e.g., `/navigation/test1`) - the baseURL is configured in playwright.config.js
+
+#### Debugging E2E Test Issues
+- If `.phx-connected` element is hidden, check browser console for JavaScript errors
+- Verify Vue components are in the correct directory (`test/e2e/vue/`)
+- Ensure component names match between LiveView template and Vue file names
+- Use Playwright traces and screenshots on failure for debugging
+
 ## Important Notes
 
 - This is a library, not an application - use `example_project/` for testing
 - `mix assets.watch` should be running in the background, you don't need to run it manually.
 - Changes to library code are immediately available in `example_project/`
 - Assets are TypeScript/JavaScript files that get packaged with the hex package
+- E2E tests provide full integration testing of LiveView + Vue interactions

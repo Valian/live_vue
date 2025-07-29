@@ -10,6 +10,7 @@ defmodule LiveVue.MixProject do
       version: @version,
       consolidate_protocols: Mix.env() != :test,
       elixir: "~> 1.13",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -121,6 +122,9 @@ defmodule LiveVue.MixProject do
     ]
   end
 
+  defp elixirc_paths(:e2e), do: ["lib", "test/e2e/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
@@ -136,7 +140,8 @@ defmodule LiveVue.MixProject do
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:makeup_html, "~> 0.1.0", only: :dev, runtime: false},
-      {:styler, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:styler, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:bandit, "~> 1.5", only: :e2e}
     ]
   end
 

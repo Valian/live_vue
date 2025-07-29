@@ -11,7 +11,12 @@
     "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\"",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "e2e:install": "cd test/e2e && npm install && npx playwright install --with-deps chromium",
+    "e2e:server": "MIX_ENV=e2e mix run test/e2e/test_helper.exs",
+    "e2e:test": "cd test/e2e && npm run build && npx playwright test",
+    "e2e:test:headed": "cd test/e2e && npm run build && npx playwright test --headed",
+    "e2e:test:debug": "cd test/e2e && npm run build && npx playwright test --debug"
   },
   "devDependencies": {
     "@types/node": "^22.9.1",
