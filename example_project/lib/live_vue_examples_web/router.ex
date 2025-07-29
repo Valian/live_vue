@@ -22,8 +22,7 @@ defmodule LiveVueExamplesWeb.Router do
     live "/counter", LiveCounter
     live "/slots", LiveSlots
     live "/form", LiveForm
-    live "/upload", LiveUpload
-    live "/upload-vue", LiveUploadVue
+    live "/upload", LiveUploadVue
     live "/sigil", LiveSigil
     live "/prime_vue", LivePrimeVue
     live "/calendar", CalendarLive
