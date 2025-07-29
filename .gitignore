@@ -36,3 +36,8 @@ RELEASE.md
 priv/static
 .elixir_ls/
 .vscode/
+
+# Playwright
+test/e2e/priv/static/
+test-results/
+playwright-report/
