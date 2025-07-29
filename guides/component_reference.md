@@ -317,6 +317,17 @@ Consider disabling diffing for:
 | `map` | `object` | `user={%{name: "John"}}` |
 | `nil` | `null` | `optional={nil}` |
 
+### Phoenix LiveView Upload Types
+
+Phoenix LiveView upload configurations are automatically encoded for use with the [`useLiveUpload()`](client_api.html#useliveuploadevent-callback) composable:
+
+| Elixir Type | Vue Type | Usage |
+|-------------|----------|-------|
+| `%Phoenix.LiveView.UploadConfig{}` | `UploadConfig` | `upload={@uploads.documents}` |
+| `%Phoenix.LiveView.UploadEntry{}` | `UploadEntry` | Automatically included in config |
+
+These types are pre-configured with the `LiveVue.Encoder` protocol and work seamlessly with file upload functionality.
+
 ### Custom Structs with LiveVue.Encoder
 
 When passing custom structs as props, you must implement the `LiveVue.Encoder` protocol to ensure they are properly serialized and can be diffed efficiently. This protocol is similar to `Jason.Encoder` but converts structs to maps instead of JSON strings.

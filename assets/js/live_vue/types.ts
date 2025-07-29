@@ -1,5 +1,5 @@
 import type { LiveSocketInstanceInterface, ViewHook } from "../../../deps/phoenix_live_view/assets/js/types"
-import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
+import type { App, Component, ComputedRef, createApp, createSSRApp, h, Plugin, Ref } from "vue"
 export type { Hook } from "../../../deps/phoenix_live_view/assets/js/types"
 
 export type ComponentOrComponentModule = Component | { default: Component }
@@ -20,6 +20,55 @@ export type VueArgs = {
 
 // all the functions and additional properties that are available on the LiveHook
 export type LiveHook = ViewHook & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
+
+// Phoenix LiveView Upload types for client-side use
+export interface UploadEntry {
+  ref: string
+  client_name: string
+  client_size: number
+  client_type: string
+  progress: number
+  done: boolean
+  valid: boolean
+  preflighted: boolean
+  errors: string[]
+}
+
+export interface UploadConfig {
+  ref: string
+  name: string
+  accept: string | false
+  max_entries: number
+  auto_upload: boolean
+  entries: UploadEntry[]
+  errors: { ref: string; error: string }[]
+}
+
+export type UploadOptions = {
+  changeEvent?: string
+  submitEvent: string
+}
+
+export interface UseLiveUploadReturn {
+  /** Reactive list of current entries coming from the server patch */
+  entries: Ref<UploadEntry[]>
+  /** Opens the native file-picker dialog */
+  showFilePicker: () => void
+  /** Manually enqueue external files (e.g. drag-drop) */
+  addFiles: (files: (File | Blob)[]) => void
+  /** Submit *all* currently queued files to LiveView (no args) */
+  submit: () => void
+  /** Cancel a single entry by ref or every entry when omitted */
+  cancel: (ref?: string) => void
+  /** Clear local queue and reset hidden input (post-upload cleanup) */
+  clear: () => void
+  /** Overall progress 0-100 derived from entries */
+  progress: Ref<number>
+  /** The underlying hidden <input type=file> */
+  inputEl: Ref<Element | null>
+  /** Whether the selected files are valid */
+  valid: ComputedRef<boolean>
+}
 
 export interface SetupContext {
   createApp: typeof createSSRApp | typeof createApp

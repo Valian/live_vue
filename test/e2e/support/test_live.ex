@@ -34,11 +34,7 @@ defmodule LiveVue.E2E.NavigationLive do
   def render(assigns) do
     ~H"""
     <div id="navigation-test">
-      <LiveVue.vue 
-        params={@params} 
-        query_params={@query_params}
-        v-component="navigation" 
-        v-socket={@socket} />
+      <LiveVue.vue params={@params} query_params={@query_params} v-component="navigation" v-socket={@socket} />
     </div>
     """
   end
@@ -72,13 +68,9 @@ defmodule LiveVue.E2E.EventLive do
   def render(assigns) do
     ~H"""
     <div id="event-test">
-      <div id="message-display">Message: <%= @message %></div>
-      <div id="event-count">Event Count: <%= @event_count %></div>
-      <LiveVue.vue 
-        message={@message}
-        event_count={@event_count}
-        v-component="event_test" 
-        v-socket={@socket} />
+      <div id="message-display">Message: {@message}</div>
+      <div id="event-count">Event Count: {@event_count}</div>
+      <LiveVue.vue message={@message} event_count={@event_count} v-component="event_test" v-socket={@socket} />
     </div>
     """
   end

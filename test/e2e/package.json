@@ -15,9 +15,9 @@
     "live_vue": "file:../.."
   },
   "scripts": {
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
+    "test": "vite build && npx playwright test",
+    "test:headed": "vite build && npx playwright test --headed",
+    "test:debug": "vite build && npx playwright test --debug",
     "build": "vite build"
   }
 }

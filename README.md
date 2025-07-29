@@ -18,6 +18,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
 -   🦥 **Slot Interoperability**
+-   📁 **File Upload Composable** - `useLiveUpload()` for seamless Vue integration with LiveView uploads
 -   🚀 **Amazing DX** with Vite
 
 

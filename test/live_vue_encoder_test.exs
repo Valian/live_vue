@@ -2,6 +2,8 @@ defmodule LiveVue.EncoderTest do
   use ExUnit.Case
 
   alias LiveVue.Encoder
+  alias Phoenix.LiveView.UploadConfig
+  alias Phoenix.LiveView.UploadEntry
 
   describe "primitive types" do
     test "encodes integers" do
@@ -345,6 +347,202 @@ defmodule LiveVue.EncoderTest do
       encoded_fun = Encoder.encode(fun)
 
       assert encoded_fun == fun
+    end
+  end
+
+  describe "Phoenix.LiveView upload structs" do
+    test "encodes UploadEntry struct" do
+      entry = %UploadEntry{
+        ref: "entry-1",
+        client_name: "document.pdf",
+        client_size: 1024,
+        client_type: "application/pdf",
+        progress: 50,
+        done?: false,
+        valid?: true,
+        preflighted?: true
+      }
+
+      expected = %{
+        ref: "entry-1",
+        client_name: "document.pdf",
+        client_size: 1024,
+        client_type: "application/pdf",
+        progress: 50,
+        done: false,
+        valid: true,
+        preflighted: true
+      }
+
+      assert Encoder.encode(entry) == expected
+    end
+
+    test "encodes UploadConfig struct without errors" do
+      entry1 = %UploadEntry{
+        ref: "entry-1",
+        client_name: "doc1.pdf",
+        client_size: 1024,
+        client_type: "application/pdf",
+        progress: 100,
+        done?: true,
+        valid?: true,
+        preflighted?: true
+      }
+
+      entry2 = %UploadEntry{
+        ref: "entry-2",
+        client_name: "doc2.jpg",
+        client_size: 2048,
+        client_type: "image/jpeg",
+        progress: 75,
+        done?: false,
+        valid?: true,
+        preflighted?: false
+      }
+
+      config = %UploadConfig{
+        ref: "upload-1",
+        name: "documents",
+        accept: [".pdf", ".jpg"],
+        max_entries: 5,
+        auto_upload?: false,
+        entries: [entry1, entry2],
+        errors: []
+      }
+
+      expected = %{
+        ref: "upload-1",
+        name: "documents",
+        accept: [".pdf", ".jpg"],
+        max_entries: 5,
+        auto_upload: false,
+        entries: [
+          %{
+            ref: "entry-1",
+            client_name: "doc1.pdf",
+            client_size: 1024,
+            client_type: "application/pdf",
+            progress: 100,
+            done: true,
+            valid: true,
+            preflighted: true,
+            errors: []
+          },
+          %{
+            ref: "entry-2",
+            client_name: "doc2.jpg",
+            client_size: 2048,
+            client_type: "image/jpeg",
+            progress: 75,
+            done: false,
+            valid: true,
+            preflighted: false,
+            errors: []
+          }
+        ],
+        errors: []
+      }
+
+      assert Encoder.encode(config) == expected
+    end
+
+    test "encodes UploadConfig struct with errors" do
+      entry1 = %UploadEntry{
+        ref: "entry-1",
+        client_name: "large.pdf",
+        client_size: 10_000_000,
+        client_type: "application/pdf",
+        progress: 0,
+        done?: false,
+        valid?: false,
+        preflighted?: false
+      }
+
+      entry2 = %UploadEntry{
+        ref: "entry-2",
+        client_name: "valid.jpg",
+        client_size: 1024,
+        client_type: "image/jpeg",
+        progress: 100,
+        done?: true,
+        valid?: true,
+        preflighted?: true
+      }
+
+      config = %UploadConfig{
+        ref: "upload-1",
+        name: "files",
+        accept: [".pdf", ".jpg"],
+        max_entries: 2,
+        auto_upload?: true,
+        entries: [entry1, entry2],
+        errors: [
+          {"entry-1", :too_large},
+          {"entry-1", :invalid_format}
+        ]
+      }
+
+      expected = %{
+        ref: "upload-1",
+        name: "files",
+        accept: [".pdf", ".jpg"],
+        max_entries: 2,
+        auto_upload: true,
+        entries: [
+          %{
+            ref: "entry-1",
+            client_name: "large.pdf",
+            client_size: 10_000_000,
+            client_type: "application/pdf",
+            progress: 0,
+            done: false,
+            valid: false,
+            preflighted: false,
+            errors: [:too_large, :invalid_format]
+          },
+          %{
+            ref: "entry-2",
+            client_name: "valid.jpg",
+            client_size: 1024,
+            client_type: "image/jpeg",
+            progress: 100,
+            done: true,
+            valid: true,
+            preflighted: true,
+            errors: []
+          }
+        ],
+        errors: [
+          %{ref: "entry-1", error: :too_large},
+          %{ref: "entry-1", error: :invalid_format}
+        ]
+      }
+
+      assert Encoder.encode(config) == expected
+    end
+
+    test "encodes empty UploadConfig" do
+      config = %UploadConfig{
+        ref: "upload-empty",
+        name: "empty_upload",
+        accept: [],
+        max_entries: 0,
+        auto_upload?: false,
+        entries: [],
+        errors: []
+      }
+
+      expected = %{
+        ref: "upload-empty",
+        name: "empty_upload",
+        accept: [],
+        max_entries: 0,
+        auto_upload: false,
+        entries: [],
+        errors: []
+      }
+
+      assert Encoder.encode(config) == expected
     end
   end
 end

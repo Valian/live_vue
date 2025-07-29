@@ -47,6 +47,7 @@ defmodule LiveVue.E2E.Layout do
     </script>
     <script src="/assets/app.js">
     </script>
+    <link rel="stylesheet" href="/assets/app.css" />
     {@inner_content}
     """
   end
@@ -116,6 +117,7 @@ defmodule LiveVue.E2E.Router do
       live "/navigation/:page", NavigationLive
       live "/navigation/alt/:page", NavigationLive
       live "/events", EventLive
+      live "/upload/:mode", UploadTestLive
     end
   end
 

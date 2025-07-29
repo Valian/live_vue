@@ -1,6 +1,6 @@
 defmodule LiveVue.SSR.NodeJS do
   @moduledoc """
-  Implements SSR by using `NodeJS` package.
+  Implements SSR by using NodeJS package.
 
   Under the hood, it invokes "render" function exposed by `server.js` file.
   You can see how `server.js` is created by looking at `assets.deploy` command
