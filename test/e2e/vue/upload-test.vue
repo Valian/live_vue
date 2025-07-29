@@ -68,7 +68,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const { entries, showFilePicker, submit, cancel } = useLiveUpload(() => props.upload)
+const { entries, showFilePicker, submit, cancel } = useLiveUpload(() => props.upload, {
+  changeEvent: "validate",
+  submitEvent: "save",
+})
 
 // Computed properties to handle reactive values
 const entriesList = computed(() => entries.value || [])

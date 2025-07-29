@@ -10,7 +10,10 @@ const props = defineProps<{
 }>()
 
 // Use the upload composable
-const { entries, showFilePicker, addFiles, submit, cancel, clear, progress } = useLiveUpload(() => props.upload)
+const { entries, showFilePicker, addFiles, submit, cancel, clear, progress } = useLiveUpload(() => props.upload, {
+  changeEvent: "validate",
+  submitEvent: "save",
+})
 
 // Handle drag and drop
 const handleDrop = (event: DragEvent) => {

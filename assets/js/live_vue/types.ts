@@ -44,6 +44,11 @@ export interface UploadConfigClient {
   errors: { ref: string; error: string }[]
 }
 
+export type UploadOptions = {
+  changeEvent?: string
+  submitEvent: string
+}
+
 export interface UseLiveUploadReturn {
   /** Reactive list of current entries coming from the server patch */
   entries: Ref<UploadEntryClient[]>

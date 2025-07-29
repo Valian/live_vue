@@ -1,6 +1,6 @@
 import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef } from "vue"
 import { MaybeRefOrGetter } from "vue"
-import type { LiveHook, UploadConfigClient, UploadEntryClient, UseLiveUploadReturn } from "./types.js"
+import type { LiveHook, UploadConfigClient, UploadEntryClient, UploadOptions, UseLiveUploadReturn } from "./types.js"
 
 export const liveInjectKey = "_live_vue"
 
@@ -78,9 +78,13 @@ export const useLiveNavigation = () => {
  * A composable for Phoenix LiveView file uploads.
  * Provides a Vue-friendly API for handling file uploads with LiveView.
  * @param uploadConfig - Reactive reference to the upload configuration from LiveView
+ * @param options - The options for the upload. Mostly names of events to use for phx-change and phx-submit.
  * @returns An object with upload methods and reactive state
  */
-export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>): UseLiveUploadReturn => {
+export const useLiveUpload = (
+  uploadConfig: MaybeRefOrGetter<UploadConfigClient>,
+  options: UploadOptions
+): UseLiveUploadReturn => {
   const live = useLiveVue()
   const inputEl = ref<HTMLInputElement | null>(null)
 
@@ -90,8 +94,8 @@ export const useLiveUpload = (uploadConfig: MaybeRefOrGetter<UploadConfigClient>
       // Create a form to wrap the input, with phx-change="validate"
       const uploadConfigValue = toValue(uploadConfig)
       const form = document.createElement("form")
-      form.setAttribute("phx-change", "validate")
-      form.setAttribute("phx-submit", "save")
+      if (options.changeEvent) form.setAttribute("phx-change", options.changeEvent)
+      form.setAttribute("phx-submit", options.submitEvent)
       form.style.display = "none"
 
       const input = document.createElement("input")
