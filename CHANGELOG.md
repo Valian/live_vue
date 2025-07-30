@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.7.1 - 2025-07-30
+
+### 🐛 Bugfixes
+
+- Fixed `useLiveUpload` composable to properly handle change event dispatching for `addFiles` - now auto uploads for drag and drop should be working
+- `addFiles` now accepts `DataTransfer` objects directly
+- diff algorithm correctly handles time and date values - they're maps internally, but should be diffed as strings.
+
+### 🧪 Testing
+
+- Added E2E tests for drag and drop functionality
+
+
 ## 0.7.0 - 2025-07-29
 
 ### 🚀 New Composable: useLiveUpload
