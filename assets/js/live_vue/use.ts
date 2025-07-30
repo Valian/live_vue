@@ -1,6 +1,6 @@
-import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef } from "vue"
+import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef, Ref } from "vue"
 import { MaybeRefOrGetter } from "vue"
-import type { LiveHook, UploadConfig, UploadEntry, UploadOptions, UseLiveUploadReturn } from "./types.js"
+import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types.js"
 
 export const liveInjectKey = "_live_vue"
 
@@ -72,6 +72,27 @@ export const useLiveNavigation = () => {
     patch,
     navigate,
   }
+}
+
+export interface UseLiveUploadReturn {
+  /** Reactive list of current entries coming from the server patch */
+  entries: Ref<UploadEntry[]>
+  /** Opens the native file-picker dialog */
+  showFilePicker: () => void
+  /** Manually enqueue external files (e.g. drag-drop) */
+  addFiles: (files: (File | Blob)[] | DataTransfer) => void
+  /** Submit *all* currently queued files to LiveView (no args) */
+  submit: () => void
+  /** Cancel a single entry by ref or every entry when omitted */
+  cancel: (ref?: string) => void
+  /** Clear local queue and reset hidden input (post-upload cleanup) */
+  clear: () => void
+  /** Overall progress 0-100 derived from entries */
+  progress: Ref<number>
+  /** The underlying hidden <input type=file> */
+  inputEl: Ref<HTMLInputElement | null>
+  /** Whether the selected files are valid */
+  valid: ComputedRef<boolean>
 }
 
 /**
@@ -190,6 +211,15 @@ export const useLiveUpload = (
       input.forEach(f => dataTransfer.items.add(f as File))
       inputEl.value.files = dataTransfer.files
     }
+
+    // Dispatch change event to trigger Phoenix LiveView upload handling
+    // This mimics what happens when files are selected through the native file picker
+    // Use setTimeout to ensure Phoenix has had a chance to initialize the upload system
+    setTimeout(() => {
+      if (inputEl.value) {
+        inputEl.value.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }))
+      }
+    }, 0)
   }
 
   // Submit all queued files (for non-auto uploads)

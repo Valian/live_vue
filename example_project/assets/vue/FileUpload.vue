@@ -317,7 +317,7 @@ const progressValue = computed(() => progress.value)
       <div v-if="upload.errors && upload.errors.length > 0" class="space-y-2">
         <h4 class="text-sm font-medium text-red-800 dark:text-red-200">Upload Errors:</h4>
         <div
-          v-for="[ref, error] in upload.errors"
+          v-for="{ ref, error } in upload.errors"
           :key="ref"
           class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-md"
         >

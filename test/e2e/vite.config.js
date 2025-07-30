@@ -14,6 +14,7 @@ export default defineConfig(({ command }) => {
       alias: {
         vue: path.resolve(__dirname, "../../node_modules/vue"),
         "@": path.resolve(__dirname, "."),
+        live_vue: path.resolve(__dirname, "../../priv/static/index.js"),
       },
     },
     build: {

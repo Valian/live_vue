@@ -11,7 +11,11 @@
     "declaration": true,
     "emitDeclarationOnly": false,
     "outDir": "./priv/static",
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "live_vue": ["./priv/static/index"]
+    }
   },
   "exclude": ["node_modules"],
 }

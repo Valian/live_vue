@@ -1,3 +1,46 @@
+<script setup lang="ts">
+import { computed } from "vue"
+import { useLiveUpload, UploadConfig, UploadEntry } from "live_vue"
+
+interface Props {
+  upload: UploadConfig
+  uploadedFiles: { name: string; size: number; type: string }[]
+}
+
+const props = defineProps<Props>()
+
+const { entries, showFilePicker, addFiles, submit, cancel } = useLiveUpload(() => props.upload, {
+  changeEvent: "validate",
+  submitEvent: "save",
+})
+
+// Computed properties to handle reactive values
+const entriesList = computed(() => entries.value || [])
+const entriesCount = computed(() => entriesList.value.length)
+
+// Global errors handling
+const hasGlobalErrors = computed(() => props.upload.errors && props.upload.errors.length > 0)
+const globalErrorEntries = computed(() => props.upload.errors)
+
+const getEntryName = (ref: string) => {
+  const entry = entriesList.value.find((e: UploadEntry) => e.ref === ref)
+  return entry ? entry.client_name : `Entry ${ref}`
+}
+
+// Handle drag and drop
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault()
+  if (event.dataTransfer?.files) {
+    const files = Array.from(event.dataTransfer.files)
+    addFiles(files)
+  }
+}
+
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+}
+</script>
+
 <template>
   <div class="upload-container">
     <div id="upload-info" class="info-section">
@@ -14,6 +57,11 @@
       </button>
 
       <button v-if="entriesCount > 0" @click="cancel()" id="cancel-all-btn" class="btn btn-danger">Cancel All</button>
+    </div>
+
+    <!-- Drag and Drop Zone -->
+    <div id="drop-zone" class="drop-zone" @drop="handleDrop" @dragover="handleDragOver" :phx-drop-target="upload.ref">
+      <p>Drag and drop files here</p>
     </div>
 
     <div id="file-list" class="file-list">
@@ -56,36 +104,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from "vue"
-import { useLiveUpload, UploadConfig } from "live_vue"
-
-interface Props {
-  upload: UploadConfig
-  uploadedFiles: { name: string; size: number; type: string }[]
-}
-
-const props = defineProps<Props>()
-
-const { entries, showFilePicker, submit, cancel } = useLiveUpload(() => props.upload, {
-  changeEvent: "validate",
-  submitEvent: "save",
-})
-
-// Computed properties to handle reactive values
-const entriesList = computed(() => entries.value || [])
-const entriesCount = computed(() => entriesList.value.length)
-
-// Global errors handling
-const hasGlobalErrors = computed(() => props.upload.errors && props.upload.errors.length > 0)
-const globalErrorEntries = computed(() => props.upload.errors)
-
-const getEntryName = (ref: string) => {
-  const entry = entriesList.value.find(e => e.ref === ref)
-  return entry ? entry.client_name : `Entry ${ref}`
-}
-</script>
 
 <style scoped>
 .upload-container {
@@ -269,5 +287,26 @@ const getEntryName = (ref: string) => {
 
 .global-error strong {
   color: #721c24;
+}
+
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+  background-color: #f9f9f9;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.drop-zone:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.drop-zone p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
 }
 </style>

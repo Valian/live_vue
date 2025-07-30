@@ -264,4 +264,57 @@ test.describe("useLiveUpload", () => {
       .catch(() => false)
     expect(hasErrors).toBeTruthy()
   })
+
+  test("should handle drag and drop file upload", async ({ page }) => {
+    await page.goto("/upload/manual")
+    await syncLV(page)
+
+    // Verify initial state
+    await expect(page.locator("#selected-count")).toContainText("0")
+
+    // Create a DataTransfer object with files for drag and drop simulation
+    const testContent = "This is test file content for drag and drop"
+
+    // Simulate drag and drop by dispatching a drop event with files
+    await page.evaluate(async content => {
+      const dropArea = document.querySelector("#drop-zone")
+      if (!dropArea) throw new Error("Drop area not found")
+
+      // Create a File object
+      const file = new File([content], "drag-drop-test.txt", { type: "text/plain" })
+
+      // Create DataTransfer object and add the file
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(file)
+
+      // Create and dispatch drop event
+      const dropEvent = new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dataTransfer,
+      })
+
+      dropArea.dispatchEvent(dropEvent)
+    }, testContent)
+
+    await syncLV(page)
+
+    // Verify file was added via drag and drop
+    await expect(page.locator("#selected-count")).toContainText("1")
+    await expect(page.locator(".file-entry")).toHaveCount(1)
+    await expect(page.locator(".file-name")).toContainText("drag-drop-test.txt")
+    await expect(page.locator(".file-done")).toContainText("pending")
+
+    // Upload button should now be visible for manual upload
+    await expect(page.locator("#upload-btn")).toBeVisible()
+
+    // Test that the upload works after drag and drop
+    await page.click("#upload-btn")
+    await syncLV(page)
+
+    // Verify upload completed
+    await expect(page.locator("#uploaded-count")).toContainText("1")
+    await expect(page.locator(".uploaded-file")).toHaveCount(1)
+    await expect(page.locator(".uploaded-name")).toContainText("drag-drop-test.txt")
+  })
 })
