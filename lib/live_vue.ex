@@ -171,7 +171,10 @@ defmodule LiveVue do
           # TODO - replace by Jsonpatch library when all PRs are merged
           LiveVue.Diff.diff(old_value, new_value,
             ancestor_path: "/#{k}",
-            prepare_struct: &Encoder.encode/1,
+            prepare_map: fn
+              struct when is_struct(struct) -> Encoder.encode(struct)
+              rest -> rest
+            end,
             object_hash: &object_hash/1
           )
       end

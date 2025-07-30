@@ -579,5 +579,20 @@ defmodule LiveViewDiffTest do
 
       assert_patches_equal(vue.props_diff, expected_result)
     end
+
+    test "updating date time works correctly" do
+      assigns = %{
+        date: ~U[2025-01-01 12:00:00Z],
+        "v-component": "TestComponent",
+        __changed__: %{}
+      }
+
+      assigns = assign(assigns, :date, ~U[2025-01-01 15:00:00Z])
+      vue = render_vue_assigns(assigns)
+
+      assert_patches_equal(vue.props_diff, [
+        %{"op" => "replace", "path" => "/date", "value" => "2025-01-01T15:00:00Z"}
+      ])
+    end
   end
 end

@@ -10,9 +10,9 @@ defmodule LiveVue.Diff do
 
     * `:ancestor_path` - Sets the initial ancestor path for the diff operation.
       Defaults to `""` (root). Useful when you need to diff starting from a nested path.
-    * `:prepare_struct` - A function that converts structs to maps before diffing.
-      Defaults to `fn struct -> struct end` (no-op). Useful when you need to customize
-      how structs are handled during the diff process. Example:
+    * `:prepare_map` - A function that prepares maps before diffing.
+      Defaults to `fn map -> map end` (no-op). Useful when you need to customize
+      how maps are handled during the diff process. Example:
 
       ```elixir
       fn
@@ -49,46 +49,14 @@ defmodule LiveVue.Diff do
   def diff(source, destination, opts \\ []) do
     opts =
       opts
+      |> Keyword.update(:object_hash, nil, &make_safe_hash_fn/1)
       |> Keyword.validate!(
         ancestor_path: "",
-        prepare_struct: fn struct -> struct end,
+        prepare_map: fn map -> map end,
         object_hash: nil
       )
-      |> Enum.map(fn
-        {:object_hash, hash_fn} when not is_nil(hash_fn) ->
-          # we want to compare only maps
-          safe_hash_fn = fn
-            %{} = item ->
-              # unable to hash non-map
-              case hash_fn.(item) do
-                nil -> throw(:hash_not_implemented)
-                hash -> hash
-              end
 
-            _item ->
-              throw(:hash_not_implemented)
-          end
-
-          {:object_hash, safe_hash_fn}
-
-        other ->
-          other
-      end)
-
-    cond do
-      is_map(source) and is_map(destination) ->
-        do_map_diff(destination, source, opts[:ancestor_path], [], opts)
-
-      is_list(source) and is_list(destination) ->
-        do_list_diff(destination, source, opts[:ancestor_path], [], opts)
-
-      # type of value changed, eg set to nil
-      source != destination ->
-        [%{op: "replace", path: opts[:ancestor_path], value: maybe_prepare_struct(destination, opts)}]
-
-      true ->
-        []
-    end
+    do_diff(destination, source, opts[:ancestor_path], nil, [], opts)
   end
 
   defguardp are_unequal_maps(val1, val2) when val1 != val2 and is_map(val2) and is_map(val1)
@@ -96,17 +64,26 @@ defmodule LiveVue.Diff do
 
   defp do_diff(dest, source, path, key, patches, opts) when are_unequal_lists(dest, source) do
     # uneqal lists, let's use a specialized function for that
-    do_list_diff(dest, source, "#{path}/#{escape(key)}", patches, opts)
+    do_list_diff(dest, source, join_key(path, key), patches, opts)
   end
 
   defp do_diff(dest, source, path, key, patches, opts) when are_unequal_maps(dest, source) do
-    # uneqal maps, let's use a specialized function for that
-    do_map_diff(dest, source, "#{path}/#{escape(key)}", patches, opts)
+    # Convert structs to maps if prepare_map function is provided
+    dest = maybe_prepare_map(dest, opts)
+    source = maybe_prepare_map(source, opts)
+
+    if not is_map(dest) or not is_map(source) do
+      # type changed, let's process it again
+      do_diff(dest, source, path, key, patches, opts)
+    else
+      # uneqal maps, let's use a specialized function for that
+      do_map_diff(dest, source, join_key(path, key), patches, opts)
+    end
   end
 
   defp do_diff(dest, source, path, key, patches, opts) when dest != source do
     # scalar values or change of type (map -> list etc), let's just make a replace patch
-    [%{op: "replace", path: "#{path}/#{escape(key)}", value: maybe_prepare_struct(dest, opts)} | patches]
+    [%{op: "replace", path: join_key(path, key), value: maybe_prepare_map(dest, opts)} | patches]
   end
 
   defp do_diff(_dest, _source, _path, _key, patches, _opts) do
@@ -115,10 +92,6 @@ defmodule LiveVue.Diff do
   end
 
   defp do_map_diff(%{} = destination, %{} = source, ancestor_path, patches, opts) do
-    # Convert structs to maps if prepare_struct function is provided
-    destination = maybe_prepare_struct(destination, opts)
-    source = maybe_prepare_struct(source, opts)
-
     # entrypoint for map diff, let's convert the map to a list of {k, v} tuples
     destination
     |> Map.to_list()
@@ -132,7 +105,7 @@ defmodule LiveVue.Diff do
       if k in checked_keys do
         patches
       else
-        [%{op: "remove", path: "#{ancestor_path}/#{escape(k)}"} | patches]
+        [%{op: "remove", path: join_key(ancestor_path, k)} | patches]
       end
     end)
   end
@@ -145,7 +118,7 @@ defmodule LiveVue.Diff do
           do_diff(val, source_val, ancestor_path, key, patches, opts)
 
         :error ->
-          [%{op: "add", path: "#{ancestor_path}/#{escape(key)}", value: maybe_prepare_struct(val, opts)} | patches]
+          [%{op: "add", path: join_key(ancestor_path, key), value: maybe_prepare_map(val, opts)} | patches]
       end
 
     # Diff next value of same level
@@ -169,7 +142,7 @@ defmodule LiveVue.Diff do
 
   defp do_pairwise_list_diff([], [_item | source_rest], ancestor_path, patches, idx, opts) do
     # if we find any leftover items in source, we have to remove them
-    patches = [%{op: "remove", path: "#{ancestor_path}/#{idx}"} | patches]
+    patches = [%{op: "remove", path: join_key(ancestor_path, idx)} | patches]
     do_pairwise_list_diff([], source_rest, ancestor_path, patches, idx + 1, opts)
   end
 
@@ -177,7 +150,7 @@ defmodule LiveVue.Diff do
     # we have to do it without recursion, because we have to keep the order of the items
     items
     |> Enum.map_reduce(idx, fn val, idx ->
-      {%{op: "add", path: "#{ancestor_path}/#{idx}", value: maybe_prepare_struct(val, opts)}, idx + 1}
+      {%{op: "add", path: join_key(ancestor_path, idx), value: maybe_prepare_map(val, opts)}, idx + 1}
     end)
     |> elem(0)
     |> Kernel.++(patches)
@@ -318,15 +291,15 @@ defmodule LiveVue.Diff do
   @compile {:inline, add_removals: 4}
   defp add_removals(from_idx, to_idx, path, removals) do
     Enum.reduce(from_idx..to_idx//1, removals, fn idx, removals ->
-      [%{op: "remove", path: "#{path}/#{idx}"} | removals]
+      [%{op: "remove", path: join_key(path, idx)} | removals]
     end)
   end
 
   @compile {:inline, add_additions: 6}
   defp add_additions(from_idx, to_idx, path, dest_tuple, additions, opts) do
     Enum.reduce(from_idx..to_idx//1, additions, fn idx, additions ->
-      value = dest_tuple |> elem(idx) |> maybe_prepare_struct(opts)
-      [%{op: "add", path: "#{path}/#{idx}", value: value} | additions]
+      value = dest_tuple |> elem(idx) |> maybe_prepare_map(opts)
+      [%{op: "add", path: join_key(path, idx), value: value} | additions]
     end)
   end
 
@@ -344,10 +317,29 @@ defmodule LiveVue.Diff do
 
   defp escape(fragment), do: fragment
 
-  defp maybe_prepare_struct(value, opts) when is_struct(value) do
-    prepare_fn = Keyword.fetch!(opts, :prepare_struct)
+  @compile {:inline, join_key: 2}
+  defp join_key(path, nil), do: path
+  defp join_key(path, key), do: "#{path}/#{escape(key)}"
+
+  defp make_safe_hash_fn(hash_fn) do
+    # we want to compare only maps, and returning nil should mean
+    # we should compare lists pairwise instead
+    fn
+      %{} = item ->
+        case hash_fn.(item) do
+          nil -> throw(:hash_not_implemented)
+          hash -> hash
+        end
+
+      _item ->
+        throw(:hash_not_implemented)
+    end
+  end
+
+  defp maybe_prepare_map(value, opts) when is_map(value) do
+    prepare_fn = Keyword.fetch!(opts, :prepare_map)
     prepare_fn.(value)
   end
 
-  defp maybe_prepare_struct(value, _opts), do: value
+  defp maybe_prepare_map(value, _opts), do: value
 end
