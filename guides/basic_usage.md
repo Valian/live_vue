@@ -8,7 +8,7 @@ By default, Vue components should be placed in either:
 - `assets/vue` directory
 - Colocated with your LiveView files in `lib/my_app_web`
 
-For advanced component organization and custom resolution patterns, see [Configuration](configuration.html#component-organization).
+For advanced component organization and custom resolution patterns, see [Configuration](configuration.md#component-organization).
 
 ## Rendering Components
 
@@ -93,7 +93,7 @@ end
 
 The encoder protocol ensures that only specified fields are sent to the client, sensitive data is protected, and props can be efficiently diffed for updates.
 
-For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 > #### Protocol.UndefinedError {: .warning}
 >
@@ -156,7 +156,7 @@ There are two ways to access the Phoenix LiveView hook instance from your Vue co
     </template>
     ```
 
-The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.html).
+The `live` object provides all methods from [Phoenix.LiveView JS Interop](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook). For a complete API reference, see [Client-Side API](client_api.md).
 
 ### LiveView Navigation
 
@@ -181,7 +181,7 @@ import { Link } from "live_vue"
 </template>
 ```
 
-For a complete API reference, see [Client-Side API](client_api.html#link).
+For a complete API reference, see [Client-Side API](client_api.md#link).
 
 ### Vue Events
 
@@ -403,7 +403,7 @@ const {
 - **Drag & drop**: Use `addFiles()` method to support drag-and-drop functionality
 - **Cancellation**: Cancel individual files or all uploads
 
-For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.html#useliveuploadevent-callback).
+For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.md#useliveuploadevent-callback).
 
 ## Dead Views vs Live Views
 
@@ -473,7 +473,7 @@ The `~VUE` sigil is a powerful macro that compiles the string content into a ful
 
 Now that you understand the basics, you might want to explore:
 
-- [Component Reference](component_reference.html) for complete syntax documentation
-- [Configuration](configuration.html) for advanced setup and customization options
-- [Client-Side API](client_api.html) for detailed API reference and advanced patterns
-- [FAQ](faq.html) for common questions and troubleshooting
+- [Component Reference](component_reference.md) for complete syntax documentation
+- [Configuration](configuration.md) for advanced setup and customization options
+- [Client-Side API](client_api.md) for detailed API reference and advanced patterns
+- [FAQ](faq.md) for common questions and troubleshooting

@@ -405,6 +405,5 @@ Logger.debug("Vue component props: #{inspect(props)}")
 ## Next Steps
 
 With your configuration complete, explore:
-- [Getting Started](getting_started.html) for your first component
-- [Basic Usage](basic_usage.html) for common patterns
-- [Advanced Features](advanced_features.html) for complex scenarios
+- [Getting Started](getting_started.md) for your first component
+- [Basic Usage](basic_usage.md) for common patterns

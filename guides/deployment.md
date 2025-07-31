@@ -4,7 +4,7 @@ Deploying a LiveVue app is similar to deploying a regular Phoenix app, with one 
 
 > #### SSR Configuration {: .tip}
 >
-> For detailed SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr). This guide focuses on deployment-specific setup.
+> For detailed SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr). This guide focuses on deployment-specific setup.
 
 ## General Requirements
 
@@ -107,7 +107,7 @@ heroku buildpacks:add --index 1 heroku/nodejs
 If using your own Docker setup:
 1. Ensure Node.js 19+ is installed
 2. Follow standard Phoenix deployment practices
-3. Configure SSR for production (see [Configuration](configuration.html#production-ssr-setup))
+3. Configure SSR for production (see [Configuration](configuration.md#production-ssr-setup))
 
 ### Custom Server
 
@@ -124,7 +124,7 @@ apt-get install -y nodejs
 
 - [ ] Node.js 19+ installed
 - [ ] Assets built (`mix assets.build`)
-- [ ] SSR configured properly (see [Configuration](configuration.html#production-ssr-setup))
+- [ ] SSR configured properly (see [Configuration](configuration.md#production-ssr-setup))
 - [ ] Database configured
 - [ ] Environment variables set
 - [ ] SSL certificates configured (if needed)
@@ -137,7 +137,7 @@ apt-get install -y nodejs
 
 1. **SSR Not Working**
    - Verify Node.js installation
-   - Check SSR configuration (see [Configuration](configuration.html#ssr-troubleshooting))
+   - Check SSR configuration (see [Configuration](configuration.md#ssr-troubleshooting))
    - Ensure server bundle exists in `priv/vue/server.js`
 
 2. **Asset Loading Issues**
@@ -146,10 +146,10 @@ apt-get install -y nodejs
    - Inspect network requests
 
 3. **Performance Issues**
-   - Consider adjusting NodeJS pool size (see [Configuration](configuration.html#production-ssr-setup))
+   - Consider adjusting NodeJS pool size (see [Configuration](configuration.md#production-ssr-setup))
 
 ## Next Steps
 
-- Review [FAQ](faq.html) for common questions
+- Review [FAQ](faq.md) for common questions
 - Join our [GitHub Discussions](https://github.com/Valian/live_vue/discussions) for help
 - Consider contributing to [LiveVue](https://github.com/Valian/live_vue)

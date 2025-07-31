@@ -4,7 +4,7 @@ This guide explains the architecture and inner workings of LiveVue, helping you 
 
 > #### Practical Usage {: .tip}
 >
-> Looking for practical examples? Check out [Basic Usage](basic_usage.html) for common patterns and [Getting Started](getting_started.html) for your first component.
+> Looking for practical examples? Check out [Basic Usage](basic_usage.md) for common patterns and [Getting Started](getting_started.md) for your first component.
 
 ## Overview
 
@@ -130,7 +130,7 @@ This diff-based approach provides several advantages:
 The combination of server-side diff calculation and client-side patch application ensures that LiveVue can handle complex, nested data structures efficiently while maintaining real-time reactivity.
 
 **Disabling Diffs**
-For testing scenarios or debugging purposes, diffing can be disabled globally via the `enable_props_diff: false` configuration option, or per-component using the `v-diff={false}` attribute. When disabled, complete props are always sent instead of diffs, which can be useful for comprehensive testing or troubleshooting complex prop updates. See [Configuration](configuration.html#testing-configuration) for details.
+For testing scenarios or debugging purposes, diffing can be disabled globally via the `enable_props_diff: false` configuration option, or per-component using the `v-diff={false}` attribute. When disabled, complete props are always sent instead of diffs, which can be useful for comprehensive testing or troubleshooting complex prop updates. See [Configuration](configuration.md#testing-configuration) for details.
 
 ## Data Flow
 
@@ -336,6 +336,6 @@ Consider alternatives for simple forms and basic interactions, applications prio
 
 Now that you understand how LiveVue works:
 
-- [Configuration](configuration.html) to customize behavior and SSR settings
-- [Basic Usage](basic_usage.html) for practical patterns and examples
-- [Client-Side API](client_api.html) for detailed API reference
+- [Configuration](configuration.md) to customize behavior and SSR settings
+- [Basic Usage](basic_usage.md) for practical patterns and examples
+- [Client-Side API](client_api.md) for detailed API reference

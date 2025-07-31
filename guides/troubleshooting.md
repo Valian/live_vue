@@ -4,7 +4,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 
 > #### Quick Start {: .tip}
 >
-> New to LiveVue? Start with [Getting Started](getting_started.html) for a working example, then check [Basic Usage](basic_usage.html) for common patterns.
+> New to LiveVue? Start with [Getting Started](getting_started.md) for a working example, then check [Basic Usage](basic_usage.md) for common patterns.
 
 ## Component Issues
 
@@ -120,7 +120,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
    %{name: "John", email: "john@example.com"}
    ```
 
-For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 **Common Causes:**
 - Passing structs without implementing the encoder protocol
@@ -291,7 +291,7 @@ config :live_vue,
   ssr: true
 ```
 
-For complete SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr).
+For complete SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr).
 
 **Verify Node.js version:**
 ```bash
@@ -314,7 +314,7 @@ children = [
 ls priv/vue/server.js  # Should exist after build
 ```
 
-For production SSR setup details, see [Configuration](configuration.html#production-ssr-setup).
+For production SSR setup details, see [Configuration](configuration.md#production-ssr-setup).
 
 ## Performance Issues
 
@@ -452,7 +452,7 @@ export default defineConfig({
 ### Before Asking for Help
 
 1. **Check browser console for errors**
-2. **Verify all configuration steps** (see [Configuration](configuration.html))
+2. **Verify all configuration steps** (see [Configuration](configuration.md))
 3. **Test with minimal reproduction case**
 4. **Check if issue exists in example project**
 
@@ -475,7 +475,7 @@ Include:
 
 ## Next Steps
 
-- [FAQ](faq.html) for conceptual questions
-- [Architecture](architecture.html) to understand how things work
-- [Configuration](configuration.html) for advanced setup options
+- [FAQ](faq.md) for conceptual questions
+- [Architecture](architecture.md) to understand how things work
+- [Configuration](configuration.md) for advanced setup options
 - [GitHub Issues](https://github.com/Valian/live_vue/issues) to report bugs

@@ -4,7 +4,7 @@ This guide provides a complete reference for using Vue components in Phoenix Liv
 
 > #### Practical Examples {: .tip}
 >
-> For practical usage examples and patterns, see [Basic Usage](basic_usage.html). This reference focuses on complete syntax documentation.
+> For practical usage examples and patterns, see [Basic Usage](basic_usage.md). This reference focuses on complete syntax documentation.
 
 ## The `.vue` Component
 
@@ -20,7 +20,7 @@ The `.vue` component is the primary way to render Vue components in LiveView tem
 />
 ```
 
-For practical examples of different rendering patterns, see [Basic Usage](basic_usage.html#rendering-components).
+For practical examples of different rendering patterns, see [Basic Usage](basic_usage.md#rendering-components).
 
 ### Required Attributes
 
@@ -185,7 +185,7 @@ Standard Phoenix events work directly in Vue components:
 </.vue>
 ```
 
-For more event handling patterns and examples, see [Basic Usage](basic_usage.html#handling-events).
+For more event handling patterns and examples, see [Basic Usage](basic_usage.md#handling-events).
 
 ### Vue Event Handlers
 
@@ -202,7 +202,7 @@ Use `v-on:` for handling Vue component events:
 />
 ```
 
-For client-side event handling within Vue components, see [Client-Side API](client_api.html#uselivevue).
+For client-side event handling within Vue components, see [Client-Side API](client_api.md#uselivevue).
 
 ### Event Payload Handling
 
@@ -235,7 +235,7 @@ When using `JS.push()` without a value, the emit payload is automatically used:
 
 ### Global SSR Configuration
 
-For complete SSR configuration options, see [Configuration](configuration.html#server-side-rendering-ssr).
+For complete SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr).
 
 ### Per-Component SSR Control
 
@@ -256,7 +256,7 @@ LiveVue optimizes performance by sending only prop changes (diffs) instead of co
 
 ### Global Configuration
 
-For complete diffing configuration, see [Configuration - Testing Configuration](configuration.html#testing-configuration).
+For complete diffing configuration, see [Configuration - Testing Configuration](configuration.md#testing-configuration).
 
 ```elixir
 # config/config.exs
@@ -319,7 +319,7 @@ Consider disabling diffing for:
 
 ### Phoenix LiveView Upload Types
 
-Phoenix LiveView upload configurations are automatically encoded for use with the [`useLiveUpload()`](client_api.html#useliveuploadevent-callback) composable:
+Phoenix LiveView upload configurations are automatically encoded for use with the [`useLiveUpload()`](client_api.md#useliveuploadevent-callback) composable:
 
 | Elixir Type | Vue Type | Usage |
 |-------------|----------|-------|
@@ -589,7 +589,7 @@ const createdAt = new Date(props.created_at)
 
 ## Next Steps
 
-- [Basic Usage](basic_usage.html) for practical patterns and examples
-- [Client-Side API](client_api.html) for Vue component development
-- [Configuration](configuration.html) for advanced setup and customization
-- [Testing](testing.html) for testing component integration
+- [Basic Usage](basic_usage.md) for practical patterns and examples
+- [Client-Side API](client_api.md) for Vue component development
+- [Configuration](configuration.md) for advanced setup and customization
+- [Testing](testing.md) for testing component integration

@@ -277,8 +277,8 @@ defmodule User do
 end
 ```
 
-This is a safety feature to prevent accidental exposure of sensitive data. For more details, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+This is a safety feature to prevent accidental exposure of sensitive data. For more details, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 ## Next Steps
 
-Now that you have LiveVue installed, check out our [Getting Started Guide](getting_started.html) to create your first Vue component!
+Now that you have LiveVue installed, check out our [Getting Started Guide](getting_started.md) to create your first Vue component!
