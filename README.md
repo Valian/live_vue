@@ -121,7 +121,7 @@ See [Installation](guides/installation.md).
 
 This project is heavily inspired by ✨ [LiveSvelte](https://github.com/woutdp/live_svelte) ✨. Both projects try to solve the same problem. LiveVue was started as a fork of LiveSvelte with adjusted ESbuild settings, and evolved to use Vite and a slightly different syntax. I strongly believe more options are always better, and since I love Vue and it's ecosystem I've decided to give it a go 😉
 
-You can read more about differences between Vue and Svelte [in FAQ](#differences-from-livesvelte).
+You can read more about differences between Vue and Svelte [in FAQ](guides/faq.md#how-does-livevue-compare-to-livesvelte) or [in comparison guide](guides/comparison.md).
 
 ## LiveVue Development
 

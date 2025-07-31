@@ -52,7 +52,7 @@ The implementation is straightforward:
 
 Note: Hooks fire only after `app.js` loads, which may cause slight delays in initial render.
 
-For a deeper dive into the architecture, see [Architecture](architecture.html).
+For a deeper dive into the architecture, see [Architecture](architecture.md).
 
 ### What Optimizations Does LiveVue Use?
 
@@ -93,7 +93,7 @@ defmodule User do
 end
 ```
 
-For complete implementation details including field selection, custom implementations, and third-party structs, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+For complete implementation details including field selection, custom implementations, and third-party structs, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 Without implementing this protocol, you'll get a `Protocol.UndefinedError` when trying to pass custom structs as props. This is by design - it's a safety feature to prevent accidental data exposure.
 
@@ -112,7 +112,7 @@ Important notes:
 - Not needed during live navigation
 - Can be disabled per-component with `v-ssr={false}`
 
-For complete SSR configuration, see [Configuration](configuration.html#server-side-rendering-ssr).
+For complete SSR configuration, see [Configuration](configuration.md#server-side-rendering-ssr).
 
 ### Can I nest LiveVue components inside each other?
 
@@ -178,7 +178,7 @@ import {initApp} from './app.ts'
 initApp()
 ```
 
-For complete TypeScript setup, see [Configuration](configuration.html#typescript-support).
+For complete TypeScript setup, see [Configuration](configuration.md#typescript-support).
 
 ### Where Should I Put Vue Files?
 
@@ -194,7 +194,7 @@ Colocating provides better DX by:
 
 No configuration needed - just place `.vue` files in `lib/my_app_web` and reference them by name or path.
 
-For advanced component organization, see [Configuration](configuration.html#component-organization).
+For advanced component organization, see [Configuration](configuration.md#component-organization).
 
 ## Comparison with Other Solutions
 
@@ -226,7 +226,7 @@ Choose based on:
 - Syntax preferences
 - Bundle size concerns
 
-For a detailed comparison with other solutions, see [Comparison](comparison.html).
+For a detailed comparison with other solutions, see [Comparison](comparison.md).
 
 ## Additional Resources
 

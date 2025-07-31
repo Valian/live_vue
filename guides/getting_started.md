@@ -59,7 +59,7 @@ live "/counter", CounterLive
 ```
 
 Start server and visit `http://localhost:4000/counter` to see your counter in action!
-If it's not working correctly, see [Troubleshooting](troubleshooting.html).
+If it's not working correctly, see [Troubleshooting](troubleshooting.md).
 
 ## Adding Smooth Transitions
 
@@ -157,7 +157,7 @@ Basic diagram of the flow:
 
 ![LiveVue flow](./images/lifecycle.png)
 
-If you want to understand how it works in depth, see [Architecture](architecture.html).
+If you want to understand how it works in depth, see [Architecture](architecture.md).
 
 ### Working with Custom Structs
 
@@ -183,7 +183,7 @@ This protocol ensures that:
 - Sensitive data is protected from accidental exposure
 - Props can be efficiently diffed for optimal performance
 
-For more details, see [Component Reference](component_reference.html#custom-structs-with-livevue-encoder).
+For more details, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 
 > #### Good to know {: .info}
@@ -196,7 +196,7 @@ For more details, see [Component Reference](component_reference.html#custom-stru
 ## Next Steps
 
 Now that you have your first component working, explore:
-- [Basic Usage](basic_usage.html) for more patterns and the ~VUE sigil
-- [Component Reference](component_reference.html) for complete syntax documentation
-- [FAQ](faq.html) for common questions and troubleshooting
-- [Troubleshooting](troubleshooting.html) for common issues
+- [Basic Usage](basic_usage.md) for more patterns and the ~VUE sigil
+- [Component Reference](component_reference.md) for complete syntax documentation
+- [FAQ](faq.md) for common questions and troubleshooting
+- [Troubleshooting](troubleshooting.md) for common issues

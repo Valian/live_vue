@@ -4,7 +4,7 @@ This guide documents all client-side utilities, composables, and APIs available 
 
 > #### Getting Started {: .tip}
 >
-> New to LiveVue? Check out [Basic Usage](basic_usage.html) for fundamental patterns before diving into the API details.
+> New to LiveVue? Check out [Basic Usage](basic_usage.md) for fundamental patterns before diving into the API details.
 
 ## Composables
 
@@ -183,7 +183,7 @@ const handleDrop = (event) => {
 </template>
 ```
 
-For a complete working example, see [Basic Usage - File Uploads](basic_usage.html#file-uploads).
+For a complete working example, see [Basic Usage - File Uploads](basic_usage.md#file-uploads).
 
 ## Low-Level API
 
@@ -453,7 +453,7 @@ import { Link } from 'live_vue'
 
 ### createLiveVue(config)
 
-Creates a LiveVue application instance. For complete configuration options, see [Configuration](configuration.html#vue-application-setup).
+Creates a LiveVue application instance. For complete configuration options, see [Configuration](configuration.md#vue-application-setup).
 
 ### findComponent(components, name)
 
@@ -659,7 +659,7 @@ useLiveEvent("data_update", (data) => console.log("Data updated:", data))
 
 ## Next Steps
 
-- [Basic Usage](basic_usage.html) for fundamental patterns and examples
-- [Component Reference](component_reference.html) for LiveView-side API
-- [Configuration](configuration.html) for advanced setup options
-- [Testing](testing.html) for testing client-side code
+- [Basic Usage](basic_usage.md) for fundamental patterns and examples
+- [Component Reference](component_reference.md) for LiveView-side API
+- [Configuration](configuration.md) for advanced setup options
+- [Testing](testing.md) for testing client-side code
