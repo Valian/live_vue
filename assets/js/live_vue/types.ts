@@ -1,6 +1,6 @@
-import type { LiveSocketInstanceInterface, ViewHook } from "../../../deps/phoenix_live_view/assets/js/types"
+import type { LiveSocketInstanceInterface, ViewHook } from "phoenix_live_view/assets/js/types"
 import type { App, Component, ComputedRef, createApp, createSSRApp, h, Plugin, Ref } from "vue"
-export type { Hook } from "../../../deps/phoenix_live_view/assets/js/types"
+export type { Hook } from "phoenix_live_view/assets/js/types"
 
 export type ComponentOrComponentModule = Component | { default: Component }
 export type ComponentOrComponentPromise = ComponentOrComponentModule | Promise<ComponentOrComponentModule>

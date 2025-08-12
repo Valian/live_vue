@@ -1,6 +1,6 @@
 {
   "name": "live_vue",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "E2E reactivity for Vue and LiveView",
   "license": "MIT",
   "author": "Jakub Skałecki <jakub@skalecki.dev>",
