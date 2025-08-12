@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.7.2 - 2025-08-12
+
+### Improvements
+
+- Docs links are now working in both Github and docs [#66](https://github.com/Valian/live_vue/pull/66)
+
+### Bug fixes
+
+- Types for `$live` should now be correctly resolved
+
+
 ## 0.7.1 - 2025-07-30
 
 ### 🐛 Bugfixes
