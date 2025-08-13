@@ -125,22 +125,177 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
     LiveVue.Encoder.encode(
       %{
         name: form.name,
-        values: encode_form_values(form),
+        values: encode_form_values(form, opts),
         errors: encode_form_errors(form) || %{},
-        valid: form.source.valid?
+        valid: get_form_validity(form)
       },
       opts
     )
   end
 
-  def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form) do
-    form.hidden
-    |> Map.new()
-    |> Map.merge(Map.new(form.params))
-    |> Map.merge(form.data)
+  defp get_form_validity(%{source: %{valid?: valid}}), do: valid
+  defp get_form_validity(_), do: true
+
+  if Code.ensure_loaded?(Ecto) do
+    defp convert_embedded_changesets(data, types) do
+      Enum.reduce(types, data, fn {field, type_info}, acc ->
+        case type_info do
+          {tag, %{cardinality: _}} when tag in [:embed, :assoc] ->
+            # This is an embedded field - convert changesets to structs
+            converted_value = acc |> Map.get(field) |> convert_changeset_to_struct()
+            Map.put(acc, field, converted_value)
+
+          _ ->
+            # Regular field - no conversion needed
+            acc
+        end
+      end)
+    end
+
+    defp convert_changeset_to_struct(nil), do: nil
+    defp convert_changeset_to_struct(%Ecto.Association.NotLoaded{}), do: nil
+
+    defp convert_changeset_to_struct(%Ecto.Changeset{} = changeset) do
+      # Convert changeset to struct recursively
+      base_data =
+        if is_struct(changeset.data) do
+          changeset.data |> Map.from_struct() |> Map.delete(:__meta__)
+        else
+          changeset.data
+        end
+
+      merged_data = Map.merge(base_data, changeset.changes)
+      converted_data = convert_embedded_changesets(merged_data, changeset.types)
+
+      if is_struct(changeset.data) do
+        struct(changeset.data.__struct__, converted_data)
+      else
+        converted_data
+      end
+    end
+
+    defp convert_changeset_to_struct(value) when is_list(value) do
+      # Handle embeds_many
+      Enum.map(value, &convert_changeset_to_struct/1)
+    end
+
+    defp convert_changeset_to_struct(value) do
+      # For anything else (structs, maps, primitives), pass through as-is
+      value
+    end
+
+    def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form, opts) do
+      # Create a struct with the changeset data and changes applied
+      merged_struct =
+        if is_struct(form.data) do
+          struct_data = form.data |> Map.from_struct() |> Map.delete(:__meta__)
+          merged_data = Map.merge(struct_data, form.source.changes)
+
+          # Convert any embedded changesets to structs recursively
+          converted_data = convert_embedded_changesets(merged_data, form.source.types)
+
+          struct(form.data.__struct__, converted_data)
+        else
+          Map.merge(form.data, form.source.changes)
+        end
+
+      # Add hidden fields and encode the result
+      form.hidden |> Map.new() |> Map.merge(LiveVue.Encoder.encode(merged_struct, opts))
+    end
   end
 
-  def encode_form_errors(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form) do
+  # Fallback for other form implementations (like to_form backed by maps)
+  def encode_form_values(form, opts) do
+    base_values =
+      form.hidden
+      |> Map.new()
+      |> Map.merge(form.data)
+      |> Map.merge(Map.new(form.params))
+
+    # For non-changeset forms, we don't have type information for embeds
+    # so just encode the values as-is
+    LiveVue.Encoder.encode(base_values, opts)
+  end
+
+  if Code.ensure_loaded?(Ecto) do
+    defp collect_embedded_errors(%Ecto.Changeset{} = changeset) do
+      Enum.reduce(changeset.changes, %{}, fn {field, value}, acc ->
+        case {Map.get(changeset.types, field), value} do
+          {{:embed, _}, %Ecto.Changeset{} = embed_changeset} ->
+            # Single embedded changeset
+            embed_errors = collect_changeset_errors(embed_changeset)
+            if embed_errors == %{}, do: acc, else: Map.put(acc, field, embed_errors)
+
+          {{:embed, _}, embed_changesets} when is_list(embed_changesets) ->
+            # List of embedded changesets
+            list_errors =
+              Enum.map(embed_changesets, fn embed_changeset ->
+                case embed_changeset do
+                  %Ecto.Changeset{} ->
+                    embed_errors = collect_changeset_errors(embed_changeset)
+                    if embed_errors == %{}, do: nil, else: embed_errors
+
+                  _ ->
+                    nil
+                end
+              end)
+
+            # Only include the field if there are any errors in the list
+            if Enum.all?(list_errors, &is_nil/1), do: acc, else: Map.put(acc, field, list_errors)
+
+          _ ->
+            acc
+        end
+      end)
+    end
+
+    defp collect_changeset_errors(%Ecto.Changeset{} = changeset) do
+      # Collect direct errors from this changeset
+      direct_errors =
+        for {field, error} <- changeset.errors, into: %{} do
+          case error do
+            error when is_list(error) ->
+              {field, Enum.map(error, &translate_error/1)}
+
+            error ->
+              {field, List.wrap(translate_error(error))}
+          end
+        end
+
+      # Collect errors from nested embedded changesets
+      nested_errors = collect_embedded_errors(changeset)
+
+      # Merge direct and nested errors
+      Map.merge(direct_errors, nested_errors)
+    end
+
+    def encode_form_errors(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form) do
+      # Collect top-level errors
+      direct_errors =
+        for {field, error} <- form.source.errors, into: %{} do
+          case error do
+            error when is_list(error) ->
+              {field, Enum.map(error, &translate_error/1)}
+
+            error ->
+              {field, List.wrap(translate_error(error))}
+          end
+        end
+
+      # Collect errors from embedded changesets
+      embedded_errors = collect_embedded_errors(form.source)
+
+      # Merge direct errors with embedded errors
+      all_errors = Map.merge(direct_errors, embedded_errors)
+
+      # let's leave only keys with errors. If none, let's return nil.
+      errors = for {field, error} <- all_errors, error != nil, into: %{}, do: {field, error}
+      if errors == %{}, do: nil, else: errors
+    end
+  end
+
+  # Fallback for other form implementations (like test mocks)
+  def encode_form_errors(form) do
     errors =
       for {field, error} <- form.errors, into: %{} do
         case error do
@@ -152,29 +307,6 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
         end
       end
 
-    # TODO - In my project I'm using Ash so I don't have yet an implementation
-    # of nested error serialization for Ecto-backed forms.
-    # errors =
-    #   for {field, form_settings} <- ash_form.form_keys, into: errors do
-    #     case form_settings[:type] do
-    #       :single ->
-    #         {field, encode_form_errors(impl.to_form(ash_form.forms[field], []))}
-
-    #       :list ->
-    #         field_errors =
-    #           ash_form.forms[field]
-    #           |> Kernel.||([])
-    #           |> Enum.map(fn f -> encode_form_errors(impl.to_form(f, [])) end)
-
-    #         # if there are no errors, return nil
-    #         if Enum.all?(field_errors, &(&1 == nil)) do
-    #           {field, nil}
-    #         else
-    #           {field, field_errors}
-    #         end
-    #     end
-    #   end
-
     # let's leave only keys with errors. If none, let's return nil.
     errors = for {field, error} <- errors, error != nil, into: %{}, do: {field, error}
     if errors == %{}, do: nil, else: errors
@@ -185,16 +317,21 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
     count = opts[:count]
 
     cond do
-      backend == nil ->
+      backend == nil or not Code.ensure_loaded?(Gettext) ->
         Enum.reduce(opts, msg, fn {key, value}, acc ->
           String.replace(acc, "%{#{key}}", to_string(value))
         end)
 
-      count != nil ->
-        Gettext.dngettext(backend, "errors", msg, msg, count, opts)
+      count != nil and Code.ensure_loaded?(Gettext) ->
+        apply(Gettext, :dngettext, [backend, "errors", msg, msg, count, opts])
+
+      Code.ensure_loaded?(Gettext) ->
+        apply(Gettext, :dgettext, [backend, "errors", msg, opts])
 
       true ->
-        Gettext.dgettext(backend, "errors", msg, opts)
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
     end
   end
 end
