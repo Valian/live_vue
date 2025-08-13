@@ -141,7 +141,9 @@ defmodule LiveVue.MixProject do
       {:excoveralls, "~> 0.18", only: :test},
       {:makeup_html, "~> 0.1.0", only: :dev, runtime: false},
       {:styler, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:bandit, "~> 1.5", only: :e2e}
+      {:bandit, "~> 1.5", only: :e2e},
+      {:ecto, "~> 3.0", optional: true},
+      {:phoenix_ecto, "~> 4.0", optional: true}
     ]
   end
 
