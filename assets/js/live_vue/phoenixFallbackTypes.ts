@@ -1,7 +1,10 @@
 // Fallback types for phoenix_live_view versions < 1.1 that don't export types
 // These types match the structure from deps/phoenix_live_view/assets/js/types/
 
-import type { Socket as PhoenixSocket } from "phoenix"
+// Conditionally import Socket type from phoenix if available
+// Uses a helper type to safely extract Socket when it exists
+type GetPhoenixSocket<T> = T extends { Socket: infer S } ? S : any
+type PhoenixSocket = GetPhoenixSocket<typeof import("phoenix")>
 
 // Check if DOM types are available and use them, otherwise use any
 type ServerHTMLElement = unknown extends HTMLElement ? any : HTMLElement

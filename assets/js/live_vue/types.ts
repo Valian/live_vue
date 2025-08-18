@@ -13,7 +13,7 @@ import type {
   LiveSocketInstanceInterface as FallbackLiveSocketInstanceInterface,
   ViewHook as FallbackViewHook,
   Hook as FallbackHook,
-} from "./phoenix_fallback_types"
+} from "./phoenixFallbackTypes"
 
 // Re-export with our preferred names, using phoenix_live_view types if available
 export type LiveSocketInstanceInterface = PhoenixLiveSocketInstanceInterface extends undefined
