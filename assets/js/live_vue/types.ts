@@ -1,6 +1,27 @@
-import type { LiveSocketInstanceInterface, ViewHook } from "phoenix_live_view/assets/js/types"
-import type { App, Component, ComputedRef, createApp, createSSRApp, h, Plugin, Ref } from "vue"
-export type { Hook } from "phoenix_live_view/assets/js/types"
+// Conditional imports with fallback types for phoenix_live_view < 1.1
+import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
+
+// Try to import from phoenix_live_view first, fallback to our definitions if not available
+import type {
+  LiveSocketInstanceInterface as PhoenixLiveSocketInstanceInterface,
+  ViewHook as PhoenixViewHook,
+  Hook as PhoenixHook,
+} from "phoenix_live_view"
+
+// If using phoenix_live_view < 1.1, use our fallback types
+import type {
+  LiveSocketInstanceInterface as FallbackLiveSocketInstanceInterface,
+  ViewHook as FallbackViewHook,
+  Hook as FallbackHook,
+} from "./phoenix_fallback_types"
+
+// Re-export with our preferred names, using phoenix_live_view types if available
+export type LiveSocketInstanceInterface = PhoenixLiveSocketInstanceInterface extends undefined
+  ? FallbackLiveSocketInstanceInterface
+  : PhoenixLiveSocketInstanceInterface
+
+export type ViewHook = PhoenixViewHook extends undefined ? FallbackViewHook : PhoenixViewHook
+export type Hook = PhoenixHook extends undefined ? FallbackHook : PhoenixHook
 
 export type ComponentOrComponentModule = Component | { default: Component }
 export type ComponentOrComponentPromise = ComponentOrComponentModule | Promise<ComponentOrComponentModule>

@@ -2,7 +2,7 @@
 
 import fs from "fs"
 import { basename, resolve } from "path"
-import { ViewHookInternal } from "phoenix_live_view"
+import { ViewHook } from "phoenix_live_view"
 import { App, Component, createSSRApp, h } from "vue"
 import { renderToString, type SSRContext } from "vue/server-renderer"
 import { migrateToLiveVueApp } from "./app.js"
@@ -12,7 +12,7 @@ import { mapValues } from "./utils.js"
 type Components = Record<string, Component>
 type Manifest = Record<string, string[]>
 
-const mockLive: Partial<Omit<ViewHookInternal, "el">> & {
+const mockLive: Partial<Omit<ViewHook, "el">> & {
   el: {}
   liveSocket: {}
   removeHandleEvent: () => void
@@ -21,10 +21,10 @@ const mockLive: Partial<Omit<ViewHookInternal, "el">> & {
   vue: Omit<VueArgs, "app"> & { app: object }
 } = {
   el: {},
-  liveSocket: {},
-  pushEvent: () => 0,
-  pushEventTo: () => 0,
-  handleEvent: () => () => {},
+  liveSocket: {} as any,
+  pushEvent: () => Promise.resolve(0),
+  pushEventTo: () => Promise.resolve([]),
+  handleEvent: () => ({ event: "", callback: () => {} }),
   removeHandleEvent: () => {},
   upload: () => {},
   uploadTo: () => {},

@@ -1,6 +1,6 @@
 {
   "name": "live_vue",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "E2E reactivity for Vue and LiveView",
   "license": "MIT",
   "author": "Jakub Skałecki <jakub@skalecki.dev>",
@@ -25,7 +25,6 @@
     "phoenix_live_view": "file:deps/phoenix_live_view",
     "@playwright/test": "^1.53.0",
     "@types/node": "^22.9.1",
-    "@types/phoenix_live_view": "^0.20.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vitest/ui": "^3.2.4",
     "concurrently": "^9.0.1",
