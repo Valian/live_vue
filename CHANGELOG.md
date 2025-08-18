@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.7.3 - 2025-08-18
+
+### Improvements
+
+- Added fallback type definitions for phoenix_live_view versions < 1.1 that don't export TypeScript types
+- Enhanced type compatibility with conditional DOM types that adapt to server vs client environments
+- Improved TypeScript development experience with better type safety across different phoenix_live_view versions
+
+
 ## 0.7.2 - 2025-08-12
 
 ### Improvements
