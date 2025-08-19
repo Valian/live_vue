@@ -209,8 +209,8 @@ describe("useLiveForm - Integration Tests", () => {
       const formRef = createFormRef()
       const form = createFormInScope(formRef)
       const itemsArray = form.fieldArray("items")
-      // Use at() method to access array item
-      const firstItemField = itemsArray.at(0)
+      // Use field(index) to access array item
+      const firstItemField = itemsArray.field(0)
       const nameField = firstItemField.field("name")
 
       expect(nameField.value.value).toBe("Item 1")
@@ -474,7 +474,7 @@ describe("useLiveForm - Integration Tests", () => {
       const formRef = createFormRef()
       const form = createFormInScope(formRef)
       const skillsArray = form.fieldArray("profile.skills")
-      const firstSkillField = skillsArray.at(0)
+      const firstSkillField = skillsArray.field(0)
 
       const attrs = firstSkillField.inputAttrs.value
 
@@ -600,14 +600,6 @@ describe("useLiveForm - Integration Tests", () => {
       expect(skillsArray.value.value).toEqual(["TypeScript", "JavaScript"])
     })
 
-    it("should access array items with at method", () => {
-      const formRef = createFormRef()
-      const form = createFormInScope(formRef)
-      const skillsArray = form.fieldArray("profile.skills")
-
-      const firstSkill = skillsArray.at(0)
-      expect(firstSkill.value.value).toBe("JavaScript")
-    })
 
     it("should handle complex nested array operations", async () => {
       const formRef = createFormRef()
@@ -645,7 +637,7 @@ describe("useLiveForm - Integration Tests", () => {
 
       // Check that the change is reflected in multiple ways of accessing the same field
       expect(itemsArray.field("[0].name").value.value).toBe("Modified Item 1")
-      expect(itemsArray.at(0).field("name").value.value).toBe("Modified Item 1")
+      expect(itemsArray.field(0).field("name").value.value).toBe("Modified Item 1")
       expect(form.field("items[0].name").value.value).toBe("Modified Item 1")
     })
 
@@ -710,7 +702,7 @@ describe("useLiveForm - Integration Tests", () => {
       expect(secondItemTags.errors.value).toEqual([["Invalid tag format"]])
       expect(secondItemTags.isValid.value).toBe(false)
 
-      const secondItemTagsFirstTag = secondItemTags.at(0)
+      const secondItemTagsFirstTag = secondItemTags.field(0)
       expect(secondItemTagsFirstTag.errors.value).toEqual(["Invalid tag format"])
       expect(secondItemTagsFirstTag.isValid.value).toBe(false)
     })
@@ -1152,7 +1144,7 @@ describe("useLiveForm - Integration Tests", () => {
       const emailField = form.field("email")
       const bioField = form.field("profile.bio")
       const skillsArray = form.fieldArray("profile.skills")
-      const firstSkillField = skillsArray.at(0)
+      const firstSkillField = skillsArray.field(0)
       const itemNameField = form.field("items[0].name")
       const itemTagField = form.field("items[0].tags[0]")
 
@@ -1187,7 +1179,7 @@ describe("useLiveForm - Integration Tests", () => {
       skillsArray.add("Vue.js")
       await nextTick()
 
-      const newSkillField = skillsArray.at(2) // Third skill (index 2)
+      const newSkillField = skillsArray.field(2) // Third skill (index 2)
       expect(newSkillField.isTouched.value).toBe(false)
 
       // Submit the form (succeeds and resets touched state)
