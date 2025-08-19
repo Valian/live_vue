@@ -164,3 +164,124 @@ export const cacheOnAccessProxy = <T extends object>(createFunc: (key: keyof T) 
       },
     }
   )
+
+/**
+ * Parses a path string like "user.items[0].name" into an array of keys
+ */
+export function parsePath(path: string): (string | number)[] {
+  if (!path) return []
+
+  const keys: (string | number)[] = []
+  let current = ""
+  let i = 0
+
+  while (i < path.length) {
+    const char = path[i]
+
+    if (char === ".") {
+      if (current) {
+        keys.push(current)
+        current = ""
+      }
+    } else if (char === "[") {
+      if (current) {
+        keys.push(current)
+        current = ""
+      }
+
+      // Find the closing bracket
+      i++
+      let bracketContent = ""
+      while (i < path.length && path[i] !== "]") {
+        bracketContent += path[i]
+        i++
+      }
+
+      if (path[i] === "]") {
+        const index = parseInt(bracketContent, 10)
+        if (!isNaN(index)) {
+          keys.push(index)
+        } else {
+          keys.push(bracketContent) // String key in brackets
+        }
+      }
+    } else {
+      current += char
+    }
+
+    i++
+  }
+
+  if (current) {
+    keys.push(current)
+  }
+
+  return keys
+}
+
+/**
+ * Gets a value from an object using a parsed path
+ */
+export function getValueByPath(obj: any, keys: (string | number)[]): any {
+  let current = obj
+
+  for (const key of keys) {
+    if (current == null) return undefined
+    current = current[key]
+  }
+
+  return current
+}
+
+/**
+ * Sets a value in an object using a parsed path
+ */
+export function setValueByPath(obj: any, keys: (string | number)[], value: any): void {
+  if (keys.length === 0) return
+
+  let current = obj
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i]
+    if (current[key] == null) {
+      // Create object or array based on next key type
+      const nextKey = keys[i + 1]
+      current[key] = typeof nextKey === "number" ? [] : {}
+    }
+    current = current[key]
+  }
+
+  const lastKey = keys[keys.length - 1]
+  current[lastKey] = value
+}
+
+/**
+ * Deep clone utility - alias for existing deepCopy function for consistency
+ */
+export const deepClone = deepCopy
+
+/**
+ * Helper function to replace reactive object contents while preserving reactivity
+ */
+export function replaceReactiveObject(target: any, source: any) {
+  // Remove properties that exist in target but not in source
+  for (const key in target) {
+    if (!(key in source)) {
+      delete target[key]
+    }
+  }
+
+  // Recursively update/add properties from source
+  for (const key in source) {
+    if (typeof source[key] === "object" && source[key] !== null && !Array.isArray(source[key])) {
+      // Handle nested objects
+      if (!target[key] || typeof target[key] !== "object" || Array.isArray(target[key])) {
+        target[key] = {}
+      }
+      replaceReactiveObject(target[key], source[key])
+    } else {
+      // Handle primitive values and arrays
+      target[key] = source[key]
+    }
+  }
+}

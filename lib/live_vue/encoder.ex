@@ -121,6 +121,8 @@ defimpl LiveVue.Encoder, for: [Date, Time, NaiveDateTime, DateTime] do
 end
 
 defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
+  @relations [:embed, :assoc]
+
   def encode(%Phoenix.HTML.Form{} = form, opts) do
     LiveVue.Encoder.encode(
       %{
@@ -137,70 +139,70 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
   defp get_form_validity(_), do: true
 
   if Code.ensure_loaded?(Ecto) do
-    defp convert_embedded_changesets(data, types) do
-      Enum.reduce(types, data, fn {field, type_info}, acc ->
-        case type_info do
-          {tag, %{cardinality: _}} when tag in [:embed, :assoc] ->
-            # This is an embedded field - convert changesets to structs
-            converted_value = acc |> Map.get(field) |> convert_changeset_to_struct()
-            Map.put(acc, field, converted_value)
+    # for changeset, we need to collect actual values from the changeset
+    # - if there are changes, we need to use changed values
+    # - if there are no changes, we should use params (possibly invalid, to reflect intermediate state)
+    # - if there are not changes and no params, we should use the data
+    # it's a bit tricky, because we need to traverse embeds and assocs
+    defp collect_changeset_values(%Ecto.Changeset{} = source) do
+      data = Map.new(source.types, fn {field, type} -> {field, get_field_value(source, field, type)} end)
 
-          _ ->
-            # Regular field - no conversion needed
-            acc
-        end
-      end)
+      result = if is_struct(source.data), do: Map.merge(source.data, data), else: data
+
+      # Filter out __meta__ field from Ecto schemas
+      Map.delete(result, :__meta__)
     end
 
-    defp convert_changeset_to_struct(nil), do: nil
-    defp convert_changeset_to_struct(%Ecto.Association.NotLoaded{}), do: nil
+    defp get_field_value(source, field, {tag, %{cardinality: :one}}) when tag in @relations do
+      case Map.fetch(source.changes, field) do
+        {:ok, nil} ->
+          nil
 
-    defp convert_changeset_to_struct(%Ecto.Changeset{} = changeset) do
-      # Convert changeset to struct recursively
-      base_data =
-        if is_struct(changeset.data) do
-          changeset.data |> Map.from_struct() |> Map.delete(:__meta__)
-        else
-          changeset.data
-        end
+        {:ok, %Ecto.Changeset{} = changeset} ->
+          collect_changeset_values(changeset)
 
-      merged_data = Map.merge(base_data, changeset.changes)
-      converted_data = convert_embedded_changesets(merged_data, changeset.types)
-
-      if is_struct(changeset.data) do
-        struct(changeset.data.__struct__, converted_data)
-      else
-        converted_data
+        # there are no changes underneath, so we can just use the data
+        :error ->
+          case Map.fetch!(source.data, field) do
+            %Ecto.Association.NotLoaded{} = not_loaded ->
+              raise ArgumentError, """
+              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
+              
+              Associations must be preloaded before encoding forms for LiveVue.
+              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
+              """
+            %{__meta__: _} = value -> Map.delete(value, :__meta__)
+            value -> value
+          end
       end
     end
 
-    defp convert_changeset_to_struct(value) when is_list(value) do
-      # Handle embeds_many
-      Enum.map(value, &convert_changeset_to_struct/1)
+    defp get_field_value(source, field, {tag, %{cardinality: :many}}) when tag in @relations do
+      case Map.fetch(source.changes, field) do
+        {:ok, changesets} ->
+          Enum.map(changesets, &collect_changeset_values/1)
+
+        :error ->
+          case Map.fetch!(source.data, field) do
+            %Ecto.Association.NotLoaded{} = not_loaded ->
+              raise ArgumentError, """
+              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
+              
+              Associations must be preloaded before encoding forms for LiveVue.
+              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
+              """
+            [%{__meta__: _} | _] = value -> Enum.map(value, &Map.delete(&1, :__meta__))
+            value -> value
+          end
+      end
     end
 
-    defp convert_changeset_to_struct(value) do
-      # For anything else (structs, maps, primitives), pass through as-is
-      value
+    defp get_field_value(source, field, _type) do
+      Phoenix.HTML.FormData.Ecto.Changeset.input_value(source, %{params: source.params}, field)
     end
 
-    def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form, opts) do
-      # Create a struct with the changeset data and changes applied
-      merged_struct =
-        if is_struct(form.data) do
-          struct_data = form.data |> Map.from_struct() |> Map.delete(:__meta__)
-          merged_data = Map.merge(struct_data, form.source.changes)
-
-          # Convert any embedded changesets to structs recursively
-          converted_data = convert_embedded_changesets(merged_data, form.source.types)
-
-          struct(form.data.__struct__, converted_data)
-        else
-          Map.merge(form.data, form.source.changes)
-        end
-
-      # Add hidden fields and encode the result
-      form.hidden |> Map.new() |> Map.merge(LiveVue.Encoder.encode(merged_struct, opts))
+    def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset, source: source}, opts) do
+      source |> collect_changeset_values() |> LiveVue.Encoder.encode(opts)
     end
   end
 
@@ -218,26 +220,24 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
   end
 
   if Code.ensure_loaded?(Ecto) do
-    defp collect_embedded_errors(%Ecto.Changeset{} = changeset) do
-      Enum.reduce(changeset.changes, %{}, fn {field, value}, acc ->
-        case {Map.get(changeset.types, field), value} do
-          {{:embed, _}, %Ecto.Changeset{} = embed_changeset} ->
+    defp collect_changeset_errors(%Ecto.Changeset{} = changeset) do
+      # Collect direct errors from this changeset
+      errors = translate_errors(changeset.errors)
+
+      # Collect errors from nested embedded changesets
+      Enum.reduce(changeset.changes, errors, fn {field, value}, acc ->
+        case Map.get(changeset.types, field) do
+          {tag, %{cardinality: :one}} when tag in @relations ->
             # Single embedded changeset
-            embed_errors = collect_changeset_errors(embed_changeset)
+            embed_errors = collect_changeset_errors(value)
             if embed_errors == %{}, do: acc, else: Map.put(acc, field, embed_errors)
 
-          {{:embed, _}, embed_changesets} when is_list(embed_changesets) ->
+          {tag, %{cardinality: :many}} when tag in @relations ->
             # List of embedded changesets
             list_errors =
-              Enum.map(embed_changesets, fn embed_changeset ->
-                case embed_changeset do
-                  %Ecto.Changeset{} ->
-                    embed_errors = collect_changeset_errors(embed_changeset)
-                    if embed_errors == %{}, do: nil, else: embed_errors
-
-                  _ ->
-                    nil
-                end
+              Enum.map(value, fn embed_changeset ->
+                embed_errors = collect_changeset_errors(embed_changeset)
+                if embed_errors == %{}, do: nil, else: embed_errors
               end)
 
             # Only include the field if there are any errors in the list
@@ -249,67 +249,18 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
       end)
     end
 
-    defp collect_changeset_errors(%Ecto.Changeset{} = changeset) do
-      # Collect direct errors from this changeset
-      direct_errors =
-        for {field, error} <- changeset.errors, into: %{} do
-          case error do
-            error when is_list(error) ->
-              {field, Enum.map(error, &translate_error/1)}
-
-            error ->
-              {field, List.wrap(translate_error(error))}
-          end
-        end
-
-      # Collect errors from nested embedded changesets
-      nested_errors = collect_embedded_errors(changeset)
-
-      # Merge direct and nested errors
-      Map.merge(direct_errors, nested_errors)
-    end
-
     def encode_form_errors(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form) do
-      # Collect top-level errors
-      direct_errors =
-        for {field, error} <- form.source.errors, into: %{} do
-          case error do
-            error when is_list(error) ->
-              {field, Enum.map(error, &translate_error/1)}
-
-            error ->
-              {field, List.wrap(translate_error(error))}
-          end
-        end
-
-      # Collect errors from embedded changesets
-      embedded_errors = collect_embedded_errors(form.source)
-
-      # Merge direct errors with embedded errors
-      all_errors = Map.merge(direct_errors, embedded_errors)
-
-      # let's leave only keys with errors. If none, let's return nil.
-      errors = for {field, error} <- all_errors, error != nil, into: %{}, do: {field, error}
-      if errors == %{}, do: nil, else: errors
+      collect_changeset_errors(form.source)
     end
   end
 
   # Fallback for other form implementations (like test mocks)
   def encode_form_errors(form) do
-    errors =
-      for {field, error} <- form.errors, into: %{} do
-        case error do
-          error when is_list(error) ->
-            {field, Enum.map(error, &translate_error/1)}
+    translate_errors(form.errors)
+  end
 
-          error ->
-            {field, List.wrap(translate_error(error))}
-        end
-      end
-
-    # let's leave only keys with errors. If none, let's return nil.
-    errors = for {field, error} <- errors, error != nil, into: %{}, do: {field, error}
-    if errors == %{}, do: nil, else: errors
+  defp translate_errors(errors) do
+    Map.new(errors, fn {field, error} -> {field, error |> List.wrap() |> Enum.map(&translate_error/1)} end)
   end
 
   defp translate_error({msg, opts}) do

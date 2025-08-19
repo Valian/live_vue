@@ -2,6 +2,6 @@ export type { LiveVueApp, LiveVueOptions, SetupContext, VueComponent, LiveHook, 
 export { createLiveVue } from "./app.js";
 export { getHooks } from "./hooks.js";
 export { useLiveVue, useLiveEvent, useLiveNavigation, useLiveUpload } from "./use.js";
-export { useLiveForm, useFieldArray, type Form } from "./useLiveForm.js";
+export { useLiveForm, type Form, type FormField, type FormFieldArray, type FormOptions, type UseLiveFormReturn } from "./useLiveForm.js";
 export { findComponent } from "./utils.js";
 export { default as Link } from "./link.js";

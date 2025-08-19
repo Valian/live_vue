@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  const props = defineProps<{
-    serverState: Record<string, any>,
-    clientState: Record<string, any>
-  }>()
+const props = defineProps<{
+  serverState: Record<string, any>
+  clientState: Record<string, any>
+}>()
 </script>
 
 <template>
@@ -13,17 +13,12 @@
       </div>
     </div>
     <div class="p-2 rounded-lg bg-orange-200 text-black">
-      <p class="text-center font-semibold">
-        Server side state
-      </p>
-      <pre class="overflow-y-auto max-h-60">{{ props.serverState }}</pre>
+      <p class="text-center font-semibold">Server side state</p>
+      <pre class="overflow-y-auto">{{ props.serverState }}</pre>
     </div>
     <div class="p-2 rounded-lg bg-green-200 text-black">
-      <p class="text-center font-semibold">
-        Client side state
-      </p>
+      <p class="text-center font-semibold">Client side state</p>
       <pre class="overflow-y-auto max-h-60">{{ props.clientState }}</pre>
     </div>
   </div>
 </template>
-

@@ -19,3 +19,23 @@ export declare function deepAssign(target: any, source: any): any;
 export declare function deepCopy<T>(obj: T): T;
 export declare const debounce: <T extends (...args: any[]) => any>(func: T, wait: number) => ((...args: Parameters<T>) => void);
 export declare const cacheOnAccessProxy: <T extends object>(createFunc: (key: keyof T) => any) => {};
+/**
+ * Parses a path string like "user.items[0].name" into an array of keys
+ */
+export declare function parsePath(path: string): (string | number)[];
+/**
+ * Gets a value from an object using a parsed path
+ */
+export declare function getValueByPath(obj: any, keys: (string | number)[]): any;
+/**
+ * Sets a value in an object using a parsed path
+ */
+export declare function setValueByPath(obj: any, keys: (string | number)[], value: any): void;
+/**
+ * Deep clone utility - alias for existing deepCopy function for consistency
+ */
+export declare const deepClone: typeof deepCopy;
+/**
+ * Helper function to replace reactive object contents while preserving reactivity
+ */
+export declare function replaceReactiveObject(target: any, source: any): void;

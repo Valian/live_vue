@@ -8,9 +8,9 @@ import { mapValues } from "./utils.js";
 const mockLive = {
     el: {},
     liveSocket: {},
-    pushEvent: () => 0,
-    pushEventTo: () => 0,
-    handleEvent: () => () => { },
+    pushEvent: () => Promise.resolve(0),
+    pushEventTo: () => Promise.resolve([]),
+    handleEvent: () => ({ event: "", callback: () => { } }),
     removeHandleEvent: () => { },
     upload: () => { },
     uploadTo: () => { },

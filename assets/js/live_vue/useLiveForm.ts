@@ -1,22 +1,41 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { reactive, isRef, Ref, watch, computed, ref } from "vue"
+import {
+  ref,
+  reactive,
+  computed,
+  toValue,
+  watch,
+  onScopeDispose,
+  nextTick,
+  provide,
+  inject,
+  type Ref,
+  type MaybeRefOrGetter,
+  type InjectionKey,
+  readonly,
+} from "vue"
 import { useLiveVue } from "./use"
-import { cacheOnAccessProxy, debounce, deepAssign, deepCopy } from "./utils"
+import {
+  parsePath,
+  getValueByPath,
+  setValueByPath,
+  deepClone,
+  debounce,
+  replaceReactiveObject,
+  deepToRaw,
+} from "./utils"
 
-/**
- * Maps form field structure to a corresponding structure tracking touched state
- * For each field in the original form, creates a boolean flag indicating if it's been modified
- */
-type TouchedValues<T extends object> = {
-  [K in keyof T]: T[K] extends object ? TouchedValues<T[K]> : boolean
-}
+// Injection key for providing form instances to child components
+export const LIVE_FORM_INJECTION_KEY = Symbol("LiveForm") as InjectionKey<{
+  field: (path: string) => FormField<any>
+  fieldArray: (path: string) => FormFieldArray<any>
+}>
 
 /**
  * Maps form field structure to a corresponding structure for validation errors
  * For each field in the original form, creates an array of error strings
  */
-type FormErrors<T extends object> = {
-  [K in keyof T]: T[K] extends object ? FormErrors<T[K]> : string[]
+export type FormErrors<T extends object> = {
+  [K in keyof T]?: T[K] extends object ? FormErrors<T[K]> : string[]
 }
 
 /**
@@ -30,81 +49,89 @@ export interface Form<T extends object> {
   values: T
   /** Validation errors for form fields */
   errors: FormErrors<T>
-}
-
-/**
- * Extended internal form state interface used by the form system
- * @template T - The type of form values
- */
-interface FormStateInternal<T extends object> extends Form<T> {
-  /** Original values when the form was initialized or last submitted */
-  initialValues: T
-  /** Tracks which fields have been modified by the user */
-  touched: TouchedValues<T>
-  /** Callback that runs when any field value changes */
-  onChange: (name: string) => void
-}
-
-/**
- * Metadata about a field's state
- */
-interface FieldMeta {
-  /** Whether the field passes validation */
+  /** Whether the form is valid */
   valid: boolean
-  /** Whether the field's value differs from its initial value */
-  dirty: boolean
-  /** The field's initial value */
-  initialValue: any
 }
 
-/**
- * Represents the state of an individual form field
- * @template T - The type of the field value
- */
-interface FieldState<T = any> {
-  /** Full path name of the field (e.g. "user.address.street") */
-  name: string
-  /** Current field value */
-  value: T
-  /** Whether the field has been modified by the user */
-  touched: boolean
-  /** Validation errors for this field */
-  errors: T extends object ? FormErrors<T> : string[]
-  /** First error message for this field, if any */
-  errorMessage: string | undefined
-  /** Additional metadata about the field state */
-  meta: FieldMeta
-}
+// TypeScript utility types for path safety
+type PathsToStringProps<T> = T extends string | number | boolean | Date
+  ? never
+  : T extends readonly (infer U)[]
+  ? U extends object
+    ? `[${number}]` | `[${number}].${PathsToStringProps<U>}`
+    : `[${number}]`
+  : T extends object
+  ? {
+      [K in keyof T]: K extends string | number
+        ? T[K] extends readonly (infer U)[]
+          ? U extends object
+            ? `${K}` | `${K}[${number}]` | `${K}[${number}].${PathsToStringProps<U>}`
+            : `${K}` | `${K}[${number}]`
+          : T[K] extends object
+          ? `${K}` | `${K}.${PathsToStringProps<T[K]>}`
+          : `${K}`
+        : never
+    }[keyof T]
+  : never
 
-/**
- * Complete form state accessible to component
- * @template T - The type of form values
- */
-interface FormState<T extends object> {
-  /** Full path name of the form */
-  name: string
-  /** Current form values */
-  value: T
-  /** Whether any field in the form has been touched */
-  touched: boolean
-  /** All validation errors in the form */
-  errors: FormErrors<T>
-  /** First error message in the form, if any */
-  errorMessage: string | undefined
-  /** Metadata about the form state */
-  meta: FieldMeta
-  /** Access to all primitive fields (string, number, boolean, arrays) */
-  fields: { [K in keyof T as T[K] extends string | boolean | number | any[] ? K : never]: FieldState<T[K]> }
-  /** Access to all nested form objects */
-  forms: { [K in keyof T as T[K] extends object ? K : never]: FormState<T[K] & object> }
-}
+// Get type at path
+type PathValue<T, P extends string> = P extends `${infer Key}[${infer Index}].${infer Rest}`
+  ? Key extends keyof T
+    ? T[Key] extends readonly (infer U)[]
+      ? PathValue<U, Rest>
+      : never
+    : never
+  : P extends `${infer Key}[${infer Index}]`
+  ? Key extends keyof T
+    ? T[Key] extends readonly (infer U)[]
+      ? U
+      : never
+    : never
+  : P extends `${infer Key}.${infer Rest}`
+  ? Key extends keyof T
+    ? PathValue<T[Key], Rest>
+    : never
+  : P extends `[${infer Index}]`
+  ? T extends readonly (infer U)[]
+    ? U
+    : never
+  : P extends keyof T
+  ? T[P]
+  : never
 
-/**
- * Configuration options for the form system
- */
+// Helper type to resolve array field types from relative paths
+type ArrayFieldPath<T, P extends string | number> = P extends number
+  ? FormField<T>
+  : P extends `[${number}]`
+  ? FormField<T>
+  : P extends `[${number}].${infer Rest}`
+  ? PathValue<T, Rest> extends readonly (infer U)[]
+    ? FormFieldArray<U>
+    : FormField<PathValue<T, Rest>>
+  : P extends keyof T
+  ? T[P] extends readonly (infer U)[]
+    ? FormFieldArray<U>
+    : FormField<T[P]>
+  : FormField<any>
+
+// Helper type for array field array paths
+type ArrayFieldArrayPath<T, P extends string | number> = P extends number
+  ? never
+  : P extends `[${number}]`
+  ? never
+  : P extends `[${number}].${infer Rest}`
+  ? PathValue<T, Rest> extends readonly (infer U)[]
+    ? FormFieldArray<U>
+    : never
+  : P extends keyof T
+  ? T[P] extends readonly (infer U)[]
+    ? FormFieldArray<U>
+    : never
+  : never
+
 export interface FormOptions {
-  /** Event name to send to the server when form values change */
-  changeEvent?: string
+  /** Event name to send to the server when form values change. Set to null to disable validation events */
+  changeEvent?: string | null
   /** Event name to send to the server when form is submitted */
   submitEvent?: string
   /** Delay in milliseconds before sending change events to reduce server load */
@@ -113,345 +140,468 @@ export interface FormOptions {
   prepareData?: (data: any) => any
 }
 
-/**
- * Recursively searches for the first error message in a nested error structure
- * @param errors - Error structure to search
- * @returns The first error message found, or undefined if no errors
- */
-const findFirstError = <T extends object>(
-  errors: FormErrors<T> | FormErrors<T>[] | string[] | string
-): string | undefined => {
-  if (typeof errors === "string") return errors
-  errors = Array.isArray(errors) ? errors : Object.values(errors)
-  for (const error of errors) {
-    const firstError = findFirstError(error || [])
-    if (firstError) return firstError
-  }
+export interface FormField<T> {
+  // Reactive state (using reactive + toRefs for clean syntax)
+  value: Ref<T> // field.value instead of field.value.value
+  errors: Readonly<Ref<string[]>> // Read-only, from backend
+  errorMessage: Readonly<Ref<string | undefined>> // First error, read-only
+  isValid: Ref<boolean>
+  isDirty: Ref<boolean>
+  isTouched: Ref<boolean>
+
+  // Input binding helper
+  inputAttrs: Readonly<
+    Ref<{
+      value: T
+      onInput: (event: Event) => void
+      onFocus: () => void
+      onBlur: () => void
+      name: string
+      id: string
+      "aria-invalid": boolean
+      "aria-describedby"?: string
+    }>
+  >
+
+  // Type-safe sub-field creation (enables fluent interface)
+  field<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<T[K]>
+  fieldArray<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
+
+  // Field actions
+  focus: () => void // Sets as currently editing, auto-marks as touched
+  blur: () => void // Unsets as currently editing
 }
 
-/**
- * Creates a nested form state for handling sub-forms
- * @param form - Parent form state
- * @param name - Property name of the nested form
- * @returns Internal form state for the nested form
- */
-const createNestedForm = <T extends object>(form: FormStateInternal<T>, name: keyof T) => {
-  // Initialize nested state if it doesn't exist
-  form.errors[name] = form.errors[name] || {}
-  form.touched[name] = form.touched[name] || ({} as TouchedValues<T>[keyof T])
-  form.values[name] = form.values[name] || ({} as T[typeof name])
+export interface FormFieldArray<T> extends Omit<FormField<T[]>, "field" | "fieldArray"> {
+  // Array-specific methods
+  add: (item?: Partial<T>) => void
+  remove: (index: number) => void
+  move: (from: number, to: number) => void
 
-  return {
-    name: `${form.name}.${name.toString()}`,
-    initialValues: form.initialValues[name],
-    values: form.values[name],
-    errors: form.errors[name],
-    touched: form.touched[name],
-    onChange: form.onChange,
-  } as FormStateInternal<T[typeof name] & object>
+  // Reactive array of field instances for iteration
+  fields: Readonly<Ref<FormField<T>[]>>
+
+  // Get individual array item fields
+  field: <P extends string | number>(path: P) => ArrayFieldPath<T, P>
+  fieldArray: <P extends string | number>(path: P) => ArrayFieldArrayPath<T, P>
 }
 
-/**
- * Class implementation of FormState that provides a reactive interface to the form
- * @template T - The type of form values
- */
-class FormStateClass<T extends object> implements FormState<T> {
-  name: string
-  fields: FormState<T>["fields"]
-  forms: FormState<T>["forms"]
-  private form: FormStateInternal<T>
+export interface UseLiveFormReturn<T extends object> {
+  // Form-level state
+  isValid: Ref<boolean>
+  isDirty: Ref<boolean>
+  isTouched: Ref<boolean>
+  submitCount: Readonly<Ref<number>>
+  initialValues: Readonly<Ref<T>>
 
-  constructor(form: FormStateInternal<T>) {
-    this.form = form
-    this.name = form.name
+  // Type-safe field factory functions
+  field<P extends PathsToStringProps<T>>(path: P): FormField<PathValue<T, P>>
+  fieldArray<P extends PathsToStringProps<T>>(
+    path: P
+  ): PathValue<T, P> extends readonly (infer U)[] ? FormFieldArray<U> : never
 
-    // Create proxies that lazily instantiate field and form states when accessed
-    this.fields = cacheOnAccessProxy<T>(name => new FieldStateClass(form, name)) as unknown as FormState<T>["fields"]
-    this.forms = cacheOnAccessProxy<T>(
-      (name: any) => new FormStateClass(createNestedForm(form, name))
-    ) as FormState<T>["forms"]
-  }
+  // Form actions
+  submit: () => Promise<void>
+  reset: () => void
+}
 
-  /** Get or set the entire form value object */
-  get value(): T {
-    return this.form.values
-  }
-  set value(newValue: T) {
-    this.form.values = newValue
-    this.form.onChange(this.name)
-  }
+export function useLiveForm<T extends object>(
+  form: MaybeRefOrGetter<Form<T>>,
+  options: FormOptions = {}
+): UseLiveFormReturn<T> {
+  const {
+    changeEvent = null,
+    submitEvent = "submit",
+    debounceInMiliseconds = 300,
+    prepareData = (data: any) => data,
+  } = options
 
-  /**
-   * Whether any field in the form has been touched
-   * Setting this will mark all fields as touched/untouched
-   */
-  get touched(): boolean {
-    for (const key in this.fields) if (this.fields[key].touched) return true
-    for (const key in this.forms) if (this.forms[key].touched) return true
+  // Get initial form data
+  const initialForm = toValue(form)
+  const initialValues = ref(deepClone(initialForm.values)) as Ref<T>
+  const currentValues = reactive(deepClone(initialForm.values)) as T
+  const currentErrors = reactive(deepClone(initialForm.errors)) as FormErrors<T>
+
+  // Form-level state tracking
+  const touchedFields = reactive<Set<string>>(new Set())
+  const editingFields = reactive<Set<string>>(new Set())
+  const submitCount = ref(0)
+  const isUpdatingFromServer = ref(false)
+
+  // Memoization for field instances to prevent recreation
+  const fieldCache = new Map<string, FormField<any>>()
+  const fieldArrayCache = new Map<string, FormFieldArray<any>>()
+
+  // Helper function to check if any errors exist in nested error structure
+  function hasAnyErrors(errors: any): boolean {
+    if (Array.isArray(errors)) {
+      // Check if it's an array of strings (field errors) or array of objects (nested form errors)
+      if (errors.length === 0) return false
+
+      // If first item is string, it's a field error array
+      if (typeof errors[0] === "string") {
+        return errors.length > 0
+      }
+
+      // If first item is object, it's an array of nested error objects
+      return errors.some(item => hasAnyErrors(item))
+    }
+    if (typeof errors === "object" && errors !== null) {
+      return Object.values(errors).some(value => hasAnyErrors(value))
+    }
     return false
   }
-  set touched(value: boolean) {
-    for (const key in this.fields) this.fields[key].touched = value
-    for (const key in this.forms) this.forms[key].touched = value
-  }
 
-  /** All validation errors in the form */
-  get errors(): FormErrors<T> {
-    return this.form.errors
-  }
+  // Form-level computed properties
+  const isValid = computed(() => !hasAnyErrors(currentErrors))
 
-  /** First error message in the form, if any */
-  get errorMessage(): string | undefined {
-    return findFirstError(this.errors)
-  }
+  const isDirty = computed(() => {
+    return JSON.stringify(currentValues) !== JSON.stringify(initialValues.value)
+  })
 
-  /** Metadata about the form's overall state */
-  get meta(): FieldMeta {
-    const fields = Object.values(this.fields) as FieldState<T>[]
-    const forms = Object.values(this.forms) as FormState<T>[]
-    return {
-      valid: fields.every(field => field.meta.valid) && forms.every(form => form.meta.valid),
-      dirty: fields.some(field => field.meta.dirty) || forms.some(form => form.meta.dirty),
-      initialValue: this.form.initialValues,
-    }
-  }
-}
+  const isTouched = computed(() => {
+    return submitCount.value > 0 || touchedFields.size > 0
+  })
 
-/**
- * Class implementation of FieldState that provides a reactive interface to a form field
- * @template T - The type of the parent form values
- */
-class FieldStateClass<T extends object> implements FieldState<T[keyof T]> {
-  name: string
-  private form: FormStateInternal<T>
-  private fieldName: keyof T
-
-  constructor(form: FormStateInternal<T>, name: keyof T) {
-    this.fieldName = name
-    this.name = `${form.name}.${name.toString()}`
-    this.form = form
-
-    // Initialize field state
-    this.form.touched[name] = this.form.touched[name] || (false as TouchedValues<T>[keyof T])
-    this.form.errors[name] = this.form.errors[name] || []
-
-    // Watch for changes to the field value
-    watch(
-      () => this.value as object,
-      () => {
-        this.touched = true
-        this.form.onChange(this.name)
-      },
-      { deep: true, flush: "sync" }
-    )
-  }
-
-  /** Get or set the field value */
-  get value(): T[keyof T] {
-    return this.form.values[this.fieldName]
-  }
-
-  set value(newValue: T[keyof T]) {
-    this.form.values[this.fieldName] = newValue
-    this.form.touched[this.fieldName] = true as TouchedValues<T>[keyof T]
-  }
-
-  /** Whether the field has been touched */
-  get touched(): boolean {
-    return this.form.touched[this.fieldName] as boolean
-  }
-  set touched(value: boolean) {
-    this.form.touched[this.fieldName] = value as TouchedValues<T>[keyof T]
-  }
-
-  /** Validation errors for this field */
-  get errors() {
-    return this.form.errors[this.fieldName]
-  }
-
-  /** First error message for this field, if any */
-  get errorMessage(): string | undefined {
-    return findFirstError(this.errors || [])
-  }
-
-  /** Metadata about the field's state */
-  get meta(): FieldMeta {
-    // Compare string representations to detect changes
-    const initialJson = JSON.stringify(this.form.initialValues[this.fieldName])
-    const currentJson = JSON.stringify(this.form.values[this.fieldName])
-    return {
-      valid: !this.errorMessage,
-      dirty: initialJson !== currentJson,
-      initialValue: this.form.initialValues[this.fieldName],
-    }
-  }
-}
-
-/**
- * Vue composable that creates a reactive form interface connected to Phoenix LiveView
- *
- * @template T - The type of form values
- * @param initialForm - Ref containing form data from the server (name, values, errors)
- * @param options - Configuration options for the form
- * @returns Object with form state and utility functions for form handling
- *
- * @example
- * ```
- * // Basic usage
- * const { form, fields, submit } = useLiveForm(toRef(props, "form"), {
- *   changeEvent: "validate",
- *   submitEvent: "save"
- * })
- *
- * // Access field value and error
- * const email = fields.email.value
- * const emailError = fields.email.errorMessage
- * ```
- */
-export const useLiveForm = <T extends object>(initialForm: Ref<Form<T>>, options: FormOptions) => {
-  if (!isRef(initialForm))
-    throw new Error('form must be a ref. Use `toRef(props, "form")` to create a ref from a prop.')
-
+  // LiveView integration
   const live = useLiveVue()
 
-  // Create change handler with optional debounce
-  const onChange = (fieldName: string) => {
-    if (options.changeEvent) {
-      live.pushEvent(options.changeEvent, { [form.name]: form.values, _target: fieldName.split(".") })
+  // Create debounced change handler
+  const debouncedSendChanges = debounce(() => {
+    if (live && isDirty.value && changeEvent) {
+      const data = prepareData(deepToRaw(currentValues))
+      live.pushEvent(changeEvent, { [initialForm.name]: data })
     }
+  }, debounceInMiliseconds)
+
+  // Create a form field for a given path
+  function createFormField<V>(path: string): FormField<V> {
+    // Check cache first
+    if (fieldCache.has(path)) {
+      return fieldCache.get(path) as FormField<V>
+    }
+
+    const keys = parsePath(path)
+
+    const fieldValue = computed({
+      get(): V {
+        return getValueByPath(currentValues, keys)
+      },
+      set(newValue: V) {
+        setValueByPath(currentValues, keys, newValue)
+      },
+    })
+
+    const fieldErrors = computed(() => {
+      const errors = getValueByPath(currentErrors, keys)
+      return Array.isArray(errors) ? errors : []
+    })
+
+    const fieldErrorMessage = computed(() => {
+      const errors = fieldErrors.value
+      return errors.length > 0 ? errors[0] : undefined
+    })
+
+    const fieldIsValid = computed(() => fieldErrors.value.length === 0)
+    const fieldIsTouched = computed(() => submitCount.value > 0 || touchedFields.has(path))
+    const fieldIsDirty = computed(() => {
+      const currentVal = getValueByPath(currentValues, keys)
+      const initialVal = getValueByPath(initialValues.value, keys)
+      return JSON.stringify(currentVal) !== JSON.stringify(initialVal)
+    })
+
+    // Create sanitized ID from path (replace dots with underscores, remove brackets)
+    const fieldId = path.replace(/\./g, "_").replace(/\[|\]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")
+    const fieldInputAttrs = computed(() => ({
+      value: fieldValue.value,
+      onInput: (event: Event) => {
+        const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        fieldValue.value = target.value as V
+      },
+      onFocus: () => {
+        editingFields.add(path)
+      },
+      onBlur: () => {
+        editingFields.delete(path)
+        touchedFields.add(path)
+      },
+      name: path,
+      id: fieldId,
+      "aria-invalid": !fieldIsValid.value,
+      ...(fieldErrors.value.length > 0 ? { "aria-describedby": `${fieldId}-error` } : {}),
+    }))
+
+    const field = {
+      value: fieldValue,
+      errors: fieldErrors as Readonly<Ref<string[]>>,
+      errorMessage: fieldErrorMessage as Readonly<Ref<string | undefined>>,
+      isValid: fieldIsValid,
+      isDirty: fieldIsDirty,
+      isTouched: fieldIsTouched,
+      inputAttrs: fieldInputAttrs,
+
+      field<K extends keyof V>(key: K): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]> {
+        const subPath = path ? `${path}.${String(key)}` : String(key)
+        return createFormField(subPath) as V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]>
+      },
+
+      fieldArray<K extends keyof V>(key: K): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : never {
+        const subPath = path ? `${path}.${String(key)}` : String(key)
+        return createFormFieldArray(subPath) as V[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
+      },
+
+      focus() {
+        editingFields.add(path)
+      },
+
+      blur() {
+        editingFields.delete(path)
+        touchedFields.add(path)
+      },
+    }
+
+    // Cache the field instance
+    fieldCache.set(path, field as any)
+    return field
   }
 
-  // Initialize form state
-  const form = {
-    name: initialForm.value.name,
-    initialValues: reactive(deepCopy(initialForm.value.values)),
-    values: reactive(deepCopy(initialForm.value.values)),
-    errors: reactive(deepCopy(initialForm.value.errors)),
-    touched: reactive({}) as TouchedValues<T>,
-    onChange: options.debounceInMiliseconds ? debounce(onChange, options.debounceInMiliseconds) : onChange,
-  } as FormStateInternal<T>
-
-  const formState = new FormStateClass<T>(form)
-  const isSubmitting = ref<boolean>(false)
-  const submitCount = ref<number>(0)
-
-  /**
-   * Submits the form to the server
-   * @param e - Optional event object to prevent default form submission
-   * @returns Promise that resolves to form validity after submission
-   */
-  const submit = async (e?: Event) => {
-    if (!options.submitEvent) {
-      throw new Error('submitEvent was not provided. Use `submitEvent: "submit"` to submit the form.')
+  function createFormFieldArray<V>(path: string): FormFieldArray<V> {
+    // Check cache first
+    if (fieldArrayCache.has(path)) {
+      return fieldArrayCache.get(path) as FormFieldArray<V>
     }
-    const submitEvent = options.submitEvent
-    e?.preventDefault()
-    if (!isSubmitting.value) {
-      isSubmitting.value = true
-      formState.touched = true
-      submitCount.value++
-      return new Promise<boolean>(resolve => {
-        let data = { [form.name]: form.values }
-        if (options.prepareData) data = options.prepareData(data)
-        return live.pushEvent(submitEvent, data, () => {
-          isSubmitting.value = false
-          deepAssign(form.initialValues, form.values)
-          // a small hack, that valid value is there but I'm not including it in the main type to avoid defining it in the subforms
-          resolve((initialForm as Ref<Form<T> & { valid: boolean }>).value.valid)
-        })
+
+    const baseField = createFormField<V[]>(path)
+
+    const fieldArray = {
+      ...baseField,
+
+      add(item?: Partial<V>) {
+        const currentArray = baseField.value.value || []
+        baseField.value.value = [...currentArray, item as V]
+      },
+
+      remove(index: number) {
+        const currentArray = baseField.value.value || []
+        baseField.value.value = currentArray.filter((_, i) => i !== index)
+      },
+
+      move(from: number, to: number) {
+        const currentArray = [...(baseField.value.value || [])]
+        if (from >= 0 && from < currentArray.length && to >= 0 && to < currentArray.length) {
+          const item = currentArray.splice(from, 1)[0]
+          currentArray.splice(to, 0, item)
+          baseField.value.value = currentArray
+        }
+      },
+
+      fields: computed(() => {
+        const array = baseField.value.value || []
+        return array.map((_, index) => createFormField<V>(`${path}[${index}]`))
+      }) as Readonly<Ref<FormField<V>[]>>,
+
+      field<P extends string | number>(pathOrIndex: P): ArrayFieldPath<V, P> {
+        // Handle number shortcut: convert 0 to "[0]"
+        if (typeof pathOrIndex === "number") {
+          return createFormField(`${path}[${pathOrIndex}]`) as ArrayFieldPath<V, P>
+        }
+        // Handle string path: use as-is, could be "[0]", "[0].name", etc.
+        return createFormField(`${path}${pathOrIndex}`) as ArrayFieldPath<V, P>
+      },
+
+      fieldArray<P extends string | number>(pathOrIndex: P): ArrayFieldArrayPath<V, P> {
+        // Handle number shortcut: convert 0 to "[0]"
+        if (typeof pathOrIndex === "number") {
+          return createFormFieldArray(`${path}[${pathOrIndex}]`) as ArrayFieldArrayPath<V, P>
+        }
+        // Handle string path: use as-is, could be "[0]", "[0].tags", etc.
+        return createFormFieldArray(`${path}${pathOrIndex}`) as ArrayFieldArrayPath<V, P>
+      },
+    }
+
+    // Cache the field array instance
+    fieldArrayCache.set(path, fieldArray)
+    return fieldArray
+  }
+
+  // Method to update form state from server
+  function updateFromServer(newForm: Form<T>) {
+    // Set flag to prevent triggering change events during server update
+    isUpdatingFromServer.value = true
+
+    try {
+      // Update values intelligently - only skip paths that are currently being edited
+      const newValues = deepClone(newForm.values)
+
+      if (editingFields.size === 0) {
+        // No fields being edited, safe to update everything
+        Object.assign(currentValues, newValues)
+      } else {
+        // Selective update - avoid overwriting fields currently being edited
+        updateValuesSelectively(currentValues, newValues, editingFields)
+      }
+
+      // Always update errors since they come from server validation
+      // Use deep replacement instead of Object.assign to handle error clearing
+      replaceReactiveObject(currentErrors, deepClone(newForm.errors))
+    } finally {
+      // Clear the flag after Vue's reactive effects have been flushed
+      nextTick(() => {
+        isUpdatingFromServer.value = false
       })
     }
   }
 
-  // Update form errors when server validation results come back
-  watch(initialForm, newForm => deepAssign(form.errors, newForm.errors), { deep: true })
+  // Helper function to selectively update values, avoiding currently edited paths
+  function updateValuesSelectively(current: any, newValues: any, editingPaths: Set<string>, currentPath = "") {
+    for (const key in newValues) {
+      const fullPath = currentPath ? `${currentPath}.${key}` : key
 
-  return {
-    fields: formState.fields,
-    forms: formState.forms,
-    form: formState,
-    isSubmitting: isSubmitting as Ref<boolean>,
-    submitCount: submitCount as Ref<number>,
-    submit,
+      // Check if this path or any parent path is being edited
+      const isBeingEdited = Array.from(editingPaths).some(
+        editingPath => editingPath.startsWith(fullPath) || fullPath.startsWith(editingPath)
+      )
+
+      if (!isBeingEdited) {
+        if (typeof newValues[key] === "object" && newValues[key] !== null && !Array.isArray(newValues[key])) {
+          // Recursively update nested objects
+          if (!current[key] || typeof current[key] !== "object") {
+            current[key] = {}
+          }
+          updateValuesSelectively(current[key], newValues[key], editingPaths, fullPath)
+        } else {
+          // Update primitive values and arrays
+          current[key] = newValues[key]
+        }
+      }
+    }
   }
-}
 
-/**
- * Represents an item in an array field with its value, errors, and position
- */
-interface ArrayItem<T> {
-  /** The item's value */
-  value: T
-  /** Validation errors for this item */
-  error?: T extends object ? FormErrors<T> : string[]
-  /** First error message for this item, if any */
-  errorMessage?: string
-  /** Index position in the array (used as React key) */
-  key: number
-}
+  // Watch for changes and send to server (debounced) - but only when not updating from server
+  const stopWatchingValues = watch(
+    () => currentValues,
+    () => {
+      if (!isUpdatingFromServer.value) debouncedSendChanges()
+    },
+    { deep: true }
+  )
 
-/**
- * Vue composable for managing array fields in forms
- * Provides reactive access to array items and methods to manipulate the array
- *
- * @template T - The type of items in the array
- * @param field - FieldState for the array field
- * @returns Object with items and methods to push, remove, and update items
- *
- * @example
- * ```
- * // Usage with form fields
- * const { items, push, remove } = useFieldArray(fields.items)
- *
- * // Add a new item
- * push({ name: '', quantity: 0 })
- *
- * // Remove an item
- * remove(2) // removes the item at index 2
- * ```
- */
-export const useFieldArray = <T>(field: FieldState<T[]>) => {
-  // Create a computed array of items with their values and errors
-  const items = computed<ArrayItem<T>[]>(() => {
-    const errors = Array.isArray(field.errors) ? field.errors : []
-    const values = field.value || []
-    return values.map((value, index) => ({
-      value,
-      error: (errors[index] || {}) as T extends object ? FormErrors<T> : string[],
-      errorMessage: findFirstError(errors[index] || {}),
-      key: index,
-    }))
+  // Watch for server updates to the form
+  const stopWatchingForm = watch(() => toValue(form), updateFromServer, { deep: true })
+
+  const reset = () => {
+    Object.assign(currentValues, deepClone(initialValues.value))
+    touchedFields.clear()
+    editingFields.clear()
+    submitCount.value = 0
+  }
+
+  const submit = async () => {
+    // Increment submit count to mark all fields as touched
+    submitCount.value += 1
+
+    if (live) {
+      const data = prepareData(deepToRaw(currentValues))
+
+      return new Promise<void>((resolve, reject) => {
+        // Send submit event to LiveView
+        const result = live.pushEvent(submitEvent, { [initialForm.name]: data })
+
+        // If pushEvent returns a promise, wait for it
+        if (result && typeof result.then === "function") {
+          result
+            .then(() => {
+              // On successful submission:
+              // 1. Update initial values to match current values (server accepted changes)
+              initialValues.value = deepClone(toValue(form).values)
+              reset()
+              resolve()
+            })
+            .catch(error => {
+              // On failed submission, keep the incremented submit count
+              reject(error)
+            })
+        } else {
+          // Non-promise result means immediate success
+          // Update initial values to match current values
+          initialValues.value = deepClone(toValue(form).values)
+          // Reset touched state and submit count
+          reset()
+          resolve()
+        }
+      })
+    } else {
+      // Fallback when not in LiveView context
+      console.warn("LiveView hook not available, form submission skipped")
+      return Promise.resolve()
+    }
+  }
+
+  // Clean up watchers when component unmounts
+  onScopeDispose(() => {
+    if (stopWatchingValues) {
+      stopWatchingValues()
+    }
+    stopWatchingForm()
   })
 
-  /**
-   * Adds a new item to the end of the array
-   * @param value - The item to add
-   */
-  const push = (value: T) => {
-    field.value.push(value)
+  const formInstance = {
+    isValid,
+    isDirty,
+    isTouched,
+    submitCount: readonly(submitCount),
+    initialValues: readonly(initialValues) as Readonly<Ref<T>>,
+    submit: submit,
+    reset: reset,
+    field<P extends PathsToStringProps<T>>(path: P): FormField<PathValue<T, P>> {
+      return createFormField<PathValue<T, P>>(path as string)
+    },
+
+    fieldArray<P extends PathsToStringProps<T>>(path: P): any {
+      return createFormFieldArray(path as string)
+    },
   }
 
-  /**
-   * Removes an item at the specified index
-   * @param index - The index of the item to remove
-   */
-  const remove = (index: number) => {
-    field.value = field.value.filter((_, i) => i !== index)
+  // Provide the form instance to child components
+  provide(LIVE_FORM_INJECTION_KEY, formInstance as any)
+
+  return formInstance
+}
+
+/**
+ * Hook to access form fields from an injected form instance
+ * @param path - The field path (e.g., "name", "user.email", "items[0].title")
+ * @throws Error if no form was provided via inject
+ * @returns FormField instance for the specified path
+ */
+export function useField<T = any>(path: string): FormField<T> {
+  const form = inject(LIVE_FORM_INJECTION_KEY)
+
+  if (!form) {
+    throw new Error(
+      "useField() can only be used inside components where a form has been provided. " +
+        "Make sure to use useLiveForm() in a parent component."
+    )
   }
 
-  /**
-   * Updates an item at the specified index
-   * @param index - The index of the item to update
-   * @param value - The new value for the item
-   */
-  const update = (index: number, value: T) => {
-    field.value = field.value.map((item, i) => (i === index ? value : item))
+  return form.field(path) as FormField<T>
+}
+
+/**
+ * Hook to access form array fields from an injected form instance
+ * @param path - The field path for an array field (e.g., "items", "user.tags", "posts[0].comments")
+ * @throws Error if no form was provided via inject
+ * @returns FormFieldArray instance for the specified path
+ */
+export function useArrayField<T = any>(path: string): FormFieldArray<T> {
+  const form = inject(LIVE_FORM_INJECTION_KEY)
+
+  if (!form) {
+    throw new Error(
+      "useArrayField() can only be used inside components where a form has been provided. " +
+        "Make sure to use useLiveForm() in a parent component."
+    )
   }
 
-  return {
-    items,
-    push,
-    remove,
-    update,
-  }
+  return form.fieldArray(path) as FormFieldArray<T>
 }

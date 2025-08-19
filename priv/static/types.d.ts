@@ -1,6 +1,9 @@
-import type { LiveSocketInstanceInterface, ViewHook } from "phoenix_live_view/assets/js/types";
 import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue";
-export type { Hook } from "phoenix_live_view/assets/js/types";
+import type { LiveSocketInstanceInterface as PhoenixLiveSocketInstanceInterface, ViewHook as PhoenixViewHook, Hook as PhoenixHook } from "phoenix_live_view";
+import type { LiveSocketInstanceInterface as FallbackLiveSocketInstanceInterface, ViewHook as FallbackViewHook, Hook as FallbackHook } from "./phoenixFallbackTypes";
+export type LiveSocketInstanceInterface = PhoenixLiveSocketInstanceInterface extends undefined ? FallbackLiveSocketInstanceInterface : PhoenixLiveSocketInstanceInterface;
+export type ViewHook = PhoenixViewHook extends undefined ? FallbackViewHook : PhoenixViewHook;
+export type Hook = PhoenixHook extends undefined ? FallbackHook : PhoenixHook;
 export type ComponentOrComponentModule = Component | {
     default: Component;
 };
@@ -66,3 +69,4 @@ export type LiveVueApp = {
 export interface LiveVue {
     VueHook: ViewHook;
 }
+export {};

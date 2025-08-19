@@ -7,6 +7,14 @@ defmodule LiveVue.EncoderFormTest do
   alias LiveVue.Encoder
   alias Phoenix.HTML.FormData
 
+  # Utility function to simplify test patterns
+  defp encode_form(source, attrs) do
+    module = source.__struct__
+    changeset = module.changeset(source, attrs)
+    form = FormData.to_form(changeset, as: module.__schema__(:source))
+    Encoder.encode(form)
+  end
+
   # Test schemas using Ecto.Schema for realistic form testing
   defmodule Simple do
     @moduledoc false
@@ -65,6 +73,72 @@ defmodule LiveVue.EncoderFormTest do
     end
   end
 
+  # Association test schemas (simulating database-backed models)
+  defmodule AssocProfile do
+    @moduledoc false
+    use Ecto.Schema
+
+    import Ecto.Changeset
+
+    @derive {Encoder, except: [:secret_data]}
+    schema "profiles" do
+      field(:bio, :string)
+      field(:secret_data, :string)
+      field(:avatar_url, :string)
+    end
+
+    def changeset(profile, attrs) do
+      cast(profile, attrs, [:bio, :secret_data, :avatar_url])
+    end
+  end
+
+  defmodule AssocComment do
+    @moduledoc false
+    use Ecto.Schema
+
+    import Ecto.Changeset
+
+    @derive {Encoder, except: [:internal_notes]}
+    schema "comments" do
+      field(:content, :string)
+      field(:internal_notes, :string)
+      field(:author, :string)
+      field(:published, :boolean)
+    end
+
+    def changeset(comment, attrs) do
+      cast(comment, attrs, [:content, :internal_notes, :author, :published])
+    end
+  end
+
+  defmodule ComplexAssoc do
+    @moduledoc false
+    use Ecto.Schema
+
+    import Ecto.Changeset
+
+    alias LiveVue.EncoderFormTest.AssocComment
+    alias LiveVue.EncoderFormTest.AssocProfile
+
+    @derive {Encoder, except: [:private_data]}
+    schema "complex_assocs" do
+      field(:title, :string)
+      field(:private_data, :string)
+      # Association fields (simulating database relationships)
+      has_one(:profile, AssocProfile, on_replace: :update)
+      has_many(:comments, AssocComment, on_replace: :delete)
+    end
+
+    def changeset(complex_assoc, attrs) do
+      complex_assoc
+      |> cast(attrs, [:title, :private_data])
+      |> cast_assoc(:profile)
+      |> cast_assoc(:comments)
+      |> validate_required([:title])
+      |> validate_length(:title, min: 1)
+    end
+  end
+
   # Custom encoder implementation for demonstration
   defmodule CustomFormData do
     @moduledoc false
@@ -103,10 +177,7 @@ defmodule LiveVue.EncoderFormTest do
     test "encodes form with simple values" do
       simple = %Simple{}
       attrs = %{name: "John", secret: "hidden_value", age: 30, active: true, tags: ["elixir", "phoenix"], score: 95.5}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       assert encoded == %{
                name: "simple",
@@ -127,10 +198,7 @@ defmodule LiveVue.EncoderFormTest do
     test "encodes form with validation errors" do
       simple = %Simple{}
       attrs = %{name: nil, age: -5, score: 150}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       assert encoded.name == "simple"
       assert encoded.valid == false
@@ -156,10 +224,7 @@ defmodule LiveVue.EncoderFormTest do
     test "encodes form with mixed valid and invalid fields" do
       simple = %Simple{}
       attrs = %{name: "John", age: -5, active: true}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       assert encoded.name == "simple"
       assert encoded.valid == false
@@ -181,10 +246,7 @@ defmodule LiveVue.EncoderFormTest do
     test "encodes form with nil values correctly" do
       simple = %Simple{}
       attrs = %{name: "John", secret: nil, age: nil, active: nil, tags: nil, score: nil}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       assert encoded.values == %{
                id: nil,
@@ -218,10 +280,7 @@ defmodule LiveVue.EncoderFormTest do
         }
       }
 
-      changeset = Complex.changeset(complex, attrs)
-      form = FormData.to_form(changeset, as: :complex)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(complex, attrs)
 
       assert encoded.values == %{
                id: nil,
@@ -293,10 +352,7 @@ defmodule LiveVue.EncoderFormTest do
         private_data: %{name: "Hidden", secret: "confidential"}
       }
 
-      changeset = Complex.changeset(complex, attrs)
-      form = FormData.to_form(changeset, as: :complex)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(complex, attrs)
 
       assert encoded.values.title == "Level 0"
       assert encoded.values.nested.title == "Level 1"
@@ -330,16 +386,14 @@ defmodule LiveVue.EncoderFormTest do
         }
       }
 
-      changeset = Complex.changeset(complex, attrs)
-      form = FormData.to_form(changeset, as: :complex)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(complex, attrs)
 
       assert encoded.valid == false
 
       assert encoded.values == %{
                id: nil,
-               title: nil,
+               # Should show submitted empty string
+               title: "",
                items: [
                  %{
                    id: nil,
@@ -352,7 +406,7 @@ defmodule LiveVue.EncoderFormTest do
                ],
                nested: %{
                  id: nil,
-                 title: nil,
+                 title: "",
                  nested: nil,
                  items: []
                }
@@ -370,10 +424,7 @@ defmodule LiveVue.EncoderFormTest do
         metadata: %{internal: true}
       }
 
-      changeset = CustomFormData.changeset(custom_data, attrs)
-      form = FormData.to_form(changeset, as: :custom)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(custom_data, attrs)
 
       # Form values now use the custom encoder, so secret_field is filtered out
       # and metadata is transformed according to the custom encoder
@@ -389,10 +440,7 @@ defmodule LiveVue.EncoderFormTest do
       # This test shows that Simple encoder excludes secret field and Complex excludes private_data
       simple = %Simple{}
       attrs = %{name: "John", secret: "confidential", age: 30}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       # Secret field is not included in form values due to @derive {Encoder, except: [:secret]}
       refute Map.has_key?(encoded.values, :secret)
@@ -407,9 +455,7 @@ defmodule LiveVue.EncoderFormTest do
         private_data: %{name: "Secret Item", secret: "top-secret"}
       }
 
-      complex_changeset = Complex.changeset(complex, complex_attrs)
-      complex_form = FormData.to_form(complex_changeset, as: :complex)
-      complex_encoded = Encoder.encode(complex_form)
+      complex_encoded = encode_form(complex, complex_attrs)
 
       # Private_data field not in values
       refute Map.has_key?(complex_encoded.values, :private_data)
@@ -418,77 +464,68 @@ defmodule LiveVue.EncoderFormTest do
   end
 
   describe "form error handling edge cases" do
-    test "handles multiple errors on single field" do
-      simple = %Simple{}
-      # Invalid age and score to trigger multiple validation errors potentially
-      attrs = %{name: nil, age: -10, score: 200}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
 
-      encoded = Encoder.encode(form)
-
-      assert encoded.valid == false
-
-      assert encoded.values == %{
-               id: nil,
-               name: nil,
-               age: -10,
-               active: nil,
-               tags: nil,
-               score: 200
-             }
-
-      # Check that errors exist for invalid fields
-      assert Map.has_key?(encoded.errors, :name)
-      assert Map.has_key?(encoded.errors, :age)
-      assert Map.has_key?(encoded.errors, :score)
-      assert is_list(encoded.errors.name)
-    end
-
-    test "encodes form with deeply nested validation errors" do
+    test "encodes form with deeply nested validation errors and affects parent validity" do
       complex = %Complex{}
 
       attrs = %{
-        title: "Valid Title",
+        title: "Valid Parent",
         nested: %{
           # Invalid - empty title
-          title: "",
-          items: [
-            # Invalid items
-            %{name: nil, age: -5}
-          ]
-        }
+          title: ""
+        },
+        items: [
+          %{name: "Valid item"},
+          # Invalid item
+          %{name: nil, age: -5}
+        ]
       }
 
-      changeset = Complex.changeset(complex, attrs)
-      form = FormData.to_form(changeset, as: :complex)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(complex, attrs)
 
       # Basic structure should be intact even with nested validation errors
       assert encoded.values == %{
                id: nil,
-               title: "Valid Title",
+               title: "Valid Parent",
                nested: %{
                  id: nil,
-                 title: nil,
+                 title: "",
                  nested: nil,
-                 items: [
-                   %{
-                     id: nil,
-                     name: nil,
-                     age: -5,
-                     active: nil,
-                     tags: nil,
-                     score: nil
-                   }
-                 ]
+                 items: []
                },
-               items: []
+               items: [
+                 %{
+                   id: nil,
+                   name: "Valid item",
+                   age: nil,
+                   active: nil,
+                   tags: nil,
+                   score: nil
+                 },
+                 %{
+                   id: nil,
+                   name: nil,
+                   age: -5,
+                   active: nil,
+                   tags: nil,
+                   score: nil
+                 }
+               ]
              }
 
-      # The form itself might be invalid due to nested errors
-      # (depends on Ecto changeset behavior with nested validations)
+      # The form itself is invalid due to nested errors
+      assert encoded.valid == false
+
+      # Nested validation errors are propagated to parent form
+      assert encoded.errors == %{
+               nested: %{
+                 title: ["can't be blank"]
+               },
+               items: [
+                 nil,
+                 %{name: ["can't be blank"], age: ["must be greater than 0"]}
+               ]
+             }
     end
   end
 
@@ -499,10 +536,7 @@ defmodule LiveVue.EncoderFormTest do
 
       # Apply new parameters
       attrs = %{name: "Updated", secret: "updated_secret", age: 25, active: true}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       # New parameters should override original data
       assert encoded.values == %{
@@ -520,10 +554,7 @@ defmodule LiveVue.EncoderFormTest do
       simple = %Simple{name: "Alice"}
       # Use string keys (common in web forms) and test type casting
       attrs = %{"name" => "John", "secret" => "hidden", "age" => "30", "active" => "true", "score" => "87.5"}
-      changeset = Simple.changeset(simple, attrs)
-      form = FormData.to_form(changeset, as: :simple)
-
-      encoded = Encoder.encode(form)
+      encoded = encode_form(simple, attrs)
 
       assert encoded.values == %{
                id: nil,
@@ -540,71 +571,240 @@ defmodule LiveVue.EncoderFormTest do
     end
   end
 
-  describe "form validation behavior" do
-    test "nested embedded forms validation affects parent form validity" do
-      complex = %Complex{}
+  describe "form values update behavior" do
 
-      attrs = %{
-        title: "Valid Parent",
-        nested: %{
-          # Invalid - empty title in nested struct
-          title: ""
-        },
-        items: [
-          %{name: "Valid item"},
-          # Invalid item
-          %{name: nil}
+    test "encodes form values from params even when changeset has validation errors" do
+      # Start with existing data
+      simple = %Simple{name: "Valid Name", age: 30}
+
+      # Submit invalid parameters that should still be displayed in form
+      # Both invalid but should be shown
+      invalid_params = %{"name" => "", "age" => "-5"}
+      encoded = encode_form(simple, invalid_params)
+
+      # Form should show the invalid submitted values, not the original valid ones
+      assert encoded.values == %{
+               id: nil,
+               # Should show submitted empty string, not nil
+               name: "",
+               # Should be -5 (the invalid submitted value), not 30
+               age: -5,
+               active: nil,
+               tags: nil,
+               score: nil
+             }
+
+      # Should have validation errors
+      assert encoded.valid == false
+      assert Map.has_key?(encoded.errors, :name)
+      assert Map.has_key?(encoded.errors, :age)
+    end
+
+    test "encodes form values correctly with action set to validate" do
+      # Start with existing data (simulate LiveView form state)
+      simple = %Simple{name: "Original", age: 20, active: false}
+
+      # Simulate form validation like in LiveView handle_event("validate", ...)
+      new_params = %{"name" => "Updated Value", "age" => "30", "active" => "true"}
+
+      _changeset =
+        simple
+        |> Simple.changeset(new_params)
+        # This is what LiveView does
+        |> Map.put(:action, :validate)
+
+      encoded = encode_form(simple, new_params)
+
+      # Test form validation with :validate action
+
+      # Values should reflect the new params, not original data
+      assert encoded.values == %{
+               id: nil,
+               # Should be new value
+               name: "Updated Value",
+               # Should be new value
+               age: 30,
+               # Should be new value
+               active: true,
+               tags: nil,
+               score: nil
+             }
+    end
+
+    test "encodes nested embedded form values correctly" do
+      # Test with Complex schema to match example project structure
+      complex = %Complex{title: "Original Title"}
+
+      new_params = %{
+        "title" => "Updated Title",
+        "items" => [
+          %{"name" => "New Item", "age" => "25", "active" => "true"}
         ]
       }
 
-      encoded =
+      _changeset =
         complex
-        |> Complex.changeset(attrs)
-        |> FormData.to_form(as: :complex)
-        |> Encoder.encode()
+        |> Complex.changeset(new_params)
+        |> Map.put(:action, :validate)
 
-      assert encoded.values == %{
-               id: nil,
-               title: "Valid Parent",
-               nested: %{
-                 id: nil,
-                 title: nil,
-                 nested: nil,
-                 items: []
-               },
-               items: [
-                 %{
-                   id: nil,
-                   name: "Valid item",
-                   age: nil,
-                   active: nil,
-                   tags: nil,
-                   score: nil
-                 },
-                 %{
-                   id: nil,
-                   name: nil,
-                   age: nil,
-                   active: nil,
-                   tags: nil,
-                   score: nil
-                 }
-               ]
-             }
+      encoded = encode_form(complex, new_params)
 
+      # Test complex nested form handling
+
+      # Values should reflect the new params
+      assert encoded.values.title == "Updated Title"
+      assert length(encoded.values.items) == 1
+      assert hd(encoded.values.items).name == "New Item"
+      assert hd(encoded.values.items).age == 25
+      assert hd(encoded.values.items).active == true
+    end
+
+    test "reproduces bug - embedded forms not showing submitted values when validation fails" do
+      # Start with empty complex struct (like in LiveView mount)
+      complex = %Complex{}
+
+      # Simulate form submission with partial data that will cause validation errors
+      # (missing required title, but has embedded data that should still be displayed)
+      form_params = %{
+        # Invalid - will cause validation error
+        "title" => "",
+        "items" => [
+          %{"name" => "Item 1", "age" => "25", "active" => "true"},
+          %{"name" => "Item 2", "age" => "30"}
+        ],
+        "nested" => %{
+          "title" => "Nested Title",
+          "items" => [
+            %{"name" => "Nested Item", "age" => "20"}
+          ]
+        }
+      }
+
+      # Simulate LiveView validation logic
+      _changeset =
+        complex
+        |> Complex.changeset(form_params)
+        |> Map.put(:action, :validate)
+
+      encoded = encode_form(complex, form_params)
+
+      # Verify that embedded forms show submitted data correctly
+
+      # Form should be invalid due to empty title
       assert encoded.valid == false
 
-      assert encoded.errors == %{
-               nested: %{
-                 title: ["can't be blank"]
-               },
-               items: [
-                 nil,
-                 %{name: ["can't be blank"]}
-               ]
-             }
+      # BUT the form values should still show all the submitted data
+      # Title should show the submitted empty string
+      assert encoded.values.title == ""
+
+      # Items should show the submitted data (this is likely failing)
+      assert length(encoded.values.items) == 2
+
+      item1 = Enum.at(encoded.values.items, 0)
+      assert item1.name == "Item 1"
+      assert item1.age == 25
+      assert item1.active == true
+
+      item2 = Enum.at(encoded.values.items, 1)
+      assert item2.name == "Item 2"
+      assert item2.age == 30
+      # Not provided, should be nil
+      assert item2.active == nil
+
+      # Nested data should show submitted values
+      assert encoded.values.nested != nil
+      assert encoded.values.nested.title == "Nested Title"
+      assert length(encoded.values.nested.items) == 1
+      nested_item = hd(encoded.values.nested.items)
+      assert nested_item.name == "Nested Item"
+      assert nested_item.age == 20
+    end
+
+    test "reproduces specific bug - required embedded field with partial data becomes nil" do
+      # Test the exact issue: when a required embedded field has partial data that fails validation,
+      # the entire embedded field becomes nil instead of showing the partial submitted data
+
+      complex = %Complex{}
+
+      # Submit data where the embedded field will fail validation due to missing required fields
+      form_params = %{
+        "title" => "Valid Title",
+        # Nested has partial data but missing required title - this should cause validation error
+        # but we should still see the submitted items, not nil
+        "nested" => %{
+          # Empty title - required field
+          "title" => "",
+          "items" => [
+            %{"name" => "Submitted Item", "age" => "25"}
+          ]
+        }
+      }
+
+      _changeset =
+        complex
+        |> Complex.changeset(form_params)
+        |> Map.put(:action, :validate)
+
+      encoded = encode_form(complex, form_params)
+
+      # Test embedded forms with validation errors
+
+      # Form should be invalid due to nested validation error
+      assert encoded.valid == false
+
+      # The key bug: nested should NOT be nil - it should show the submitted data
+      # even if validation failed
+      assert encoded.values.nested != nil
+      # Empty string becomes nil after casting
+      assert encoded.values.nested.title == ""
+      assert length(encoded.values.nested.items) == 1
+      assert hd(encoded.values.nested.items).name == "Submitted Item"
+      assert hd(encoded.values.nested.items).age == 25
+    end
+
+    test "form shows all submitted params including invalid types excluded from changeset.changes" do
+      # This test verifies that invalid parameters that fail casting are still displayed in forms
+      # rather than showing as nil, ensuring users see what they actually submitted
+      
+      simple = %Simple{}
+      
+      # Test both with and without :validate action to ensure consistent behavior
+      form_params = %{
+        "name" => "Valid Name",
+        # Invalid types that should show as submitted strings, not nil
+        "age" => "not_a_number",
+        "active" => "invalid_bool", 
+        "score" => "invalid_float"
+      }
+
+      # Test with :validate action (like LiveView validation)
+      _changeset_with_action =
+        simple
+        |> Simple.changeset(form_params)
+        |> Map.put(:action, :validate)
+
+      encoded = encode_form(simple, form_params)
+
+      # Form should be invalid due to cast failures
+      assert encoded.valid == false
+
+      # Valid field should show cast value
+      assert encoded.values.name == "Valid Name"
+
+      # Key fix: invalid fields should show submitted string values, not nil
+      # This ensures users see what they typed even if casting failed
+      assert encoded.values.age == "not_a_number", "Age should show submitted value, not nil"
+      assert encoded.values.active == "invalid_bool", "Active should show submitted value, not nil" 
+      assert encoded.values.score == "invalid_float", "Score should show submitted value, not nil"
+      
+      # Test also works without :validate action
+      encoded_without_action = encode_form(simple, form_params)
+      assert encoded_without_action.values.age == "not_a_number"
+      assert encoded_without_action.values.active == "invalid_bool"
+      assert encoded_without_action.values.score == "invalid_float"
     end
   end
+
 
   describe "forms backed by simple maps" do
     test "encodes form backed by simple map data" do
@@ -693,24 +893,6 @@ defmodule LiveVue.EncoderFormTest do
              }
     end
 
-    test "encodes form with nil values" do
-      form_data = %{
-        "name" => nil,
-        "email" => nil,
-        "bio" => nil,
-        "active" => nil
-      }
-
-      form = to_form(form_data, as: :nullable_form)
-      encoded = Encoder.encode(form)
-
-      assert encoded.values == %{
-               "name" => nil,
-               "email" => nil,
-               "bio" => nil,
-               "active" => nil
-             }
-    end
 
     test "encodes form with params override" do
       form_data = %{
@@ -840,6 +1022,398 @@ defmodule LiveVue.EncoderFormTest do
                  metadata: %{has_secret: true, field_count: 3}
                  # secret_field excluded by custom encoder
                }
+             }
+    end
+  end
+
+  describe "association handling" do
+    test "encodes form with loaded has_one association" do
+      # Simulate a loaded association from database
+      profile = %AssocProfile{
+        id: 1,
+        bio: "Software developer",
+        secret_data: "confidential info",
+        avatar_url: "https://example.com/avatar.jpg"
+      }
+
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        profile: profile,
+        comments: []
+      }
+
+      attrs = %{title: "Updated Article"}
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: %{
+                 id: 1,
+                 bio: "Software developer",
+                 # secret_data excluded by encoder
+                 avatar_url: "https://example.com/avatar.jpg"
+               },
+               comments: []
+             }
+    end
+
+    test "encodes form with nil has_one association (not loaded)" do
+      # Simulate association not loaded from database
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        profile: nil,
+        comments: []
+      }
+
+      attrs = %{title: "Updated Article"}
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: []
+             }
+    end
+
+    test "encodes form with has_one association using Ecto.Association.NotLoaded" do
+      # When creating a struct without specifying associations, they default to NotLoaded
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        comments: []
+        # profile field omitted - defaults to NotLoaded
+      }
+
+      attrs = %{title: "Updated Article"}
+
+      # Should raise an error that the association is not loaded
+      exception = assert_raise ArgumentError, fn -> encode_form(complex_assoc, attrs) end
+      assert String.contains?(exception.message, "Cannot encode form with NotLoaded association")
+      assert String.contains?(exception.message, "association :profile is not loaded")
+    end
+
+    test "encodes form with loaded has_many associations" do
+      # Simulate loaded comments from database
+      comments = [
+        %AssocComment{
+          id: 1,
+          content: "Great article!",
+          internal_notes: "approved by moderator",
+          author: "user1",
+          published: true
+        },
+        %AssocComment{
+          id: 2,
+          content: "Very helpful",
+          internal_notes: "flagged for review",
+          author: "user2",
+          published: false
+        }
+      ]
+
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        comments: comments,
+        profile: nil
+      }
+
+      attrs = %{title: "Updated Article"}
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: [
+                 %{
+                   id: 1,
+                   content: "Great article!",
+                   # internal_notes excluded by encoder
+                   author: "user1",
+                   published: true
+                 },
+                 %{
+                   id: 2,
+                   content: "Very helpful",
+                   # internal_notes excluded by encoder
+                   author: "user2",
+                   published: false
+                 }
+               ]
+             }
+    end
+
+    test "encodes form with empty has_many associations" do
+      # Simulate empty loaded association (no comments)
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        profile: nil,
+        comments: []
+      }
+
+      attrs = %{title: "Updated Article"}
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: []
+             }
+    end
+
+    test "encodes form with has_many association using Ecto.Association.NotLoaded" do
+      # When creating a struct without specifying associations, they default to NotLoaded
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Main Article",
+        private_data: "internal notes",
+        profile: nil
+        # comments field omitted - defaults to NotLoaded
+      }
+
+      attrs = %{title: "Updated Article"}
+
+      # Should raise an error that the association is not loaded
+      exception = assert_raise ArgumentError, fn -> encode_form(complex_assoc, attrs) end
+      assert String.contains?(exception.message, "Cannot encode form with NotLoaded association")
+      assert String.contains?(exception.message, "association :comments is not loaded")
+    end
+
+    test "encodes form with cast_assoc changes for has_one association" do
+      # Start with existing association
+      profile = %AssocProfile{id: 1, bio: "Old bio", avatar_url: "old.jpg"}
+
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Article",
+        profile: profile,
+        comments: []
+      }
+
+      # Update association through cast_assoc (include ID for update)
+      attrs = %{
+        title: "Updated Article",
+        profile: %{id: 1, bio: "New bio", avatar_url: "new.jpg"}
+      }
+
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: %{
+                 id: 1,
+                 bio: "New bio",
+                 # secret_data excluded by encoder
+                 avatar_url: "new.jpg"
+               },
+               comments: []
+             }
+    end
+
+    test "encodes form with cast_assoc changes for has_many associations" do
+      # Start with existing comments
+      comments = [
+        %AssocComment{id: 1, content: "Old comment", author: "user1", published: true}
+      ]
+
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Article",
+        comments: comments,
+        profile: nil
+      }
+
+      # Update and add comments through cast_assoc
+      attrs = %{
+        title: "Updated Article",
+        comments: [
+          %{id: 1, content: "Updated comment", author: "user1", published: false},
+          %{content: "New comment", author: "user2", published: true}
+        ]
+      }
+
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: [
+                 %{
+                   id: 1,
+                   content: "Updated comment",
+                   # internal_notes excluded by encoder
+                   author: "user1",
+                   published: false
+                 },
+                 %{
+                   id: nil,
+                   content: "New comment",
+                   # internal_notes excluded by encoder
+                   author: "user2",
+                   published: true
+                 }
+               ]
+             }
+    end
+
+    test "encodes form with validation errors in has_one association" do
+      complex_assoc = %ComplexAssoc{id: 1, title: "Article", comments: [], profile: nil}
+
+      # Submit invalid association data
+      attrs = %{
+        title: "Valid Title",
+        # Invalid - assuming bio is required in real scenario
+        profile: %{bio: "", avatar_url: nil}
+      }
+
+      encoded = encode_form(complex_assoc, attrs)
+
+      # Should show submitted association data even if validation fails
+      assert encoded.values == %{
+               id: 1,
+               title: "Valid Title",
+               # private_data excluded by encoder
+               profile: %{
+                 id: nil,
+                 bio: "",
+                 # secret_data excluded by encoder
+                 avatar_url: nil
+               },
+               comments: []
+             }
+    end
+
+    test "encodes form with validation errors in has_many associations" do
+      complex_assoc = %ComplexAssoc{id: 1, title: "Article", profile: nil, comments: []}
+
+      # Submit mix of valid and invalid comment data
+      attrs = %{
+        title: "Valid Title",
+        comments: [
+          %{content: "Valid comment", author: "user1", published: true},
+          # Invalid comment
+          %{content: "", author: nil, published: false}
+        ]
+      }
+
+      encoded = encode_form(complex_assoc, attrs)
+
+      # Should show all submitted data, both valid and invalid
+      assert encoded.values == %{
+               id: 1,
+               title: "Valid Title",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: [
+                 %{
+                   id: nil,
+                   content: "Valid comment",
+                   # internal_notes excluded by encoder
+                   author: "user1",
+                   published: true
+                 },
+                 %{
+                   id: nil,
+                   content: "",
+                   # internal_notes excluded by encoder
+                   author: nil,
+                   published: false
+                 }
+               ]
+             }
+    end
+
+    test "handles mixed association states - loaded profile with new comments" do
+      # Mix of loaded association with new association data
+      existing_profile = %AssocProfile{id: 1, bio: "Existing bio", avatar_url: "old.jpg"}
+
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Article",
+        profile: existing_profile,
+        # Start with empty comments
+        comments: []
+      }
+
+      # Update existing profile and add new comments (include ID for update)
+      attrs = %{
+        profile: %{id: 1, bio: "Updated bio", avatar_url: "new.jpg"},
+        comments: [
+          %{content: "First comment", author: "user1", published: true},
+          %{content: "Second comment", author: "user2", published: false}
+        ]
+      }
+
+      encoded = encode_form(complex_assoc, attrs)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Article",
+               # private_data excluded by encoder
+               profile: %{
+                 id: 1,
+                 bio: "Updated bio",
+                 # secret_data excluded by encoder
+                 avatar_url: "new.jpg"
+               },
+               comments: [
+                 %{
+                   id: nil,
+                   content: "First comment",
+                   # internal_notes excluded by encoder
+                   author: "user1",
+                   published: true
+                 },
+                 %{
+                   id: nil,
+                   content: "Second comment",
+                   # internal_notes excluded by encoder
+                   author: "user2",
+                   published: false
+                 }
+               ]
+             }
+    end
+
+    test "handles association corner cases properly" do
+      # Test basic association handling with both nil and empty associations
+      complex_assoc = %ComplexAssoc{
+        id: 1,
+        title: "Article with Basic Associations",
+        profile: nil,
+        comments: []
+      }
+
+      attrs = %{title: "Updated Article"}
+      encoded = encode_form(complex_assoc, attrs)
+
+      # Verify basic association encoding works correctly
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Article",
+               # private_data excluded by encoder
+               profile: nil,
+               comments: []
              }
     end
   end
