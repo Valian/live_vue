@@ -15,6 +15,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   🐌 **Lazy-loading** Vue Components
 -   📦 **Efficient Props Diffing** - Only changed data is sent over WebSocket
 -   🪄 **Sigil** as an [Alternative LiveView DSL](#using-vue-sigil-to-inline-vue-components)
+-   🎯 **Phoenix Streams** Support with efficient patches
 -   🦄 **Tailwind** Support
 -   💀 **Dead View** Support
 -   🦥 **Slot Interoperability**
@@ -184,7 +185,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
-- [ ] Add support for Phoenix streams as props
+- [x] **Phoenix Streams** - Full support for `stream()` operations with transparent patches ✅ **Done!**
 
 ## Credits
 
