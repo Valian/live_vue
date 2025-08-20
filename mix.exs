@@ -12,6 +12,7 @@ defmodule LiveVue.MixProject do
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      listeners: listeners(Mix.env()),
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
@@ -125,6 +126,9 @@ defmodule LiveVue.MixProject do
   defp elixirc_paths(:e2e), do: ["lib", "test/e2e/support"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp listeners(:e2e), do: [Phoenix.CodeReloader]
+  defp listeners(_), do: []
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
@@ -135,13 +139,18 @@ defmodule LiveVue.MixProject do
       {:floki, ">= 0.30.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.2"},
+
+      # dev dependencies
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:makeup_html, "~> 0.1.0", only: :dev, runtime: false},
       {:styler, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:bandit, "~> 1.5", only: :e2e}
+
+      # e2e dependencies
+      {:bandit, "~> 1.5", only: :e2e},
+      {:phoenix_live_reload, "~> 1.2", only: :e2e}
     ]
   end
 

@@ -9,7 +9,15 @@ Application.put_env(:live_vue, LiveVue.E2E.Endpoint,
   live_view: [signing_salt: "aaaaaaaa"],
   secret_key_base: String.duplicate("a", 64),
   debug_errors: true,
-  pubsub_server: LiveVue.E2E.PubSub
+  code_reloader: true,
+  pubsub_server: LiveVue.E2E.PubSub,
+  reloadable_apps: [:live_vue],
+  live_reload: [
+    patterns: [
+      ~r"lib/live_vue/.*(ex|exs)$",
+      ~r"test/e2e/.*\.(ex|exs|vue|js|ts)$"
+    ]
+  ]
 )
 
 Process.register(self(), :e2e_helper)
@@ -118,6 +126,7 @@ defmodule LiveVue.E2E.Router do
       live "/navigation/alt/:page", NavigationLive
       live "/events", EventLive
       live "/upload/:mode", UploadTestLive
+      live "/streams", StreamLive
     end
   end
 
@@ -139,6 +148,13 @@ defmodule LiveVue.E2E.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+
+  # Code reloading configuration
+  if code_reloading? do
+    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
+    plug Phoenix.LiveReloader
+    plug Phoenix.CodeReloader
+  end
 
   plug Plug.Static, from: {:phoenix, "priv/static"}, at: "/assets/phoenix"
   plug Plug.Static, from: {:phoenix_live_view, "priv/static"}, at: "/assets/phoenix_live_view"

@@ -405,6 +405,134 @@ const {
 
 For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.md#useliveuploadevent-callback).
 
+## Phoenix Streams
+
+LiveVue provides full support for Phoenix LiveView's `stream()` operations. Since LiveVue already sends minimal JSON patches for all props updates, streams primarily help reduce server memory consumption by not keeping large collections in the socket assigns.
+
+### Why Use Streams?
+
+Streams are ideal for:
+- Lists with many items where you want to avoid keeping all data in memory
+- Real-time data like chat messages, notifications, or live feeds
+
+Note: LiveVue's automatic JSON patch diffing already ensures efficient client updates for regular props, so the main benefit of streams is server-side memory efficiency.
+
+### Server Setup
+
+Configure your LiveView to use streams:
+
+```elixir
+defmodule MyAppWeb.ItemsLive do
+  use MyAppWeb, :live_view
+
+  def render(assigns) do
+    ~H"""
+    <.vue items={@streams.items} v-component="ItemList" v-socket={@socket} />
+    """
+  end
+
+  def mount(_params, _session, socket) do
+    # Initialize with sample items
+    items = [
+      %{id: 1, name: "Item 1"},
+      %{id: 2, name: "Item 2"},
+      %{id: 3, name: "Item 3"}
+    ]
+
+    {:ok, stream(socket, :items, items)}
+  end
+
+  def handle_event("add_item", %{"name" => name}, socket) do
+    new_item = %{ id: Enum.random(1..1000), name: name }
+    {:noreply, stream_insert(socket, :items, new_item)}
+  end
+
+  def handle_event("remove_item", %{"id" => id}, socket) do
+    {:noreply, stream_delete_by_dom_id(socket, :items, "item-#{id}")}
+  end
+
+end
+```
+
+### Vue Component
+
+Create a Vue component that receives and renders the stream:
+
+```html
+<!-- assets/vue/ItemList.vue -->
+<script setup lang="ts">
+import { useLiveVue } from 'live_vue'
+import { ref } from 'vue'
+
+const props = defineProps<{
+  items: {
+    id: number
+    name: string
+  }[]
+}>()
+
+const live = useLiveVue()
+const newName = ref('')
+
+function addItem() {
+  if (newName.value) {
+    // Use $live to push events to LiveView
+    live.pushEvent('add_item', { name: newName.value })
+    newName.value = ''
+  }
+}
+</script>
+
+<template>
+  <div>
+    <!-- Add new item form -->
+    <div>
+      <input v-model="newName" placeholder="Item name" />
+      <button @click="addItem">Add Item</button>
+    </div>
+
+    <!-- Items list -->
+    <div>
+      <div v-for="item in items" :key="item.id" >
+        <h3>{{ item.name }}</h3>
+        <button @click="$live.pushEvent('remove_item', { id: item.id })">
+          Remove
+        </button>
+      </div>
+    </div>
+    <div v-if="items.length === 0" >No items yet.</div>
+  </div>
+</template>
+```
+
+### Key Features
+
+- **Memory Efficient**: Reduces server memory usage by not storing large collections in socket assigns
+- **Transparent Updates**: When you use `stream_insert()`, `stream_delete()`, or other stream operations, LiveVue automatically patches only the affected items
+- **State Preservation**: Vue component state (like form inputs, local variables) is preserved during stream updates
+- **Same API as HEEX**: Use `@streams.items` exactly as you would in a HEEX template
+- **Automatic Patches**: LiveVue's existing JSON patch system handles efficient client updates
+
+### Advanced Stream Operations
+
+All Phoenix stream operations work seamlessly:
+
+```elixir
+# Add item at specific position
+stream_insert(socket, :items, new_item, at: 0)
+
+# Add multiple items with limits
+stream(socket, :items, new_items, at: -1, limit: -5)
+
+# Reset entire stream
+stream(socket, :items, new_items, reset: true)
+
+# Delete by DOM ID
+stream_delete_by_dom_id(socket, :items, "item-123")
+```
+
+The Vue component will automatically receive these updates and maintain its local state throughout all operations.
+
 ## Dead Views vs Live Views
 
 Components can be used in both contexts:

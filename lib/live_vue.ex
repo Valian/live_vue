@@ -45,6 +45,7 @@ defmodule LiveVue do
   alias LiveVue.Slots
   alias LiveVue.SSR
   alias Phoenix.LiveView
+  alias Phoenix.LiveView.LiveStream
 
   require Logger
 
@@ -220,6 +221,9 @@ defmodule LiveVue do
         true ->
           [%{op: "replace", path: "/#{k}", value: new_value}]
 
+        %LiveStream{} ->
+          generate_stream_patches(k, new_value)
+
         # For complex types which didn't change type, use Jsonpatch to find minimal diff
         old_value ->
           # TODO - replace by Jsonpatch library when all PRs are merged
@@ -240,6 +244,40 @@ defmodule LiveVue do
   # depending on the user's needs
   defp object_hash(%{id: id}), do: id
   defp object_hash(_), do: nil
+
+  # Generates JSON patch operations for LiveStream changes
+  # Handles insertions and deletions for Phoenix LiveView streams
+  defp generate_stream_patches(stream_name, %LiveStream{} = stream) do
+    patches = []
+
+    # Handle insertions third
+    patches =
+      stream.inserts
+      |> Enum.reverse()
+      |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
+        patches =
+          if limit,
+            do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
+            else: patches
+
+        item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
+
+        if update_only,
+          do: [%{op: "replace", path: "/#{stream_name}/$$#{dom_id}", value: item} | patches],
+          else: [%{op: "upsert", path: "/#{stream_name}/#{if at == -1, do: "-", else: at}", value: item} | patches]
+      end)
+
+    # Handle deletions second
+    patches =
+      Enum.reduce(stream.deletes, patches, fn dom_id, patches ->
+        [%{op: "remove", path: "/#{stream_name}/$$#{dom_id}"} | patches]
+      end)
+
+    # Handle reset operation first
+    if stream.reset?,
+      do: [%{op: "replace", path: "/#{stream_name}", value: []} | patches],
+      else: patches
+  end
 
   # we compress the diff to make it smaller, so it's faster to send to the client
   # then, it's decompressed on the client side
