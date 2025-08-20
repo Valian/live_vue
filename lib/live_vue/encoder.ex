@@ -259,3 +259,16 @@ defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadEntry do
     )
   end
 end
+
+# Explicit implementation of LiveVue.Encoder for LiveStream
+defimpl LiveVue.Encoder, for: Phoenix.LiveView.LiveStream do
+  def encode(%Phoenix.LiveView.LiveStream{} = stream, opts) do
+    # Use the LiveStream's own Enumerable protocol implementation
+    # which handles deduplication and ordering correctly
+    consumable_stream = %{stream | consumable?: true}
+
+    Enum.map(consumable_stream, fn {dom_id, item} ->
+      Map.put(LiveVue.Encoder.encode(item, opts), :__dom_id, dom_id)
+    end)
+  end
+end

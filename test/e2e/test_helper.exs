@@ -126,6 +126,7 @@ defmodule LiveVue.E2E.Router do
       live "/navigation/alt/:page", NavigationLive
       live "/events", EventLive
       live "/upload/:mode", UploadTestLive
+      live "/streams", StreamLive
     end
   end
 
