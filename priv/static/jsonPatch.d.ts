@@ -3,7 +3,7 @@
  * (c) 2013-2021 Joachim Wester
  * MIT license
  */
-export type Operation = AddOperation | RemoveOperation | ReplaceOperation | MoveOperation | CopyOperation | TestOperation;
+export type Operation = AddOperation | RemoveOperation | ReplaceOperation | MoveOperation | CopyOperation | TestOperation | UpsertOperation | LimitOperation;
 export interface BaseOperation {
     path: string;
 }
@@ -29,6 +29,14 @@ export interface CopyOperation extends BaseOperation {
 export interface TestOperation extends BaseOperation {
     op: "test";
     value: any;
+}
+export interface UpsertOperation extends BaseOperation {
+    op: "upsert";
+    value: any;
+}
+export interface LimitOperation extends BaseOperation {
+    op: "limit";
+    value: number;
 }
 /**
  * Retrieves a value from a JSON document by a JSON pointer.

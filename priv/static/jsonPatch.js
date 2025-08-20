@@ -58,6 +58,25 @@ function areEquals(a, b) {
     return a !== a && b !== b;
 }
 /**
+ * Resolves a path component that may use special syntax for finding items by ID.
+ * If the component starts with $$, it tries to find an array element with matching id.
+ * Returns the resolved index or the original component if not using special syntax.
+ */
+function resolvePathComponent(component, arrayObj) {
+    if (!component.startsWith("$$")) {
+        return component;
+    }
+    // Extract the ID from $$<id> syntax
+    const targetId = component.substring(2);
+    // Find the index of the element with matching __dom_id
+    const index = arrayObj.findIndex(item => item && typeof item === "object" && item.__dom_id == targetId);
+    if (index === -1) {
+        console.warn(`JSON Patch: Item with __dom_id "${targetId}" not found in array, skipping operation`);
+        return null;
+    }
+    return index.toString();
+}
+/**
  * Retrieves a value from a JSON document by a JSON pointer.
  */
 export function getValueByPointer(document, pointer) {
@@ -66,12 +85,20 @@ export function getValueByPointer(document, pointer) {
     const keys = pointer.split("/").slice(1); // remove empty first element
     let obj = document;
     for (const key of keys) {
-        const unescapedKey = key.indexOf("~") !== -1 ? unescapePathComponent(key) : key;
+        let resolvedKey = key.indexOf("~") !== -1 ? unescapePathComponent(key) : key;
         if (Array.isArray(obj)) {
-            obj = obj[unescapedKey === "-" ? obj.length - 1 : parseInt(unescapedKey, 10)];
+            // Handle special $$id syntax for arrays
+            if (resolvedKey.startsWith("$$")) {
+                const resolved = resolvePathComponent(resolvedKey, obj);
+                if (resolved === null) {
+                    return undefined; // Item not found
+                }
+                resolvedKey = resolved;
+            }
+            obj = obj[resolvedKey === "-" ? obj.length - 1 : parseInt(resolvedKey, 10)];
         }
         else {
-            obj = obj[unescapedKey];
+            obj = obj[resolvedKey];
         }
     }
     return obj;
@@ -100,8 +127,16 @@ export function applyOperation(document, operation) {
     let obj = document;
     // Navigate to parent object
     for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i].indexOf("~") !== -1 ? unescapePathComponent(keys[i]) : keys[i];
+        let key = keys[i].indexOf("~") !== -1 ? unescapePathComponent(keys[i]) : keys[i];
         if (Array.isArray(obj)) {
+            // Handle special $$id syntax for arrays
+            if (key.startsWith("$$")) {
+                const resolved = resolvePathComponent(key, obj);
+                if (resolved === null) {
+                    return document; // Skip operation if id not found
+                }
+                key = resolved;
+            }
             obj = obj[key === "-" ? obj.length - 1 : parseInt(key, 10)];
         }
         else {
@@ -110,9 +145,20 @@ export function applyOperation(document, operation) {
     }
     // Apply operation on final key
     const finalKey = keys[keys.length - 1];
-    const unescapedKey = finalKey.indexOf("~") !== -1 ? unescapePathComponent(finalKey) : finalKey;
+    let unescapedKey = finalKey.indexOf("~") !== -1 ? unescapePathComponent(finalKey) : finalKey;
     if (Array.isArray(obj)) {
-        const index = unescapedKey === "-" ? obj.length : parseInt(unescapedKey, 10);
+        let index;
+        // Handle special $$id syntax for arrays
+        if (unescapedKey.startsWith("$$")) {
+            const resolved = resolvePathComponent(unescapedKey, obj);
+            if (resolved === null) {
+                return document; // Skip operation if id not found
+            }
+            index = parseInt(resolved, 10);
+        }
+        else {
+            index = unescapedKey === "-" ? obj.length : parseInt(unescapedKey, 10);
+        }
         switch (operation.op) {
             case "add":
                 obj.splice(index, 0, operation.value);
@@ -123,8 +169,30 @@ export function applyOperation(document, operation) {
             case "replace":
                 obj[index] = operation.value;
                 break;
+            case "upsert":
+                const upsertValue = operation.value;
+                // Check if item with same ID already exists in the array
+                if (upsertValue && typeof upsertValue === "object" && "__dom_id" in upsertValue) {
+                    const existingIndex = obj.findIndex(item => item && typeof item === "object" && item.__dom_id === upsertValue.__dom_id);
+                    if (existingIndex !== -1) {
+                        // Update existing item
+                        obj[existingIndex] = upsertValue;
+                    }
+                    else {
+                        // Insert new item at specified index
+                        obj.splice(index, 0, upsertValue);
+                    }
+                }
+                else {
+                    // No ID to match against, just insert at specified index
+                    obj.splice(index, 0, upsertValue);
+                }
+                break;
             case "move":
                 const moveValue = getValueByPointer(document, operation.from);
+                if (moveValue === undefined) {
+                    return document; // Skip operation if source not found
+                }
                 applyOperation(document, { op: "remove", path: operation.from });
                 obj.splice(index, 0, moveValue);
                 break;
@@ -134,6 +202,22 @@ export function applyOperation(document, operation) {
                 break;
             case "test":
                 // Test operation - just return document unchanged
+                break;
+            case "limit":
+                const limitValue = operation.value;
+                if (limitValue >= 0) {
+                    // Positive limit: keep first N elements, remove the rest
+                    if (limitValue < obj.length) {
+                        obj.splice(limitValue);
+                    }
+                }
+                else {
+                    // Negative limit: keep last N elements, remove from the beginning
+                    const keepCount = Math.abs(limitValue);
+                    if (keepCount < obj.length) {
+                        obj.splice(0, obj.length - keepCount);
+                    }
+                }
                 break;
         }
     }
@@ -157,6 +241,26 @@ export function applyOperation(document, operation) {
                 break;
             case "test":
                 // Test operation - just return document unchanged
+                break;
+            case "limit":
+                // Check if target is an array
+                const targetArray = obj[unescapedKey];
+                if (Array.isArray(targetArray)) {
+                    const limitValue = operation.value;
+                    if (limitValue >= 0) {
+                        // Positive limit: keep first N elements, remove the rest
+                        if (limitValue < targetArray.length) {
+                            targetArray.splice(limitValue);
+                        }
+                    }
+                    else {
+                        // Negative limit: keep last N elements, remove from the beginning
+                        const keepCount = Math.abs(limitValue);
+                        if (keepCount < targetArray.length) {
+                            targetArray.splice(0, targetArray.length - keepCount);
+                        }
+                    }
+                }
                 break;
         }
     }
