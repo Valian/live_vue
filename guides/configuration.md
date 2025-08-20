@@ -30,7 +30,11 @@ config :live_vue,
   # Testing configuration
   # When false, we will always update full props and not send diffs
   # Useful for testing scenarios where you need complete props state
-  enable_props_diff: true
+  enable_props_diff: true,
+
+  # Shared props configuration
+  # Props that are automatically added to all Vue components
+  shared_props: []
 ```
 
 ### Environment-Specific Configuration
@@ -378,6 +382,72 @@ The server bundle will be created at `priv/vue/server.js` and used by the NodeJS
 **Performance issues?**
 - Consider adjusting the NodeJS pool size based on your server capacity
 - Disable SSR for components that don't benefit from it
+
+## Shared Props Configuration
+
+LiveVue offers a configuration option that enables developers to specify props that are automatically passed to all Vue components. This feature ensures consistent data availability across components without the need to manually pass props in every instance.
+
+### How to Configure
+
+To set shared props, define the desired properties in your LiveView configuration. These props will then be injected into every Vue component rendered within LiveView contexts, streamlining data management and improving code maintainability.
+
+```elixir
+config :live_vue,
+  shared_props: [
+    :flash,                    # Pass flash messages to all components
+    {:current_user, :user},    # Pass current_user from socket as 'user' prop
+    :locale                    # Pass locale setting to all components
+  ]
+```
+
+### Configuration Options
+
+Shared props can be configured in two ways:
+
+1. **Direct mapping**: Use an atom to pass the socket assign with the same name
+   ```elixir
+   shared_props: [:flash, :current_user]
+   ```
+
+2. **Renamed mapping**: Use a tuple `{socket_key, prop_name}` to rename the prop
+   ```elixir
+   shared_props: [{:current_user, :user}, {:user_preferences, :prefs}]
+   ```
+
+### How It Works
+
+The `merge_socket_props/2` function automatically:
+- Extracts specified assigns from the LiveView socket
+- Adds them as props to every Vue component
+- Preserves change tracking for efficient prop diffing
+- Only processes components rendered within LiveView contexts (requires `v-socket`)
+
+### Example Usage
+
+With the configuration above, all Vue components automatically receive the configured props:
+
+```vue
+<!-- MyComponent.vue -->
+<template>
+  <div>
+    <div v-if="flash.info">{{ flash.info }}</div>
+    <p>Welcome, {{ user.name }}!</p>
+    <p>Current locale: {{ locale }}</p>
+  </div>
+</template>
+
+<script setup>
+// These props are automatically available without explicit passing
+defineProps(['flash', 'user', 'locale'])
+</script>
+```
+
+```elixir
+<!-- In your LiveView template -->
+<!-- No need to manually pass flash, user, or locale -->
+<.vue v-component="MyComponent" v-socket={@socket} custom_prop="value" />
+```
+
 
 ## Troubleshooting Configuration
 
