@@ -180,7 +180,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 
 - [x] `useLiveEvent` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
-- [ ] shared props automatically included in all components
+- [x] shared props automatically included in all components
 - [ ] VS code extension highlighting `~VUE` sigil
 - [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
