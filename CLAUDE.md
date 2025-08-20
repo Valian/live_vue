@@ -16,6 +16,10 @@ This is the LiveVue library itself - an Elixir library that integrates Vue.js wi
 #### Elixir Tests
 ```bash
 mix test
+# Run a specific test file
+mix test test/live_vue_test.exs
+# Run a specific test in a specific file
+mix test test/live_vue_test.exs:123
 ```
 Runs the library test suite.
 
