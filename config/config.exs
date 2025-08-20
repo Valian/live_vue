@@ -18,4 +18,11 @@ config :live_vue,
 
   # if false, we will always update full props and not send diffs
   # defaults to true as it greatly reduces payload size
-  enable_props_diff: true
+  enable_props_diff: true,
+
+  # list of props that should be automatically added to all Vue components
+  # their value is taken from socket assigns
+  # examples:
+  #   [:current_user]  # socket.assigns.current_user → prop current_user
+  #   [{:theme, :ui_theme}]  # socket.assigns.ui_theme → prop theme
+  shared_props: []
