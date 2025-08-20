@@ -311,6 +311,196 @@ Solution:
 3. Ensure resolve function can find that component in `assets/vue/index.ts`.
 
 
+## Forms and Validation
+
+### Using useLiveForm Hook
+
+**Use** `useLiveForm()` for complex forms with validation, arrays, and nested objects:
+
+```vue
+<script setup>
+import { Form, useLiveForm } from 'live_vue'
+
+type UserForm = {
+  name: string
+  email: string
+  tags: string[]
+  profile: {
+    bio: string
+    skills: Array<{ name: string; level: string }>
+  }
+}
+
+const props = defineProps<{ form: Form<UserForm> }>()
+
+const form = useLiveForm(() => props.form, {
+  changeEvent: 'validate',     // Event sent on field changes (null to disable)
+  submitEvent: 'submit',       // Event sent on form submission
+  debounceInMiliseconds: 300,  // Debounce validation requests
+  prepareData: (data) => data  // Transform data before sending
+})
+
+// Basic field access
+const nameField = form.field('name')
+const emailField = form.field('email')
+
+// Nested object fields
+const bioField = form.field('profile.bio')
+
+// Array fields
+const tagsArray = form.fieldArray('tags')
+const skillsArray = form.fieldArray('profile.skills')
+
+// Field operations
+const addTag = () => tagsArray.add('')
+const removeTag = (index) => tagsArray.remove(index)
+</script>
+
+<template>
+  <!-- Basic field with validation -->
+  <input
+    v-bind="nameField.inputAttrs.value"
+    :class="{ 'error': nameField.isTouched.value && nameField.errorMessage.value }"
+  />
+  <div v-if="nameField.errorMessage.value">
+    {{ nameField.errorMessage.value }}
+  </div>
+
+  <!-- Array iteration -->
+  <div v-for="(tagField, index) in tagsArray.fields.value" :key="index">
+    <input v-bind="tagField.inputAttrs.value" />
+    <button @click="removeTag(index)">Remove</button>
+  </div>
+
+  <!-- Form actions -->
+  <button @click="form.submit()" :disabled="!form.isValid.value">
+    Submit
+  </button>
+  <button @click="form.reset()">Reset</button>
+</template>
+```
+
+### Field Injection for Reusable Components
+
+**Use** `useField()` and `useArrayField()` in child components:
+
+```vue
+<!-- TextInput.vue -->
+<script setup>
+import { useField } from 'live_vue'
+
+const props = defineProps<{ path: string }>()
+const field = useField(props.path)
+</script>
+
+<template>
+  <input
+    v-bind="field.inputAttrs.value"
+    :class="{ error: field.isTouched.value && field.errorMessage.value }"
+  />
+  <div v-if="field.errorMessage.value" class="error-message">
+    {{ field.errorMessage.value }}
+  </div>
+</template>
+```
+
+### Form Field Properties
+
+Each field provides reactive state and helpers:
+
+```typescript
+interface FormField<T> {
+  // Reactive state
+  value: Ref<T>                    // Current field value
+  errors: Ref<string[]>            // Validation errors from server
+  errorMessage: Ref<string>        // First error message
+  isValid: Ref<boolean>            // No validation errors
+  isDirty: Ref<boolean>            // Value changed from initial
+  isTouched: Ref<boolean>          // Field has been interacted with
+
+  // Input binding helper (includes value, events, accessibility)
+  inputAttrs: Ref<{
+    value: T
+    onInput: (event: Event) => void
+    onFocus: () => void
+    onBlur: () => void
+    name: string
+    id: string
+    'aria-invalid': boolean
+    'aria-describedby'?: string
+  }>
+
+  // Navigation methods for nested structures
+  field(key): FormField           // Access nested object field
+  fieldArray(key): FormFieldArray // Access nested array field
+}
+```
+
+### Array Field Operations
+
+Array fields provide additional methods for manipulation:
+
+```vue
+<script setup>
+const membersArray = form.fieldArray('team_members')
+
+// Array operations
+const addMember = () => membersArray.add({ name: '', email: '' })
+const removeMember = (index) => membersArray.remove(index)
+const moveMember = (from, to) => membersArray.move(from, to)
+
+// Access individual array items
+const firstMember = membersArray.field(0)           // or membersArray.field('[0]')
+const firstMemberName = membersArray.field('[0].name')
+</script>
+
+<template>
+  <!-- Iterate over array fields -->
+  <div v-for="(memberField, index) in membersArray.fields.value" :key="index">
+    <input v-bind="memberField.field('name').inputAttrs.value" />
+    <input v-bind="memberField.field('email').inputAttrs.value" />
+    <button @click="removeMember(index)">Remove</button>
+  </div>
+</template>
+```
+
+### Server-Side Form Setup
+
+**Set up** server-side forms in the standard way:
+
+```elixir
+defmodule MyApp.Live.FormTest do
+  use LiveVue, :live_view
+
+  def render(assigns) do
+    ~H"""
+    <.vue form={@form} v-component="UserForm" v-socket={@socket} />
+    """
+  end
+
+  def mount(params, socket) do
+    changeset = MyApp.User.changeset(%MyApp.User{}, %{})
+    socket = assign(socket, form: to_form(changeset, as: :user))
+    {:ok, socket}
+  end
+
+  def handle_event("validate", params, socket) do
+    changeset = MyApp.User.changeset(%MyApp.User{}, params)
+    {:noreply, assign(socket, form: to_form(changeset, as: :user))}
+  end
+
+  def handle_event("submit", params, socket) do
+    changeset = MyApp.User.changeset(%MyApp.User{}, params)
+    case Repo.insert(changeset) do
+      {:ok, _user} ->
+        {:noreply, socket}
+      {:error, changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset, as: :user))}
+    end
+  end
+end
+```
+
 ## Common Anti-Patterns
 
 ### State Management
