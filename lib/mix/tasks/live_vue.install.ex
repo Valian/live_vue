@@ -17,6 +17,10 @@ defmodule Mix.Tasks.LiveVue.Install do
   """
   use Igniter.Mix.Task
 
+  alias Igniter.Code.Common
+  alias Igniter.Code.Function
+  alias Igniter.Project.Config
+
   # Template file contents
   @vue_index_content """
   // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
@@ -114,47 +118,19 @@ defmodule Mix.Tasks.LiveVue.Install do
     |> update_package_json_for_vue()
     |> create_vue_files()
     |> setup_ssr_for_production(app_name)
+    |> update_mix_aliases()
+    |> Igniter.Mix.Task.configure_and_run("phoenix_vite.install", igniter.args.argv)
   end
 
   # Configure environments (config/dev.exs and config/prod.exs)
   defp configure_environments(igniter, _app_name) do
     igniter
-    |> Igniter.Project.Config.configure(
-      "config.exs",
-      :live_vue,
-      [:shared_props],
-      []
-    )
-    |> Igniter.Project.Config.configure(
-      "config.exs",
-      :live_vue,
-      [:ssr],
-      true
-    )
-    |> Igniter.Project.Config.configure(
-      "dev.exs",
-      :live_vue,
-      [:vite_host],
-      "http://localhost:5173"
-    )
-    |> Igniter.Project.Config.configure(
-      "dev.exs",
-      :live_vue,
-      [:ssr_module],
-      {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")}
-    )
-    |> Igniter.Project.Config.configure(
-      "prod.exs",
-      :live_vue,
-      [:ssr_module],
-      {:code, Sourceror.parse_string!("LiveVue.SSR.NodeJS")}
-    )
-    |> Igniter.Project.Config.configure(
-      "prod.exs",
-      :live_vue,
-      [:ssr],
-      true
-    )
+    |> Config.configure("config.exs", :live_vue, [:shared_props], [])
+    |> Config.configure("config.exs", :live_vue, [:ssr], true)
+    |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
+    |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})
+    |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.NodeJS")})
+    |> Config.configure("prod.exs", :live_vue, [:ssr], true)
   end
 
   # Add LiveVue to html_helpers in lib/app_web.ex
@@ -163,41 +139,23 @@ defmodule Mix.Tasks.LiveVue.Install do
     web_folder = Macro.underscore(web_module)
     web_file = Path.join(["lib", web_folder <> ".ex"])
 
-    Igniter.update_elixir_file(igniter, web_file, fn zipper ->
-      with {:ok, zipper} <- Igniter.Code.Module.move_to_defmodule(zipper, web_module),
-           {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper) do
-        case Igniter.Code.Function.move_to_function_call_in_current_scope(
-               zipper,
-               :def,
-               [1],
-               fn call ->
-                 Igniter.Code.Function.argument_equals?(call, 0, :html_helpers)
-               end
-             ) do
-          {:ok, zipper} ->
-            case Igniter.Code.Common.move_to_do_block(zipper) do
-              {:ok, zipper} ->
-                new_code = """
-                # Add support for Vue components
-                use LiveVue
+    Igniter.update_file(igniter, web_file, fn source ->
+      Rewrite.Source.update(source, :content, fn content ->
+        # Check if LiveVue is already added to avoid duplicate additions
+        if String.contains?(content, "use LiveVue") do
+          content
+        else
+          # Get the short module name (without Elixir. prefix)
+          web_module_name = web_module |> Module.split() |> Enum.join(".")
 
-                # Generate component for each vue file, so you can use <.ComponentName> syntax
-                # instead of <.vue v-component="ComponentName">
-                use LiveVue.Components, vue_root: ["./assets/vue", "./lib/#{web_folder}"]
-                """
-
-                {:ok, Igniter.Code.Common.add_code(zipper, new_code, :after)}
-
-              :error ->
-                {:ok, zipper}
-            end
-
-          :error ->
-            {:ok, zipper}
+          # Add LiveVue support only in the html_helpers function
+          String.replace(
+            content,
+            ~r/(defp html_helpers do\s+quote do\s+# Translation\s+use Gettext, backend: #{Regex.escape(web_module_name)}\.Gettext)/,
+            "\\1\n\n      # Add support for Vue components\n      use LiveVue\n\n      # Generate component for each vue file, so you can use <.ComponentName> syntax\n      # instead of <.vue v-component=\"ComponentName\">\n      use LiveVue.Components, vue_root: [\"./assets/vue\", \"./lib/#{web_folder}\"]"
+          )
         end
-      else
-        _ -> {:ok, zipper}
-      end
+      end)
     end)
   end
 
@@ -219,7 +177,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       String.replace(
         content,
         "import topbar from \"topbar\"",
-        "import topbar from \"topbar\"\nimport {getHooks} from \"live_vue\"\nimport liveVueApp from \"../vue\""
+        ~s(import topbar from "topbar"\nimport {getHooks} from "live_vue"\nimport liveVueApp from "../vue")
       )
     end
   end
@@ -251,8 +209,8 @@ defmodule Mix.Tasks.LiveVue.Install do
     else
       String.replace(
         content,
-        "import tailwindcss from \"@tailwindcss/vite\";",
-        "import tailwindcss from \"@tailwindcss/vite\";\nimport vue from \"@vitejs/plugin-vue\";\nimport liveVuePlugin from \"live_vue/vitePlugin\";"
+        "import { phoenixVitePlugin } from 'phoenix_vite'",
+        ~s(import vue from "@vitejs/plugin-vue";\nimport liveVuePlugin from "live_vue/vitePlugin";)
       )
     end
   end
@@ -272,16 +230,17 @@ defmodule Mix.Tasks.LiveVue.Install do
   defp update_vite_optimized_deps(content) do
     String.replace(
       content,
-      "include: [\"phoenix\", \"phoenix_html\", \"phoenix_live_view\"],",
-      "include: [\"live_vue\", \"phoenix\", \"phoenix_html\", \"phoenix_live_view\"],"
+      ~s(include: ["phoenix", "phoenix_html", "phoenix_live_view"],),
+      ~s(include: ["live_vue", "phoenix", "phoenix_html", "phoenix_live_view"],)
     )
   end
 
   defp update_vite_plugins(content) do
+    # Replace the phoenixVitePlugin call with the Vue plugins while keeping tailwindcss
     String.replace(
       content,
-      ~r/phoenixVitePlugin({\s*pattern: \/\.(ex|heex)$\/\s*})/,
-      "tailwindcss(),\n    vue(),\n    liveVuePlugin()"
+      ~r/phoenixVitePlugin\(\{\s*pattern: \/\\.\(ex\|heex\)\$\/\s*\}\)/s,
+      "vue(),\n    liveVuePlugin()"
     )
   end
 
@@ -295,7 +254,7 @@ defmodule Mix.Tasks.LiveVue.Install do
           String.replace(
             content,
             "@source \"../js\";",
-            "@source \"../js\";\n@source \"../vue\";"
+            ~s(@source "../js";\n@source "../vue";)
           )
         end
       end)
@@ -309,13 +268,15 @@ defmodule Mix.Tasks.LiveVue.Install do
         decoded = Jason.decode!(content)
         # Add Vue dependencies
         dependencies =
-          Map.get(decoded, "dependencies", %{})
+          decoded
+          |> Map.get("dependencies", %{})
           |> Map.put("live_vue", "file:../deps/live_vue")
           |> Map.put("vue", "^3.4.21")
 
         # Add Vue dev dependencies
         dev_dependencies =
-          Map.get(decoded, "devDependencies", %{})
+          decoded
+          |> Map.get("devDependencies", %{})
           |> Map.put("@vitejs/plugin-vue", "^5.0.4")
           |> Map.put("typescript", "^5.4.5")
           |> Map.put("vue-tsc", "^2.0.13")
@@ -358,7 +319,8 @@ defmodule Mix.Tasks.LiveVue.Install do
 
         # Update compiler options
         compiler_options =
-          Map.get(decoded, "compilerOptions", %{})
+          decoded
+          |> Map.get("compilerOptions", %{})
           |> Map.put("module", "ESNext")
           |> Map.put("types", ["vite/client"])
           |> Map.put("moduleResolution", "bundler")
@@ -366,7 +328,8 @@ defmodule Mix.Tasks.LiveVue.Install do
 
         # Update include array
         include =
-          Map.get(decoded, "include", [])
+          decoded
+          |> Map.get("include", [])
           |> Enum.concat(["vue/**/*"])
           |> Enum.uniq()
 
@@ -383,27 +346,27 @@ defmodule Mix.Tasks.LiveVue.Install do
 
   # Setup SSR for production in application.ex
   defp setup_ssr_for_production(igniter, _app_name) do
-    app_module = Igniter.Project.Application.app_name(igniter) |> to_string()
+    app_module = igniter |> Igniter.Project.Application.app_name() |> to_string()
     app_file = "lib/#{Macro.underscore(app_module)}/application.ex"
 
     Igniter.update_elixir_file(igniter, app_file, fn zipper ->
       with {:ok, zipper} <- Igniter.Code.Module.move_to_defmodule(zipper, app_module),
-           {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper) do
-        case Igniter.Code.Function.move_to_function_call_in_current_scope(
+           {:ok, zipper} <- Common.move_to_do_block(zipper) do
+        case Function.move_to_function_call_in_current_scope(
                zipper,
                :def,
                [2],
                fn call ->
-                 Igniter.Code.Function.argument_equals?(call, 0, :start)
+                 Function.argument_equals?(call, 0, :start)
                end
              ) do
           {:ok, zipper} ->
-            case Igniter.Code.Common.move_to_do_block(zipper) do
+            case Common.move_to_do_block(zipper) do
               {:ok, zipper} ->
-                case Igniter.Code.Common.move_to_cursor_match_in_scope(zipper, "children = [") do
+                case Common.move_to_cursor_match_in_scope(zipper, "children = [") do
                   {:ok, zipper} ->
                     {:ok,
-                     Igniter.Code.Common.add_code(
+                     Common.add_code(
                        zipper,
                        "{NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},",
                        :after
@@ -423,6 +386,72 @@ defmodule Mix.Tasks.LiveVue.Install do
       else
         _ -> {:ok, zipper}
       end
+    end)
+  end
+
+  # Update mix.exs aliases to include set_build_path function
+  defp update_mix_aliases(igniter) do
+    Igniter.update_file(igniter, "mix.exs", fn source ->
+      Rewrite.Source.update(source, :content, fn content ->
+        # Check if set_build_path function already exists
+        content =
+          if String.contains?(content, "defp set_build_path") do
+            content
+          else
+            # Add the set_build_path function at the end of the module (before final end)
+            String.replace(
+              content,
+              ~r/(\nend\s*$)/,
+              ~s{\n  defp set_build_path(_args) do\n    System.put_env("MIX_BUILD_PATH", System.get_env("MIX_BUILD_PATH") || Mix.Project.build_path())\n  end\\1}
+            )
+          end
+
+        # Update assets.build alias to include set_build_path
+        content =
+          if String.contains?(content, "&set_build_path/1") and String.contains?(content, "assets.build") do
+            content
+          else
+            String.replace(
+              content,
+              ~r/("assets\.build": \[)"([^"]+)"/,
+              "\\1&set_build_path/1, \"\\2\""
+            )
+          end
+
+        # Add or update phx.server alias
+        content =
+          if String.contains?(content, "\"phx.server\"") and String.contains?(content, "&set_build_path/1") do
+            content
+          else
+            if String.contains?(content, "\"phx.server\":") do
+              # Update existing phx.server alias
+              String.replace(
+                content,
+                ~r/"phx\.server": .+/,
+                ~s("phx.server": [&set_build_path/1, "phx.server"])
+              )
+            else
+              # Add new phx.server alias before the closing bracket of aliases
+              # Look for the pattern where aliases ends
+              if String.contains?(content, "precommit:") do
+                String.replace(
+                  content,
+                  ~r/(precommit: \[.*?\])/s,
+                  ~s(\\1,\n      "phx.server": [&set_build_path/1, "phx.server"])
+                )
+              else
+                # Fallback: add before the end of aliases block
+                String.replace(
+                  content,
+                  ~r/(\s+)(\]\s*\n\s+end)/,
+                  ~s(\\1"phx.server": [&set_build_path/1, "phx.server"],\n\\1\\2)
+                )
+              end
+            end
+          end
+
+        content
+      end)
     end)
   end
 end
