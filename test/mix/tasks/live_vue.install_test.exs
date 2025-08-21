@@ -85,15 +85,13 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert mix_exs != nil, "mix.exs file should exist"
 
       # Check for set_build_path function
-      assert String.contains?(mix_exs.content, "defp set_build_path"), "Should add set_build_path function"
-      assert String.contains?(mix_exs.content, "System.put_env(\"MIX_BUILD_PATH\""), "Should set MIX_BUILD_PATH env var"
+      assert mix_exs.content =~ ~r/defp set_build_path/
+      assert mix_exs.content =~ ~r/System.put_env\(\"MIX_BUILD_PATH"/
 
       # Check for updated aliases
-      assert String.contains?(mix_exs.content, "\"assets.build\": [&set_build_path/1,"),
-             "Should update assets.build alias"
+      assert mix_exs.content =~ ~r/"assets.build": \[&set_build_path\/1,/
 
-      assert String.contains?(mix_exs.content, ~s("phx.server": [&set_build_path/1, "phx.server"])),
-             "Should add phx.server alias"
+      assert mix_exs.content =~ ~s("phx.server": [&set_build_path/1, "phx.server"])
     end
 
     test "adds vue_demo route to dev section" do
@@ -107,8 +105,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert router_file != nil, "Router file should exist"
 
       # Check for vue_demo route in dev section
-      assert String.contains?(router_file.content, "live \"/vue_demo\", TestWeb.VueDemoLive"),
-             "Should add vue_demo route to dev section"
+      assert router_file.content =~ ~r/live "\/vue_demo", TestWeb.VueDemoLive/
     end
 
     test "updates home template with LiveVue content" do
@@ -122,17 +119,10 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert home_template != nil, "Home template should exist"
 
       # Check for LiveVue-specific content
-      assert String.contains?(home_template.content, "End-to-end reactivity for your Live Vue apps"),
-             "Should update tagline"
-
-      assert String.contains?(home_template.content, "VueDemo.vue"),
-             "Should mention VueDemo.vue file"
-
-      assert String.contains?(home_template.content, "vue_demo.ex"),
-             "Should mention vue_demo.ex file"
-
-      assert String.contains?(home_template.content, ~s(href={~p"/dev/vue_demo"})),
-             "Should add Vue Demo button link"
+      assert home_template.content =~ ~r/End-to-end reactivity for your Live Vue apps/
+      assert home_template.content =~ ~r/VueDemo.vue/
+      assert home_template.content =~ ~r/vue_demo.ex/
+      assert home_template.content =~ ~s(href={~p"/dev/vue_demo"})
     end
 
     test "creates VueDemo LiveView file" do
@@ -147,14 +137,9 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert live_view_file != nil, "VueDemo LiveView file should be created"
 
       # Check for LiveView content
-      assert String.contains?(live_view_file.content, "defmodule VueDemoWeb.VueDemoLive"),
-             "Should define VueDemoLive module"
-
-      assert String.contains?(live_view_file.content, "v-component=\"VueDemo\""),
-             "Should use VueDemo component"
-
-      assert String.contains?(live_view_file.content, "handle_event(\"add_todo\""),
-             "Should handle add_todo event"
+      assert live_view_file.content =~ ~r/defmodule VueDemoWeb.VueDemoLive/
+      assert live_view_file.content =~ ~r/v-component="VueDemo"/
+      assert live_view_file.content =~ ~r/handle_event\(\"add_todo\"/
     end
 
     test "basic functionality works without errors" do

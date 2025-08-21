@@ -225,6 +225,7 @@ defmodule Mix.Tasks.LiveVue.Install do
     web_folder = Macro.underscore(web_module)
 
     igniter
+    |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
     |> Igniter.mkdir("assets/vue")
     |> Igniter.mkdir("lib/#{web_folder}/live")
     |> Igniter.create_new_file("assets/vue/index.ts", vue_index_content())
@@ -637,7 +638,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         # Add the vue_demo route to the dev section after live_dashboard
         String.replace(
           content,
-          ~r/(live_dashboard\("[^"]*", [^)]*\))/,
+          ~r/(live_dashboard.*)/,
           "\\1\n      live \"/vue_demo\", #{web_module_name}.VueDemoLive"
         )
       end)
