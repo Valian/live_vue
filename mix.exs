@@ -147,7 +147,7 @@ defmodule LiveVue.MixProject do
       {:phoenix_ecto, "~> 4.0", optional: true},
 
       # dev dependencies
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false, warn_if_outdated: true},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},

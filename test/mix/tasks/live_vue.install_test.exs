@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.LiveVue.InstallTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Igniter.Test
 
@@ -11,22 +11,20 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
         |> apply_igniter!()
 
       # Verify core Vue files are created
-      assert project.rewrite.sources["assets/vue/index.ts"] != nil, "assets/vue/index.ts should be created"
-      assert project.rewrite.sources["assets/vue/VueDemo.vue"] != nil, "assets/vue/VueDemo.vue should be created"
-      assert project.rewrite.sources["assets/js/server.js"] != nil, "assets/js/server.js should be created"
+      assert project.rewrite.sources["assets/vue/index.ts"] != nil
+      assert project.rewrite.sources["assets/vue/VueDemo.vue"] != nil
+      assert project.rewrite.sources["assets/js/server.js"] != nil
 
       # Verify content contains expected LiveVue patterns
       vue_index = project.rewrite.sources["assets/vue/index.ts"]
-      assert String.contains?(vue_index.content, "createLiveVue"), "Vue index should contain createLiveVue"
-      assert String.contains?(vue_index.content, "findComponent"), "Vue index should contain findComponent"
+      assert vue_index.content =~ "createLiveVue"
+      assert vue_index.content =~ "findComponent"
 
       vue_demo = project.rewrite.sources["assets/vue/VueDemo.vue"]
-      assert String.contains?(vue_demo.content, "useLiveVue"), "VueDemo should use useLiveVue"
+      assert vue_demo.content =~ "useLiveVue"
 
       server_js = project.rewrite.sources["assets/js/server.js"]
-      assert String.contains?(server_js.content, "getRender"), "Server.js should contain getRender"
-
-      # Note: LiveVue dependency is automatically added by igniter.install script
+      assert server_js.content =~ "getRender"
     end
 
     test "adds LiveVue to html_helpers" do
@@ -40,10 +38,8 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert web_file != nil, "Web module file should exist"
 
       # Check for LiveVue usage
-      assert String.contains?(web_file.content, "use LiveVue"), "Should add 'use LiveVue' to html_helpers"
-
-      assert String.contains?(web_file.content, "use LiveVue.Components"),
-             "Should add 'use LiveVue.Components' to html_helpers"
+      assert web_file.content =~ "use LiveVue"
+      assert web_file.content =~ "use LiveVue.Components"
     end
 
     test "installs successfully with bun flag" do
@@ -54,7 +50,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       # Verify bun dependency is added
       mix_exs = project.rewrite.sources["mix.exs"]
-      assert String.contains?(mix_exs.content, "{:bun,"), "Should add bun dependency with --bun flag"
+      assert mix_exs.content =~ "{:bun,"
     end
 
     test "updates Vite configuration plugins" do
@@ -65,13 +61,13 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       # Check if Vite config was updated
       vite_config = project.rewrite.sources["assets/vite.config.mjs"]
-      assert vite_config != nil, "Vite config file should exist"
+      assert vite_config != nil
 
       # Check for Vue plugin additions
-      assert String.contains?(vite_config.content, "vue()"), "Should add vue() plugin"
-      assert String.contains?(vite_config.content, "liveVuePlugin()"), "Should add liveVuePlugin()"
-      assert String.contains?(vite_config.content, "import vue from"), "Should import vue plugin"
-      assert String.contains?(vite_config.content, "import liveVuePlugin from"), "Should import liveVuePlugin"
+      assert vite_config.content =~ "vue()"
+      assert vite_config.content =~ "liveVuePlugin()"
+      assert vite_config.content =~ "import vue from"
+      assert vite_config.content =~ "import liveVuePlugin from"
     end
 
     test "updates mix.exs aliases with set_build_path" do
@@ -140,14 +136,6 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert live_view_file.content =~ ~r/defmodule VueDemoWeb.VueDemoLive/
       assert live_view_file.content =~ ~r/v-component="VueDemo"/
       assert live_view_file.content =~ ~r/handle_event\(\"add_todo\"/
-    end
-
-    test "basic functionality works without errors" do
-      # This is a comprehensive smoke test that verifies the installer
-      # runs all the way through without any exceptions
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
     end
   end
 end
