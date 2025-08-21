@@ -48,6 +48,7 @@ defmodule Mix.Tasks.LiveVue.Install do
     |> update_mix_aliases()
     |> add_vue_demo_route()
     |> update_home_template()
+    |> fix_layout_file()
   end
 
   # Configure environments (config/dev.exs and config/prod.exs)
@@ -739,6 +740,19 @@ defmodule Mix.Tasks.LiveVue.Install do
           end
 
         content
+      end)
+    end)
+  end
+
+  defp fix_layout_file(igniter) do
+    web_module = Phoenix.web_module(igniter)
+    web_folder = Macro.underscore(web_module)
+    layout_file = Path.join(["lib", web_folder, "components", "layouts.ex"])
+    web_module_name = web_module |> Module.split() |> Enum.join(".")
+
+    Igniter.update_file(igniter, layout_file, fn source ->
+      Rewrite.Source.update(source, :content, fn content ->
+        String.replace(content, "@conn", "#{web_module_name}.Endpoint")
       end)
     end)
   end
