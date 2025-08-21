@@ -3,119 +3,50 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
   import Igniter.Test
 
   describe "live_vue.install" do
-    test "skeleton installer works" do
+    test "installs successfully with core Vue components" do
+      project = 
+        phx_test_project()
+        |> Igniter.compose_task("live_vue.install", [])
+        |> apply_igniter!()
+        
+      # Verify core Vue files are created  
+      assert project.rewrite.sources["assets/vue/index.ts"] != nil, "assets/vue/index.ts should be created"
+      assert project.rewrite.sources["assets/vue/Counter.vue"] != nil, "assets/vue/Counter.vue should be created"
+      assert project.rewrite.sources["assets/js/server.js"] != nil, "assets/js/server.js should be created"
+      
+      # Verify content contains expected LiveVue patterns
+      vue_index = project.rewrite.sources["assets/vue/index.ts"]
+      assert String.contains?(vue_index.content, "createLiveVue"), "Vue index should contain createLiveVue"
+      assert String.contains?(vue_index.content, "findComponent"), "Vue index should contain findComponent"
+      
+      counter_vue = project.rewrite.sources["assets/vue/Counter.vue"]
+      assert String.contains?(counter_vue.content, "defineProps<{count: number}>"), "Counter should have props"
+      
+      server_js = project.rewrite.sources["assets/js/server.js"]
+      assert String.contains?(server_js.content, "getRender"), "Server.js should contain getRender"
+      
+      # Verify LiveVue dependency is added
+      mix_exs = project.rewrite.sources["mix.exs"]
+      assert String.contains?(mix_exs.content, "{:live_vue,"), "Should add live_vue dependency"
+    end
+
+    test "installs successfully with bun flag" do
+      project = 
+        phx_test_project()
+        |> Igniter.compose_task("live_vue.install", ["--bun"])
+        |> apply_igniter!()
+        
+      # Verify bun dependency is added
+      mix_exs = project.rewrite.sources["mix.exs"]
+      assert String.contains?(mix_exs.content, "{:bun,"), "Should add bun dependency with --bun flag"
+    end
+
+    test "basic functionality works without errors" do
+      # This is a comprehensive smoke test that verifies the installer
+      # runs all the way through without any exceptions
       phx_test_project()
       |> Igniter.compose_task("live_vue.install", [])
       |> apply_igniter!()
-      |> assert_unchanged()
-    end
-
-    test "installer composes phoenix_vite.install" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions that phoenix_vite.install was run
-    end
-
-    test "configures environments" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for config/dev.exs and config/prod.exs
-    end
-
-    test "adds live_vue to html_helpers" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for lib/my_app_web.ex modifications
-    end
-
-    test "updates javascript configuration" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for app.js modifications
-    end
-
-    test "configures tailwind for vue" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for tailwind.config.js modifications
-    end
-
-    test "removes esbuild and tailwind deps" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for mix.exs dependency removal
-    end
-
-    test "updates mix aliases" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for mix.exs alias updates
-    end
-
-    test "removes esbuild tailwind config" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for config/config.exs cleanup
-    end
-
-    test "configures watchers" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for config/dev.exs watcher configuration
-    end
-
-    test "sets up ssr for production" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for application.ex modifications
-    end
-
-    test "adds live_vue reload to root layout" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", [])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for root.html.heex modifications
-    end
-
-    test "works with --bun flag" do
-      phx_test_project()
-      |> Igniter.compose_task("live_vue.install", ["--bun"])
-      |> apply_igniter!()
-      |> assert_unchanged()
-
-      # TODO: Add assertions for bun-specific configuration
     end
   end
 end
