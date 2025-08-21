@@ -268,7 +268,7 @@ export function useLiveForm<T extends object>(
 
   // Create debounced change handler
   const debouncedSendChanges = debounce(() => {
-    if (live && isDirty.value && changeEvent) {
+    if (live && changeEvent) {
       const data = prepareData(deepToRaw(currentValues))
       live.pushEvent(changeEvent, { [initialForm.name]: data })
     }
