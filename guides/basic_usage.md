@@ -601,6 +601,7 @@ The `~VUE` sigil is a powerful macro that compiles the string content into a ful
 
 Now that you understand the basics, you might want to explore:
 
+- [Forms and Validation](forms.md) for complex forms with server-side validation
 - [Component Reference](component_reference.md) for complete syntax documentation
 - [Configuration](configuration.md) for advanced setup and customization options
 - [Client-Side API](client_api.md) for detailed API reference and advanced patterns

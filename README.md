@@ -102,6 +102,7 @@ See [Installation](guides/installation.md).
 
 ### Core Usage
  - [Basic Usage](guides/basic_usage.md) - Fundamental patterns, ~VUE sigil, and common examples
+ - [Forms and Validation](guides/forms.md) - Complex forms with server-side validation using useLiveForm
  - [Configuration](guides/configuration.md) - Advanced setup, SSR, and customization options
 
 ### Reference
@@ -184,7 +185,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [ ] VS code extension highlighting `~VUE` sigil
 - [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
-- [ ] `useLiveForm` - an utility to efforlessly use Ecto changesets & server-side validation, similar to HEEX
+- [x] `useLiveForm` - an utility to effortlessly use Ecto changesets & server-side validation, similar to HEEX ✅ **Done!**
 - [x] **Phoenix Streams** - Full support for `stream()` operations with transparent patches ✅ **Done!**
 
 ## Credits

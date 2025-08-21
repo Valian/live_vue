@@ -185,6 +185,73 @@ const handleDrop = (event) => {
 
 For a complete working example, see [Basic Usage - File Uploads](basic_usage.md#file-uploads).
 
+### `useLiveForm(form, options)`
+
+The `useLiveForm()` composable provides comprehensive form handling with server-side validation, nested objects, and dynamic arrays. It creates a reactive form instance that synchronizes with LiveView's form state and provides type-safe field access.
+
+**Parameters:**
+
+- `form` - Reactive reference to the form data from LiveView (typically `() => props.form`)
+- `options.changeEvent` - Optional event name for sending field changes to server for validation
+- `options.submitEvent` - Event name for form submission (default: "submit")  
+- `options.debounceInMiliseconds` - Delay before sending change events (default: 300)
+- `options.prepareData` - Function to transform data before sending to server
+
+**Returns:**
+
+- `field(path)` - Get a typed field instance for the given path (e.g., "name", "user.email")
+- `fieldArray(path)` - Get an array field instance for managing dynamic lists
+- `submit()` - Submit the form to the server
+- `reset()` - Reset form to initial state
+- `isValid`, `isDirty`, `isTouched` - Reactive form state
+
+**Basic Example:**
+
+```html
+<script setup>
+import { useLiveForm } from 'live_vue'
+
+type UserForm = {
+  name: string
+  email: string  
+  skills: string[]
+}
+
+const props = defineProps<{ form: Form<UserForm> }>()
+
+const form = useLiveForm(() => props.form, {
+  changeEvent: 'validate',
+  submitEvent: 'submit'
+})
+
+// Type-safe field access
+const nameField = form.field('name')
+const skillsArray = form.fieldArray('skills')
+</script>
+
+<template>
+  <div>
+    <!-- Field with automatic validation -->
+    <input v-bind="nameField.inputAttrs.value" />
+    <div v-if="nameField.errorMessage.value">
+      {{ nameField.errorMessage.value }}
+    </div>
+
+    <!-- Dynamic array -->
+    <div v-for="(skillField, index) in skillsArray.fields.value" :key="index">
+      <input v-bind="skillField.inputAttrs.value" />
+      <button @click="skillsArray.remove(index)">Remove</button>
+    </div>
+    <button @click="skillsArray.add('')">Add Skill</button>
+
+    <!-- Form actions -->
+    <button @click="form.submit()" :disabled="!form.isValid.value">Submit</button>
+  </div>
+</template>
+```
+
+For comprehensive examples including nested objects, complex arrays, and advanced patterns, see [Forms and Validation](forms.md).
+
 ## Low-Level API
 
 While composables are recommended for most component-based use cases, you can also access the underlying hook instance for more control or for use outside of components.
@@ -660,6 +727,7 @@ useLiveEvent("data_update", (data) => console.log("Data updated:", data))
 ## Next Steps
 
 - [Basic Usage](basic_usage.md) for fundamental patterns and examples
+- [Forms and Validation](forms.md) for comprehensive form handling with useLiveForm
 - [Component Reference](component_reference.md) for LiveView-side API
 - [Configuration](configuration.md) for advanced setup options
 - [Testing](testing.md) for testing client-side code

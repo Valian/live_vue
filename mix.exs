@@ -45,6 +45,7 @@ defmodule LiveVue.MixProject do
 
           # Core Usage
           "guides/basic_usage.md": [title: "Basic Usage"],
+          "guides/forms.md": [title: "Forms and Validation"],
           "guides/configuration.md": [title: "Configuration"],
 
           # Reference
@@ -71,6 +72,7 @@ defmodule LiveVue.MixProject do
           ],
           "Core Usage": [
             "guides/basic_usage.md",
+            "guides/forms.md",
             "guides/configuration.md"
           ],
           Reference: [
@@ -136,9 +138,11 @@ defmodule LiveVue.MixProject do
       {:nodejs, "~> 3.1"},
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
-      {:floki, ">= 0.30.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.2"},
+      {:floki, ">= 0.30.0", optional: true},
+      {:ecto, "~> 3.0", optional: true},
+      {:phoenix_ecto, "~> 4.0", optional: true},
 
       # dev dependencies
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},

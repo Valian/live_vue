@@ -120,6 +120,173 @@ defimpl LiveVue.Encoder, for: [Date, Time, NaiveDateTime, DateTime] do
   end
 end
 
+defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
+  @relations [:embed, :assoc]
+
+  def encode(%Phoenix.HTML.Form{} = form, opts) do
+    LiveVue.Encoder.encode(
+      %{
+        name: form.name,
+        values: encode_form_values(form, opts),
+        errors: encode_form_errors(form) || %{},
+        valid: get_form_validity(form)
+      },
+      opts
+    )
+  end
+
+  defp get_form_validity(%{source: %{valid?: valid}}), do: valid
+  defp get_form_validity(_), do: true
+
+  if Code.ensure_loaded?(Ecto) do
+    # for changeset, we need to collect actual values from the changeset
+    # - if there are changes, we need to use changed values
+    # - if there are no changes, we should use params (possibly invalid, to reflect intermediate state)
+    # - if there are not changes and no params, we should use the data
+    # it's a bit tricky, because we need to traverse embeds and assocs
+    defp collect_changeset_values(%Ecto.Changeset{} = source) do
+      data = Map.new(source.types, fn {field, type} -> {field, get_field_value(source, field, type)} end)
+
+      result = if is_struct(source.data), do: Map.merge(source.data, data), else: data
+
+      # Filter out __meta__ field from Ecto schemas
+      Map.delete(result, :__meta__)
+    end
+
+    defp get_field_value(source, field, {tag, %{cardinality: :one}}) when tag in @relations do
+      case Map.fetch(source.changes, field) do
+        {:ok, nil} ->
+          nil
+
+        {:ok, %Ecto.Changeset{} = changeset} ->
+          collect_changeset_values(changeset)
+
+        # there are no changes underneath, so we can just use the data
+        :error ->
+          case Map.fetch!(source.data, field) do
+            %Ecto.Association.NotLoaded{} = not_loaded ->
+              raise ArgumentError, """
+              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
+              
+              Associations must be preloaded before encoding forms for LiveVue.
+              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
+              """
+            %{__meta__: _} = value -> Map.delete(value, :__meta__)
+            value -> value
+          end
+      end
+    end
+
+    defp get_field_value(source, field, {tag, %{cardinality: :many}}) when tag in @relations do
+      case Map.fetch(source.changes, field) do
+        {:ok, changesets} ->
+          Enum.map(changesets, &collect_changeset_values/1)
+
+        :error ->
+          case Map.fetch!(source.data, field) do
+            %Ecto.Association.NotLoaded{} = not_loaded ->
+              raise ArgumentError, """
+              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
+              
+              Associations must be preloaded before encoding forms for LiveVue.
+              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
+              """
+            [%{__meta__: _} | _] = value -> Enum.map(value, &Map.delete(&1, :__meta__))
+            value -> value
+          end
+      end
+    end
+
+    defp get_field_value(source, field, _type) do
+      Phoenix.HTML.FormData.Ecto.Changeset.input_value(source, %{params: source.params}, field)
+    end
+
+    def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset, source: source}, opts) do
+      source |> collect_changeset_values() |> LiveVue.Encoder.encode(opts)
+    end
+  end
+
+  # Fallback for other form implementations (like to_form backed by maps)
+  def encode_form_values(form, opts) do
+    base_values =
+      form.hidden
+      |> Map.new()
+      |> Map.merge(form.data)
+      |> Map.merge(Map.new(form.params))
+
+    # For non-changeset forms, we don't have type information for embeds
+    # so just encode the values as-is
+    LiveVue.Encoder.encode(base_values, opts)
+  end
+
+  if Code.ensure_loaded?(Ecto) do
+    defp collect_changeset_errors(%Ecto.Changeset{} = changeset) do
+      # Collect direct errors from this changeset
+      errors = translate_errors(changeset.errors)
+
+      # Collect errors from nested embedded changesets
+      Enum.reduce(changeset.changes, errors, fn {field, value}, acc ->
+        case Map.get(changeset.types, field) do
+          {tag, %{cardinality: :one}} when tag in @relations ->
+            # Single embedded changeset
+            embed_errors = collect_changeset_errors(value)
+            if embed_errors == %{}, do: acc, else: Map.put(acc, field, embed_errors)
+
+          {tag, %{cardinality: :many}} when tag in @relations ->
+            # List of embedded changesets
+            list_errors =
+              Enum.map(value, fn embed_changeset ->
+                embed_errors = collect_changeset_errors(embed_changeset)
+                if embed_errors == %{}, do: nil, else: embed_errors
+              end)
+
+            # Only include the field if there are any errors in the list
+            if Enum.all?(list_errors, &is_nil/1), do: acc, else: Map.put(acc, field, list_errors)
+
+          _ ->
+            acc
+        end
+      end)
+    end
+
+    def encode_form_errors(%{impl: Phoenix.HTML.FormData.Ecto.Changeset} = form) do
+      collect_changeset_errors(form.source)
+    end
+  end
+
+  # Fallback for other form implementations (like test mocks)
+  def encode_form_errors(form) do
+    translate_errors(form.errors)
+  end
+
+  defp translate_errors(errors) do
+    Map.new(errors, fn {field, error} -> {field, error |> List.wrap() |> Enum.map(&translate_error/1)} end)
+  end
+
+  defp translate_error({msg, opts}) do
+    backend = Application.get_env(:live_vue, :gettext_backend, nil)
+    count = opts[:count]
+
+    cond do
+      backend == nil or not Code.ensure_loaded?(Gettext) ->
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
+
+      count != nil and Code.ensure_loaded?(Gettext) ->
+        apply(Gettext, :dngettext, [backend, "errors", msg, msg, count, opts])
+
+      Code.ensure_loaded?(Gettext) ->
+        apply(Gettext, :dgettext, [backend, "errors", msg, opts])
+
+      true ->
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
+    end
+  end
+end
+
 # Default implementation for structs - convert to map and encode recursively
 defimpl LiveVue.Encoder, for: Any do
   defmacro __deriving__(module, struct, opts) do
