@@ -119,7 +119,6 @@ defmodule Mix.Tasks.LiveVue.Install do
     |> create_vue_files()
     |> setup_ssr_for_production(app_name)
     |> update_mix_aliases()
-    |> Igniter.Mix.Task.configure_and_run("phoenix_vite.install", igniter.args.argv)
   end
 
   # Configure environments (config/dev.exs and config/prod.exs)
