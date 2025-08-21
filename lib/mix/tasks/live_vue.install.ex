@@ -226,6 +226,7 @@ defmodule Mix.Tasks.LiveVue.Install do
 
     igniter
     |> Igniter.mkdir("assets/vue")
+    |> Igniter.mkdir("lib/#{web_folder}/live")
     |> Igniter.create_new_file("assets/vue/index.ts", vue_index_content())
     |> Igniter.create_new_file("assets/vue/VueDemo.vue", demo_vue_content())
     |> Igniter.create_new_file("assets/js/server.js", server_js_content())
@@ -233,7 +234,6 @@ defmodule Mix.Tasks.LiveVue.Install do
       "assets/vue/.gitignore",
       "# Ignore automatically generated Vue files by the ~V sigil\n_build/"
     )
-    |> Igniter.mkdir("lib/#{web_folder}/live")
     |> Igniter.create_new_file("lib/#{web_folder}/live/vue_demo_live.ex", demo_live_view_content(igniter))
     |> update_tsconfig_for_vue()
   end
@@ -629,6 +629,7 @@ defmodule Mix.Tasks.LiveVue.Install do
   defp add_vue_demo_route(igniter) do
     web_module = Phoenix.web_module(igniter)
     web_folder = Macro.underscore(web_module)
+    web_module_name = web_module |> Module.split() |> Enum.join(".")
     router_file = Path.join(["lib", web_folder, "router.ex"])
 
     Igniter.update_file(igniter, router_file, fn source ->
@@ -637,7 +638,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           ~r/(live_dashboard\("[^"]*", [^)]*\))/,
-          "\\1\n      live \"/vue_demo\", VueDemoLive)"
+          "\\1\n      live \"/vue_demo\", #{web_module_name}.VueDemoLive"
         )
       end)
     end)

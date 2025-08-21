@@ -93,7 +93,18 @@ LiveVue allows to create hybrid apps, where part of the session state is on the 
 
 ## Installation
 
-See [Installation](guides/installation.md).
+**New project:**
+```bash
+mix archive.install hex igniter_new
+mix igniter.new my_app --with phx.new --install live_vue
+```
+
+**Existing project:**
+```bash
+mix igniter.install live_vue
+```
+
+For detailed installation instructions, see the [Installation Guide](guides/installation.md).
 
 ## Guides
 
@@ -183,7 +194,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
 - [x] shared props automatically included in all components
 - [ ] VS code extension highlighting `~VUE` sigil
-- [ ] try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project
+- [x] ~~try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project~~ ✅ **Done!**
 - [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [x] `useLiveForm` - an utility to effortlessly use Ecto changesets & server-side validation, similar to HEEX ✅ **Done!**
 - [x] **Phoenix Streams** - Full support for `stream()` operations with transparent patches ✅ **Done!**

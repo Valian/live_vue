@@ -107,7 +107,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert router_file != nil, "Router file should exist"
 
       # Check for vue_demo route in dev section
-      assert String.contains?(router_file.content, "live(\"/vue_demo\", VueDemoLive)"),
+      assert String.contains?(router_file.content, "live \"/vue_demo\", TestWeb.VueDemoLive"),
              "Should add vue_demo route to dev section"
     end
 
@@ -137,16 +137,17 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
     test "creates VueDemo LiveView file" do
       project =
-        phx_test_project()
+        [app_name: :vue_demo]
+        |> phx_test_project()
         |> Igniter.compose_task("live_vue.install", [])
         |> apply_igniter!()
 
       # Check if VueDemo LiveView was created
-      live_view_file = project.rewrite.sources["lib/test_web/live/vue_demo_live.ex"]
+      live_view_file = project.rewrite.sources["lib/vue_demo_web/live/vue_demo_live.ex"]
       assert live_view_file != nil, "VueDemo LiveView file should be created"
 
       # Check for LiveView content
-      assert String.contains?(live_view_file.content, "defmodule TestWeb.VueDemoLive"),
+      assert String.contains?(live_view_file.content, "defmodule VueDemoWeb.VueDemoLive"),
              "Should define VueDemoLive module"
 
       assert String.contains?(live_view_file.content, "v-component=\"VueDemo\""),
