@@ -49,6 +49,8 @@ jobs:
       - name: Install dependencies
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
+      - name: Install phx_new
+        run: mix archive.install hex phx_new 1.8.0 --force
       - name: Compile application
         run: mix compile
       - name: Run tests
