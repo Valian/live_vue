@@ -17,10 +17,79 @@ defmodule Mix.Tasks.LiveVue.Install do
   """
   use Igniter.Mix.Task
 
-  # Read template files at compile time
-  @vue_index_content File.read!(Path.join([__DIR__, "..", "..", "..", "assets", "copy", "vue", "index.ts"]))
-  @counter_vue_content File.read!(Path.join([__DIR__, "..", "..", "..", "assets", "copy", "vue", "Counter.vue"]))
-  @server_js_content File.read!(Path.join([__DIR__, "..", "..", "..", "assets", "copy", "js", "server.js"]))
+  # Template file contents
+  @vue_index_content """
+  // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
+  import "vite/modulepreload-polyfill"
+  import { Component, h } from "vue"
+  import { createLiveVue, findComponent, type LiveHook, type ComponentMap } from "live_vue"
+
+  // needed to make $live available in the Vue component
+  declare module "vue" {
+    interface ComponentCustomProperties {
+      $live: LiveHook
+    }
+  }
+
+  export default createLiveVue({
+    // name will be passed as-is in v-component of the .vue HEEX component
+    resolve: name => {
+      // we're importing from ../../lib to allow collocating Vue files with LiveView files
+      // eager: true disables lazy loading - all these components will be part of the app.js bundle
+      // more: https://vite.dev/guide/features.html#glob-import
+      const components = {
+        ...import.meta.glob("./**/*.vue", { eager: true }),
+        ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
+      } as ComponentMap
+
+      // finds component by name or path suffix and gives a nice error message.
+      // `path/to/component/index.vue` can be found as `path/to/component` or simply `component`
+      // `path/to/Component.vue` can be found as `path/to/Component` or simply `Component`
+      return findComponent(components as ComponentMap, name)
+    },
+    // it's a default implementation of creating and mounting vue app, you can easily extend it to add your own plugins, directives etc.
+    setup: ({ createApp, component, props, slots, plugin, el }) => {
+      const app = createApp({ render: () => h(component as Component, props, slots) })
+      app.use(plugin)
+      // add your own plugins here
+      // app.use(pinia)
+      app.mount(el)
+      return app
+    },
+  })
+  """
+
+  @counter_vue_content """
+  <script setup lang="ts">
+    import {ref} from "vue"
+    const props = defineProps<{count: number}>()
+    const emit = defineEmits<{inc: [{value: number}]}>()
+    const diff = ref<string>("1")
+  </script>
+
+  <template>
+    Current count
+    <div class="text-2xl text-bold">{{ props.count }}</div>
+    <label class="block mt-8">Diff: </label>
+    <input v-model="diff" class="mt-4" type="range" min="1" max="10">
+
+    <button
+      @click="emit('inc', {value: parseInt(diff)})"
+      class="mt-4 bg-black text-white rounded p-2 block">
+      Increase counter by {{ diff }}
+    </button>
+  </template>
+  """
+
+  @server_js_content """
+  import components from "../vue"
+  import { getRender, loadManifest } from "live_vue/server"
+
+  // present only in prod build. Returns empty obj if doesn't exist
+  // used to render preload links
+  const manifest = loadManifest("../priv/vue/.vite/ssr-manifest.json")
+  export const render = getRender(components, manifest)
+  """
 
   @impl Igniter.Mix.Task
   def info(_argv, _parent) do
@@ -211,8 +280,8 @@ defmodule Mix.Tasks.LiveVue.Install do
   defp update_vite_plugins(content) do
     String.replace(
       content,
-      "plugins: [tailwindcss()]",
-      "plugins: [tailwindcss(), vue(), liveVuePlugin()]"
+      ~r/phoenixVitePlugin({\s*pattern: \/\.(ex|heex)$\/\s*})/,
+      "tailwindcss(),\n    vue(),\n    liveVuePlugin()"
     )
   end
 
@@ -235,42 +304,30 @@ defmodule Mix.Tasks.LiveVue.Install do
 
   # Update package.json for Vue dependencies
   defp update_package_json_for_vue(igniter) do
-    case Igniter.exists?(igniter, "assets/package.json") do
-      true ->
-        Igniter.update_file(igniter, "assets/package.json", fn source ->
-          Rewrite.Source.update(source, :content, fn content ->
-            case Jason.decode(content) do
-              {:ok, decoded} ->
-                # Add Vue dependencies
-                dependencies =
-                  Map.get(decoded, "dependencies", %{})
-                  |> Map.put("live_vue", "file:../deps/live_vue")
-                  |> Map.put("vue", "^3.4.21")
+    Igniter.update_file(igniter, "assets/package.json", fn source ->
+      Rewrite.Source.update(source, :content, fn content ->
+        decoded = Jason.decode!(content)
+        # Add Vue dependencies
+        dependencies =
+          Map.get(decoded, "dependencies", %{})
+          |> Map.put("live_vue", "file:../deps/live_vue")
+          |> Map.put("vue", "^3.4.21")
 
-                # Add Vue dev dependencies
-                dev_dependencies =
-                  Map.get(decoded, "devDependencies", %{})
-                  |> Map.put("@vitejs/plugin-vue", "^5.0.4")
-                  |> Map.put("typescript", "^5.4.5")
-                  |> Map.put("vue-tsc", "^2.0.13")
+        # Add Vue dev dependencies
+        dev_dependencies =
+          Map.get(decoded, "devDependencies", %{})
+          |> Map.put("@vitejs/plugin-vue", "^5.0.4")
+          |> Map.put("typescript", "^5.4.5")
+          |> Map.put("vue-tsc", "^2.0.13")
 
-                updated =
-                  decoded
-                  |> Map.put("dependencies", dependencies)
-                  |> Map.put("devDependencies", dev_dependencies)
+        updated =
+          decoded
+          |> Map.put("dependencies", dependencies)
+          |> Map.put("devDependencies", dev_dependencies)
 
-                Jason.encode!(updated, pretty: true)
-
-              {:error, _} ->
-                # If JSON parsing fails, return content as is
-                content
-            end
-          end)
-        end)
-
-      false ->
-        igniter
-    end
+        Jason.encode!(updated, pretty: true)
+      end)
+    end)
   end
 
   # Create Vue files from templates
@@ -288,78 +345,69 @@ defmodule Mix.Tasks.LiveVue.Install do
   end
 
   defp update_tsconfig_for_vue(igniter) do
-    case Igniter.exists?(igniter, "assets/tsconfig.json") do
-      true ->
-        Igniter.update_file(igniter, "assets/tsconfig.json", fn source ->
-          Rewrite.Source.update(source, :content, fn content ->
-            case Jason.decode(content) do
-              {:ok, decoded} ->
-                # Update compiler options
-                compiler_options =
-                  Map.get(decoded, "compilerOptions", %{})
-                  |> Map.put("module", "ESNext")
-                  |> Map.put("types", ["vite/client"])
-                  |> Map.put("moduleResolution", "bundler")
-                  |> Map.put("strict", true)
+    Igniter.update_file(igniter, "assets/tsconfig.json", fn source ->
+      Rewrite.Source.update(source, :content, fn content ->
+        # Split the content by lines that start with "//"
+        {commented, uncommented} =
+          content
+          |> String.split(~r/\R/)
+          |> Enum.split_with(&String.starts_with?(&1, "//"))
 
-                # Update include array
-                include =
-                  Map.get(decoded, "include", [])
-                  |> Enum.concat(["vue/**/*"])
-                  |> Enum.uniq()
+        # Parse the uncommented lines (i.e., the actual JSON)
+        decoded = uncommented |> Enum.join("\n") |> Jason.decode!()
 
-                updated =
-                  decoded
-                  |> Map.put("compilerOptions", compiler_options)
-                  |> Map.put("include", include)
+        # Update compiler options
+        compiler_options =
+          Map.get(decoded, "compilerOptions", %{})
+          |> Map.put("module", "ESNext")
+          |> Map.put("types", ["vite/client"])
+          |> Map.put("moduleResolution", "bundler")
+          |> Map.put("strict", true)
 
-                Jason.encode!(updated, pretty: true)
+        # Update include array
+        include =
+          Map.get(decoded, "include", [])
+          |> Enum.concat(["vue/**/*"])
+          |> Enum.uniq()
 
-              {:error, _} ->
-                # If JSON parsing fails, return content as is
-                content
-            end
-          end)
-        end)
+        updated =
+          decoded
+          |> Map.put("compilerOptions", compiler_options)
+          |> Map.put("include", include)
 
-      false ->
-        igniter
-    end
+        result = Jason.encode!(updated, pretty: true)
+        Enum.join(commented, "\n") <> "\n" <> result
+      end)
+    end)
   end
 
   # Setup SSR for production in application.ex
   defp setup_ssr_for_production(igniter, _app_name) do
-    app_module = Igniter.Project.Application.app_module(igniter)
+    app_module = Igniter.Project.Application.app_name(igniter) |> to_string()
     app_file = "lib/#{Macro.underscore(app_module)}/application.ex"
 
-    case Igniter.exists?(igniter, app_file) do
-      true ->
-        Igniter.update_elixir_file(igniter, app_file, fn zipper ->
-          with {:ok, zipper} <- Igniter.Code.Module.move_to_defmodule(zipper, app_module),
-               {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper) do
-            case Igniter.Code.Function.move_to_function_call_in_current_scope(
-                   zipper,
-                   :def,
-                   [2],
-                   fn call ->
-                     Igniter.Code.Function.argument_equals?(call, 0, :start)
-                   end
-                 ) do
+    Igniter.update_elixir_file(igniter, app_file, fn zipper ->
+      with {:ok, zipper} <- Igniter.Code.Module.move_to_defmodule(zipper, app_module),
+           {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper) do
+        case Igniter.Code.Function.move_to_function_call_in_current_scope(
+               zipper,
+               :def,
+               [2],
+               fn call ->
+                 Igniter.Code.Function.argument_equals?(call, 0, :start)
+               end
+             ) do
+          {:ok, zipper} ->
+            case Igniter.Code.Common.move_to_do_block(zipper) do
               {:ok, zipper} ->
-                case Igniter.Code.Common.move_to_do_block(zipper) do
+                case Igniter.Code.Common.move_to_cursor_match_in_scope(zipper, "children = [") do
                   {:ok, zipper} ->
-                    case Igniter.Code.Common.move_to_cursor_match_in_scope(zipper, "children = [") do
-                      {:ok, zipper} ->
-                        {:ok,
-                         Igniter.Code.Common.add_code(
-                           zipper,
-                           "{NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},",
-                           :after
-                         )}
-
-                      :error ->
-                        {:ok, zipper}
-                    end
+                    {:ok,
+                     Igniter.Code.Common.add_code(
+                       zipper,
+                       "{NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},",
+                       :after
+                     )}
 
                   :error ->
                     {:ok, zipper}
@@ -368,13 +416,13 @@ defmodule Mix.Tasks.LiveVue.Install do
               :error ->
                 {:ok, zipper}
             end
-          else
-            _ -> {:ok, zipper}
-          end
-        end)
 
-      false ->
-        igniter
-    end
+          :error ->
+            {:ok, zipper}
+        end
+      else
+        _ -> {:ok, zipper}
+      end
+    end)
   end
 end

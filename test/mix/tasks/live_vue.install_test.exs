@@ -25,9 +25,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       server_js = project.rewrite.sources["assets/js/server.js"]
       assert String.contains?(server_js.content, "getRender"), "Server.js should contain getRender"
       
-      # Verify LiveVue dependency is added
-      mix_exs = project.rewrite.sources["mix.exs"]
-      assert String.contains?(mix_exs.content, "{:live_vue,"), "Should add live_vue dependency"
+      # Note: LiveVue dependency is automatically added by igniter.install script
     end
 
     test "installs successfully with bun flag" do
