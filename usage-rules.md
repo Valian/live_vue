@@ -351,6 +351,9 @@ const bioField = form.field('profile.bio')
 const tagsArray = form.fieldArray('tags')
 const skillsArray = form.fieldArray('profile.skills')
 
+// Nested array fields are also supported
+const firstSkillNameField = form.field('profile.skills[0].name')
+
 // Field operations
 const addTag = () => tagsArray.add('')
 const removeTag = (index) => tagsArray.remove(index)
@@ -377,30 +380,6 @@ const removeTag = (index) => tagsArray.remove(index)
     Submit
   </button>
   <button @click="form.reset()">Reset</button>
-</template>
-```
-
-### Field Injection for Reusable Components
-
-**Use** `useField()` and `useArrayField()` in child components:
-
-```vue
-<!-- TextInput.vue -->
-<script setup>
-import { useField } from 'live_vue'
-
-const props = defineProps<{ path: string }>()
-const field = useField(props.path)
-</script>
-
-<template>
-  <input
-    v-bind="field.inputAttrs.value"
-    :class="{ error: field.isTouched.value && field.errorMessage.value }"
-  />
-  <div v-if="field.errorMessage.value" class="error-message">
-    {{ field.errorMessage.value }}
-  </div>
 </template>
 ```
 
@@ -434,34 +413,33 @@ interface FormField<T> {
   field(key): FormField           // Access nested object field
   fieldArray(key): FormFieldArray // Access nested array field
 }
-```
 
-### Array Field Operations
+interface FormFieldArray<T> extends FormField<T[]> {
+  // Array-specific methods
+  add: (item?: Partial<T>) => void
+  remove: (index: number) => void
+  move: (from: number, to: number) => void
 
-Array fields provide additional methods for manipulation:
+  // Reactive array of field instances for iteration
+  fields: Readonly<Ref<FormField<T>[]>>
+}
 
-```vue
-<script setup>
-const membersArray = form.fieldArray('team_members')
+interface UseLiveFormReturn<T extends object> {
+  // Form-level state
+  isValid: Ref<boolean>
+  isDirty: Ref<boolean>
+  isTouched: Ref<boolean>
+  submitCount: Readonly<Ref<number>>
+  initialValues: Readonly<Ref<T>>
 
-// Array operations
-const addMember = () => membersArray.add({ name: '', email: '' })
-const removeMember = (index) => membersArray.remove(index)
-const moveMember = (from, to) => membersArray.move(from, to)
+  // Type-safe field factory functions
+  field(key): FormField
+  fieldArray(key): FormFieldArray
 
-// Access individual array items
-const firstMember = membersArray.field(0)           // or membersArray.field('[0]')
-const firstMemberName = membersArray.field('[0].name')
-</script>
-
-<template>
-  <!-- Iterate over array fields -->
-  <div v-for="(memberField, index) in membersArray.fields.value" :key="index">
-    <input v-bind="memberField.field('name').inputAttrs.value" />
-    <input v-bind="memberField.field('email').inputAttrs.value" />
-    <button @click="removeMember(index)">Remove</button>
-  </div>
-</template>
+  // Form actions
+  submit: () => Promise<void>
+  reset: () => void
+}
 ```
 
 ### Server-Side Form Setup

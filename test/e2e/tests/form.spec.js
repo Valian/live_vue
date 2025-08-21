@@ -24,10 +24,6 @@ test.describe("useLiveForm E2E Tests", () => {
     const nameInput = page.locator("[data-pw-name-input]")
     const emailInput = page.locator("[data-pw-email-input]")
 
-    // Debug: Check initial input values
-    console.log("Initial name value:", await nameInput.inputValue())
-    console.log("Initial email value:", await emailInput.inputValue())
-
     // Fill name field (but not enough characters) - use type instead of fill
     await nameInput.type("A")
     await nameInput.blur()

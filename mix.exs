@@ -45,6 +45,7 @@ defmodule LiveVue.MixProject do
 
           # Core Usage
           "guides/basic_usage.md": [title: "Basic Usage"],
+          "guides/forms.md": [title: "Forms and Validation"],
           "guides/configuration.md": [title: "Configuration"],
 
           # Reference
@@ -71,6 +72,7 @@ defmodule LiveVue.MixProject do
           ],
           "Core Usage": [
             "guides/basic_usage.md",
+            "guides/forms.md",
             "guides/configuration.md"
           ],
           Reference: [
