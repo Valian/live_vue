@@ -140,6 +140,8 @@ defmodule LiveVue.MixProject do
       {:phoenix_live_view, ">= 0.18.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.2"},
+      {:igniter, "~> 0.6", optional: true},
+      {:phoenix_vite, "~> 0.3"},
       {:floki, ">= 0.30.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
