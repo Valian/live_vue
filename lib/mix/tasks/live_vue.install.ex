@@ -42,6 +42,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> add_live_vue_to_html_helpers(app_name)
       |> update_javascript_configuration()
       |> update_vite_configuration()
+      |> update_phoenix_vite_config()
       |> configure_tailwind_for_vue()
       |> update_package_json_for_vue()
       |> create_vue_files()
@@ -50,6 +51,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> add_vue_demo_route()
       |> update_home_template()
       |> fix_layout_file()
+      |> update_gitignore()
     end
 
     # Configure environments (config/dev.exs and config/prod.exs)
@@ -117,6 +119,16 @@ defmodule Mix.Tasks.LiveVue.Install do
         content,
         "hooks: {...colocatedHooks},",
         "hooks: {...colocatedHooks, ...getHooks(liveVueApp)},"
+      )
+    end
+
+    defp update_phoenix_vite_config(igniter) do
+      Config.configure(
+        igniter,
+        "config.exs",
+        :phoenix_vite,
+        [PhoenixVite.Npm, :assets],
+        {:code, Sourceror.parse_string!(~s|[args: [], cd: __DIR__]|)}
       )
     end
 
@@ -220,30 +232,34 @@ defmodule Mix.Tasks.LiveVue.Install do
     # Update package.json for Vue dependencies
     defp update_package_json_for_vue(igniter) do
       igniter
-      |> Igniter.rm("assets/package.json")
-      |> Igniter.create_new_file("package.json", """
-      {
-        "dependencies": {
-          "@vueuse/core": "^13.7.0",
-          "live_vue": "file:./deps/live_vue",
-          "phoenix": "file:./deps/phoenix",
-          "phoenix_html": "file:./deps/phoenix_html",
-          "phoenix_live_view": "file:./deps/phoenix_live_view",
-          "topbar": "^3.0.0",
-          "vue": "^3.4.21"
-        },
-        "devDependencies": {
-          "@tailwindcss/vite": "^4.1.0",
-          "@vitejs/plugin-vue": "^5.0.4",
-          "daisyui": "^5.0.0",
-          "phoenix_vite": "file:./deps/phoenix_vite",
-          "tailwindcss": "^4.1.0",
-          "typescript": "^5.4.5",
-          "vite": "^6.3.0",
-          "vue-tsc": "^2.0.13"
-        }
-      }
-      """)
+      |> Igniter.move_file("assets/package.json", "package.json")
+      |> Igniter.update_file("package.json", fn source ->
+        Rewrite.Source.update(source, :content, fn _ ->
+          """
+          {
+            "dependencies": {
+              "@vueuse/core": "^13.7.0",
+              "live_vue": "file:./deps/live_vue",
+              "phoenix": "file:./deps/phoenix",
+              "phoenix_html": "file:./deps/phoenix_html",
+              "phoenix_live_view": "file:./deps/phoenix_live_view",
+              "topbar": "^3.0.0",
+              "vue": "^3.4.21"
+            },
+            "devDependencies": {
+              "@tailwindcss/vite": "^4.1.0",
+              "@vitejs/plugin-vue": "^5.0.4",
+              "daisyui": "^5.0.0",
+              "phoenix_vite": "file:./deps/phoenix_vite",
+              "tailwindcss": "^4.1.0",
+              "typescript": "^5.4.5",
+              "vite": "^6.3.0",
+              "vue-tsc": "^2.0.13"
+            }
+          }
+          """
+        end)
+      end)
     end
 
     # Create Vue files from templates
@@ -676,63 +692,16 @@ defmodule Mix.Tasks.LiveVue.Install do
       Igniter.update_file(igniter, "mix.exs", fn source ->
         Rewrite.Source.update(source, :content, fn content ->
           # Check if set_build_path function already exists
-          content =
-            if String.contains?(content, "defp set_build_path") do
-              content
-            else
-              # Add the set_build_path function at the end of the module (before final end)
-              String.replace(
-                content,
-                ~r/(\nend\s*$)/,
-                ~s{\n  defp set_build_path(_args) do\n    System.put_env("MIX_BUILD_PATH", System.get_env("MIX_BUILD_PATH") || Mix.Project.build_path())\n  end\\1}
-              )
-            end
-
-          # Update assets.build alias to include set_build_path
-          content =
-            if String.contains?(content, "&set_build_path/1") and String.contains?(content, "assets.build") do
-              content
-            else
-              String.replace(
-                content,
-                ~r/("assets\.build": \[)"([^"]+)"/,
-                "\\1&set_build_path/1, \"\\2\""
-              )
-            end
-
-          # Add or update phx.server alias
-          content =
-            if String.contains?(content, "\"phx.server\"") and String.contains?(content, "&set_build_path/1") do
-              content
-            else
-              if String.contains?(content, "\"phx.server\":") do
-                # Update existing phx.server alias
-                String.replace(
-                  content,
-                  ~r/"phx\.server": .+/,
-                  ~s("phx.server": [&set_build_path/1, "phx.server"])
-                )
-              else
-                # Add new phx.server alias before the closing bracket of aliases
-                # Look for the pattern where aliases ends
-                if String.contains?(content, "precommit:") do
-                  String.replace(
-                    content,
-                    ~r/(precommit: \[.*?\])/s,
-                    ~s(\\1,\n      "phx.server": [&set_build_path/1, "phx.server"])
-                  )
-                else
-                  # Fallback: add before the end of aliases block
-                  String.replace(
-                    content,
-                    ~r/(\s+)(\]\s*\n\s+end)/,
-                    ~s(\\1"phx.server": [&set_build_path/1, "phx.server"],\n\\1\\2)
-                  )
-                end
-              end
-            end
-
-          content
+          if String.contains?(content, "js/server.js") do
+            content
+          else
+            # Add the set_build_path function at the end of the module (before final end)
+            String.replace(
+              content,
+              ~s("phoenix_vite.npm vite build"),
+              ~s("phoenix_vite.npm vite build --manifest", "phoenix_vite.npm vite build --ssr js/server.js --outDir ../priv/static --ssrManifest")
+            )
+          end
         end)
       end)
     end
@@ -746,6 +715,14 @@ defmodule Mix.Tasks.LiveVue.Install do
       Igniter.update_file(igniter, layout_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
           String.replace(content, "@conn", "#{web_module_name}.Endpoint")
+        end)
+      end)
+    end
+
+    defp update_gitignore(igniter) do
+      Igniter.update_file(igniter, ".gitignore", fn source ->
+        Rewrite.Source.update(source, :content, fn content ->
+          String.replace(content, "/assets/node_modules", "node_modules")
         end)
       end)
     end

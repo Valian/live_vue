@@ -26,6 +26,10 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert web_file.content =~ "use LiveVue"
       assert web_file.content =~ "use LiveVue.Components"
 
+      # Check if config.exs was updated
+      config_exs = project.rewrite.sources["config/config.exs"]
+      assert config_exs.content =~ ~r/\[args: \[\], cd: __DIR__\]/
+
       # Check if Vite config was updated
       vite_config = project.rewrite.sources["assets/vite.config.mjs"]
       assert vite_config.content =~ "vue()"
@@ -54,12 +58,9 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       # Check if mix.exs was updated
       mix_exs = project.rewrite.sources["mix.exs"]
-      assert mix_exs.content =~ ~r/defp set_build_path/
-      assert mix_exs.content =~ ~r/System.put_env\(\"MIX_BUILD_PATH"/
-
-      # Check for updated aliases
-      assert mix_exs.content =~ ~r/"assets.build": \[&set_build_path\/1,/
-      assert mix_exs.content =~ ~s("phx.server": [&set_build_path/1, "phx.server"])
+      assert mix_exs.content =~ ~r/phoenix_vite.npm root install/
+      assert mix_exs.content =~ ~r/build --manifest/
+      assert mix_exs.content =~ ~r/build --ssr js\/server\.js --outDir \.\.\/priv\/static --ssrManifest/
 
       # Check for vue_demo route in dev section
       router_file = project.rewrite.sources["lib/test_web/router.ex"]

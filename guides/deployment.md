@@ -138,7 +138,7 @@ apt-get install -y nodejs
 1. **SSR Not Working**
    - Verify Node.js installation
    - Check SSR configuration (see [Configuration](configuration.md#ssr-troubleshooting))
-   - Ensure server bundle exists in `priv/vue/server.js`
+   - Ensure server bundle exists in `priv/static/server.mjs`
 
 2. **Asset Loading Issues**
    - Verify assets were built

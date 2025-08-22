@@ -311,7 +311,7 @@ children = [
 
 **Verify server bundle exists:**
 ```bash
-ls priv/vue/server.js  # Should exist after build
+ls priv/static/server.mjs  # Should exist after build
 ```
 
 For production SSR setup details, see [Configuration](configuration.md#production-ssr-setup).

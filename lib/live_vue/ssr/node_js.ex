@@ -10,7 +10,7 @@ defmodule LiveVue.SSR.NodeJS do
   @behaviour LiveVue.SSR
 
   def render(name, props, slots) do
-    filename = Application.get_env(:live_vue, :ssr_filepath, "./vue/server.js")
+    filename = Application.get_env(:live_vue, :ssr_filepath, "./static/server.mjs")
 
     try do
       NodeJS.call!({filename, "render"}, [name, props, slots],
