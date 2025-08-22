@@ -140,11 +140,18 @@ import { ref, computed, type ComputedRef } from "vue"
 
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait?: number
 ): {
   debouncedFn: (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
   isPending: ComputedRef<boolean>
 } => {
+  if (!wait || wait <= 0) {
+    return {
+      debouncedFn: func,
+      isPending: computed(() => false),
+    }
+  }
+
   let timeout: ReturnType<typeof setTimeout> | null = null
   let executingCount = 0
   let pendingResolvers: Array<{

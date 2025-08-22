@@ -265,33 +265,19 @@ export function useLiveForm<T extends object>(
   const live = useLiveVue()
 
   // Immediate change handler
-  const sendChanges = async (values?: T): Promise<any> => {
-    if (live && changeEvent) {
-      try {
-        values = values || deepToRaw(currentValues)
-        const data = prepareData(values)
-        return await live.pushEvent(changeEvent, { [initialForm.name]: data })
-      } finally {
-        // Request completed
-      }
+  const sendChanges = async (): Promise<any> => {
+    if (changeEvent) {
+      const values = deepToRaw(currentValues)
+      const data = prepareData(values)
+      return await live.pushEvent(changeEvent, { [initialForm.name]: data })
     } else {
       return Promise.resolve()
     }
   }
 
   // Create debounced change handler with validation status
-  let debouncedSendChanges: (value?: T) => Promise<any>
-  let isValidatingChanges: ComputedRef<boolean>
-
-  // Only enable debouncing if there's a changeEvent configured and debounce time is set
-  if (changeEvent && debounceInMiliseconds && debounceInMiliseconds > 0) {
-    const { debouncedFn, isPending } = debounce(sendChanges, debounceInMiliseconds)
-    debouncedSendChanges = debouncedFn
-    isValidatingChanges = isPending
-  } else {
-    debouncedSendChanges = sendChanges
-    isValidatingChanges = computed(() => false)
-  }
+  const debounceWait = live && changeEvent ? debounceInMiliseconds : 0
+  const { debouncedFn: debouncedSendChanges, isPending: isValidatingChanges } = debounce(sendChanges, debounceWait)
 
   // Create a form field for a given path
   function createFormField<V>(path: string): FormField<V> {
