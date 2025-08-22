@@ -107,7 +107,7 @@ defmodule LiveVue do
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
-      |> Map.put(:props_diff, Enum.map(props_diff, &compress_diff/1))
+      |> Map.put(:props_diff, prepare_diff(props_diff))
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
@@ -281,8 +281,11 @@ defmodule LiveVue do
 
   # we compress the diff to make it smaller, so it's faster to send to the client
   # then, it's decompressed on the client side
-  defp compress_diff(%{op: op, path: path, value: value}), do: [op, path, value]
-  defp compress_diff(%{op: op, path: path}), do: [op, path]
+  defp prepare_diff(data, acc \\ [])
+  # We add a random test operation to ensure we never have the same diff as before
+  defp prepare_diff([], acc), do: [[:test, "", :rand.uniform(10_000_000)] | acc]
+  defp prepare_diff([%{op: op, path: p, value: value} | rest], acc), do: prepare_diff(rest, [[op, p, value] | acc])
+  defp prepare_diff([%{op: op, path: p} | rest], acc), do: prepare_diff(rest, [[op, p] | acc])
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, %{}, fn {key, value}, acc ->
