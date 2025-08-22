@@ -12,6 +12,7 @@ import {
   type MaybeRefOrGetter,
   type InjectionKey,
   readonly,
+  ComputedRef,
 } from "vue"
 import { useLiveVue } from "./use"
 import {
@@ -154,7 +155,6 @@ export interface FormField<T> {
     Ref<{
       value: T
       onInput: (event: Event) => void
-      onFocus: () => void
       onBlur: () => void
       name: string
       id: string
@@ -168,15 +168,14 @@ export interface FormField<T> {
   fieldArray<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Field actions
-  focus: () => void // Sets as currently editing, auto-marks as touched
   blur: () => void // Unsets as currently editing
 }
 
 export interface FormFieldArray<T> extends Omit<FormField<T[]>, "field" | "fieldArray"> {
   // Array-specific methods
-  add: (item?: Partial<T>) => void
-  remove: (index: number) => void
-  move: (from: number, to: number) => void
+  add: (item?: Partial<T>) => Promise<any>
+  remove: (index: number) => Promise<any>
+  move: (from: number, to: number) => Promise<any>
 
   // Reactive array of field instances for iteration
   fields: Readonly<Ref<FormField<T>[]>>
@@ -191,6 +190,7 @@ export interface UseLiveFormReturn<T extends object> {
   isValid: Ref<boolean>
   isDirty: Ref<boolean>
   isTouched: Ref<boolean>
+  isValidating: Readonly<Ref<boolean>>
   submitCount: Readonly<Ref<number>>
   initialValues: Readonly<Ref<T>>
 
@@ -224,9 +224,7 @@ export function useLiveForm<T extends object>(
 
   // Form-level state tracking
   const touchedFields = reactive<Set<string>>(new Set())
-  const editingFields = reactive<Set<string>>(new Set())
   const submitCount = ref(0)
-  const isUpdatingFromServer = ref(false)
 
   // Memoization for field instances to prevent recreation
   const fieldCache = new Map<string, FormField<any>>()
@@ -266,13 +264,33 @@ export function useLiveForm<T extends object>(
   // LiveView integration
   const live = useLiveVue()
 
-  // Create debounced change handler
-  const debouncedSendChanges = debounce(() => {
+  // Immediate change handler
+  const sendChanges = async (values?: T): Promise<any> => {
     if (live && changeEvent) {
-      const data = prepareData(deepToRaw(currentValues))
-      live.pushEvent(changeEvent, { [initialForm.name]: data })
+      try {
+        values = values || deepToRaw(currentValues)
+        const data = prepareData(values)
+        return await live.pushEvent(changeEvent, { [initialForm.name]: data })
+      } finally {
+        // Request completed
+      }
+    } else {
+      return Promise.resolve()
     }
-  }, debounceInMiliseconds)
+  }
+
+  // Create debounced change handler with validation status
+  let debouncedSendChanges: (value?: T) => Promise<any>
+  let isValidatingChanges: ComputedRef<boolean>
+
+  if (debounceInMiliseconds && debounceInMiliseconds > 0) {
+    const { debouncedFn, isPending } = debounce(sendChanges, debounceInMiliseconds)
+    debouncedSendChanges = debouncedFn
+    isValidatingChanges = isPending
+  } else {
+    debouncedSendChanges = sendChanges
+    isValidatingChanges = computed(() => false)
+  }
 
   // Create a form field for a given path
   function createFormField<V>(path: string): FormField<V> {
@@ -289,6 +307,7 @@ export function useLiveForm<T extends object>(
       },
       set(newValue: V) {
         setValueByPath(currentValues, keys, newValue)
+        debouncedSendChanges()
       },
     })
 
@@ -318,11 +337,7 @@ export function useLiveForm<T extends object>(
         const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
         fieldValue.value = target.value as V
       },
-      onFocus: () => {
-        editingFields.add(path)
-      },
       onBlur: () => {
-        editingFields.delete(path)
         touchedFields.add(path)
       },
       name: path,
@@ -350,12 +365,7 @@ export function useLiveForm<T extends object>(
         return createFormFieldArray(subPath) as V[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
       },
 
-      focus() {
-        editingFields.add(path)
-      },
-
       blur() {
-        editingFields.delete(path)
         touchedFields.add(path)
       },
     }
@@ -372,18 +382,25 @@ export function useLiveForm<T extends object>(
     }
 
     const baseField = createFormField<V[]>(path)
+    const keys = parsePath(path)
+
+    const updateArray = (newArray: V[]) => {
+      setValueByPath(currentValues, keys, newArray)
+      return debouncedSendChanges()
+    }
 
     const fieldArray = {
       ...baseField,
 
       add(item?: Partial<V>) {
+        // we don't want to add item immediately, rather we want to send it to the server if validation is enabled
         const currentArray = baseField.value.value || []
-        baseField.value.value = [...currentArray, item as V]
+        return updateArray([...currentArray, item as V])
       },
 
       remove(index: number) {
         const currentArray = baseField.value.value || []
-        baseField.value.value = currentArray.filter((_, i) => i !== index)
+        return updateArray(currentArray.filter((_, i) => i !== index))
       },
 
       move(from: number, to: number) {
@@ -391,7 +408,9 @@ export function useLiveForm<T extends object>(
         if (from >= 0 && from < currentArray.length && to >= 0 && to < currentArray.length) {
           const item = currentArray.splice(from, 1)[0]
           currentArray.splice(to, 0, item)
-          baseField.value.value = currentArray
+          return updateArray(currentArray)
+        } else {
+          return Promise.resolve()
         }
       },
 
@@ -426,73 +445,27 @@ export function useLiveForm<T extends object>(
 
   // Method to update form state from server
   function updateFromServer(newForm: Form<T>) {
-    // Set flag to prevent triggering change events during server update
-    isUpdatingFromServer.value = true
+    // Always update errors, we don't want to lose them
+    replaceReactiveObject(currentErrors, deepClone(newForm.errors))
 
-    try {
-      // Update values intelligently - only skip paths that are currently being edited
-      const newValues = deepClone(newForm.values)
-
-      if (editingFields.size === 0) {
-        // No fields being edited, safe to update everything
-        Object.assign(currentValues, newValues)
-      } else {
-        // Selective update - avoid overwriting fields currently being edited
-        updateValuesSelectively(currentValues, newValues, editingFields)
-      }
-
-      // Always update errors since they come from server validation
-      // Use deep replacement instead of Object.assign to handle error clearing
-      replaceReactiveObject(currentErrors, deepClone(newForm.errors))
-    } finally {
-      // Clear the flag after Vue's reactive effects have been flushed
-      nextTick(() => {
-        isUpdatingFromServer.value = false
-      })
+    // Only apply value updates if no validation is in progress
+    // Otherwise we could overwrite local client data with server data
+    if (!isValidatingChanges.value) {
+      Object.assign(currentValues, deepClone(newForm.values))
     }
   }
-
-  // Helper function to selectively update values, avoiding currently edited paths
-  function updateValuesSelectively(current: any, newValues: any, editingPaths: Set<string>, currentPath = "") {
-    for (const key in newValues) {
-      const fullPath = currentPath ? `${currentPath}.${key}` : key
-
-      // Check if this path or any parent path is being edited
-      const isBeingEdited = Array.from(editingPaths).some(
-        editingPath => editingPath.startsWith(fullPath) || fullPath.startsWith(editingPath)
-      )
-
-      if (!isBeingEdited) {
-        if (typeof newValues[key] === "object" && newValues[key] !== null && !Array.isArray(newValues[key])) {
-          // Recursively update nested objects
-          if (!current[key] || typeof current[key] !== "object") {
-            current[key] = {}
-          }
-          updateValuesSelectively(current[key], newValues[key], editingPaths, fullPath)
-        } else {
-          // Update primitive values and arrays
-          current[key] = newValues[key]
-        }
-      }
-    }
-  }
-
-  // Watch for changes and send to server (debounced) - but only when not updating from server
-  const stopWatchingValues = watch(
-    () => currentValues,
-    () => {
-      if (!isUpdatingFromServer.value) debouncedSendChanges()
-    },
-    { deep: true }
-  )
 
   // Watch for server updates to the form
-  const stopWatchingForm = watch(() => toValue(form), updateFromServer, { deep: true })
+  // setTimeout ensures updates are processed after current execution cycle
+  const stopWatchingForm = watch(
+    () => toValue(form),
+    () => setTimeout(() => updateFromServer(toValue(form)), 0),
+    { deep: true }
+  )
 
   const reset = () => {
     Object.assign(currentValues, deepClone(initialValues.value))
     touchedFields.clear()
-    editingFields.clear()
     submitCount.value = 0
   }
 
@@ -503,7 +476,7 @@ export function useLiveForm<T extends object>(
     if (live) {
       const data = prepareData(deepToRaw(currentValues))
 
-      return new Promise<void>((resolve, reject) => {
+      return await new Promise<void>((resolve, reject) => {
         // Send submit event to LiveView
         const result = live.pushEvent(submitEvent, { [initialForm.name]: data })
 
@@ -539,9 +512,6 @@ export function useLiveForm<T extends object>(
 
   // Clean up watchers when component unmounts
   onScopeDispose(() => {
-    if (stopWatchingValues) {
-      stopWatchingValues()
-    }
     stopWatchingForm()
   })
 
@@ -549,6 +519,7 @@ export function useLiveForm<T extends object>(
     isValid,
     isDirty,
     isTouched,
+    isValidating: readonly(isValidatingChanges) as Readonly<Ref<boolean>>,
     submitCount: readonly(submitCount),
     initialValues: readonly(initialValues) as Readonly<Ref<T>>,
     submit: submit,

@@ -239,7 +239,7 @@ defmodule LiveVue.E2E.FormTestLive do
 
     def changeset(profile, attrs) do
       profile
-      |> cast(attrs, [:bio, :skills])
+      |> cast(attrs, [:bio, :skills], empty_values: [])
       |> validate_length(:bio, min: 10, max: 200, message: "must be between 10 and 200 characters")
       |> validate_skills()
     end
@@ -339,6 +339,8 @@ defmodule LiveVue.E2E.FormTestLive do
       |> TestForm.changeset(form_params)
       |> Map.put(:action, :validate)
       |> to_form(as: :test_form)
+
+    LiveVue.Encoder.encode(form)
 
     {:noreply, assign(socket, :form, form)}
   end

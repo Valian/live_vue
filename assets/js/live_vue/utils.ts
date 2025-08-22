@@ -136,16 +136,57 @@ export function deepCopy<T>(obj: T): T {
   }
 }
 
+import { ref, computed, type ComputedRef } from "vue"
+
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
-): ((...args: Parameters<T>) => void) => {
+): {
+  debouncedFn: (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
+  isPending: ComputedRef<boolean>
+} => {
   let timeout: ReturnType<typeof setTimeout> | null = null
+  let executingCount = 0
+  let pendingResolvers: Array<{
+    resolve: (value: Awaited<ReturnType<T>>) => void
+    reject: (error: any) => void
+  }> = []
 
-  return (...args: Parameters<T>) => {
-    if (timeout !== null) clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
+  const timeoutRef = ref<ReturnType<typeof setTimeout> | null>(null)
+  const executingCountRef = ref(0)
+
+  const debouncedFn = (...args: Parameters<T>) => {
+    return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
+      pendingResolvers.push({ resolve, reject })
+
+      if (timeout !== null) clearTimeout(timeout)
+
+      timeout = setTimeout(async () => {
+        const currentResolvers = pendingResolvers
+        pendingResolvers = []
+        timeout = null
+        timeoutRef.value = null
+        executingCount++
+        executingCountRef.value++
+
+        try {
+          const result = await func(...args)
+          currentResolvers.forEach(({ resolve }) => resolve(result))
+        } catch (error) {
+          currentResolvers.forEach(({ reject }) => reject(error))
+        } finally {
+          executingCount--
+          executingCountRef.value--
+        }
+      }, wait)
+
+      timeoutRef.value = timeout
+    })
   }
+
+  const isPending = computed(() => timeoutRef.value !== null || executingCountRef.value > 0)
+
+  return { debouncedFn, isPending }
 }
 
 export const cacheOnAccessProxy = <T extends object>(createFunc: (key: keyof T) => any) =>

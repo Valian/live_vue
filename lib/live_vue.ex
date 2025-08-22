@@ -250,22 +250,11 @@ defmodule LiveVue do
   defp generate_stream_patches(stream_name, %LiveStream{} = stream) do
     patches = []
 
-    # Handle insertions third
+    # Handle reset operation first
     patches =
-      stream.inserts
-      |> Enum.reverse()
-      |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
-        patches =
-          if limit,
-            do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
-            else: patches
-
-        item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
-
-        if update_only,
-          do: [%{op: "replace", path: "/#{stream_name}/$$#{dom_id}", value: item} | patches],
-          else: [%{op: "upsert", path: "/#{stream_name}/#{if at == -1, do: "-", else: at}", value: item} | patches]
-      end)
+      if stream.reset?,
+        do: [%{op: "replace", path: "/#{stream_name}", value: []} | patches],
+        else: patches
 
     # Handle deletions second
     patches =
@@ -273,10 +262,21 @@ defmodule LiveVue do
         [%{op: "remove", path: "/#{stream_name}/$$#{dom_id}"} | patches]
       end)
 
-    # Handle reset operation first
-    if stream.reset?,
-      do: [%{op: "replace", path: "/#{stream_name}", value: []} | patches],
-      else: patches
+    # Handle insertions third
+    stream.inserts
+    |> Enum.reverse()
+    |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
+      item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
+
+      patches =
+        if update_only,
+          do: [%{op: "replace", path: "/#{stream_name}/$$#{dom_id}", value: item} | patches],
+          else: [%{op: "upsert", path: "/#{stream_name}/#{if at == -1, do: "-", else: at}", value: item} | patches]
+
+      if limit,
+        do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
+        else: patches
+    end)
   end
 
   # we compress the diff to make it smaller, so it's faster to send to the client

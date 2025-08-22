@@ -24,7 +24,7 @@ const props = defineProps<{
 const form = useLiveForm(() => props.form, {
   changeEvent: "validate",
   submitEvent: "submit",
-  debounceInMiliseconds: 50,
+  debounceInMiliseconds: 300,
 })
 
 // Basic fields
@@ -40,6 +40,14 @@ const bioField = profileField.field("bio")
 const skillsArray = form.fieldArray("profile.skills")
 const itemsArray = form.fieldArray("items")
 
+watch(
+  () => skillsArray,
+  newSkills => {
+    console.log("skillsArray changed", newSkills.value.value.length)
+  },
+  { deep: true }
+)
+
 const submitForm = async () => {
   try {
     await form.submit()
@@ -47,14 +55,6 @@ const submitForm = async () => {
     console.error("Form submission failed:", error)
   }
 }
-
-watch(
-  () => props.form,
-  newForm => {
-    console.log("form changed", JSON.stringify(newForm, null, 2))
-  },
-  { deep: true }
-)
 </script>
 
 <template>
@@ -75,7 +75,6 @@ watch(
         <input
           :value="nameField.inputAttrs.value.value"
           @input="nameField.inputAttrs.value.onInput"
-          @focus="nameField.inputAttrs.value.onFocus"
           @blur="nameField.inputAttrs.value.onBlur"
           :name="nameField.inputAttrs.value.name"
           :id="nameField.inputAttrs.value.id"
@@ -94,7 +93,6 @@ watch(
         <input
           :value="emailField.inputAttrs.value.value"
           @input="emailField.inputAttrs.value.onInput"
-          @focus="emailField.inputAttrs.value.onFocus"
           @blur="emailField.inputAttrs.value.onBlur"
           :name="emailField.inputAttrs.value.name"
           :id="emailField.inputAttrs.value.id"
@@ -134,7 +132,6 @@ watch(
     <div class="skills-section">
       <div class="skills-header">
         <h3>Skills</h3>
-        <pre>{{ JSON.stringify(skillsArray.value.value, null, 2) }}</pre>
         <button @click="skillsArray.add('')" data-pw-add-skill>Add Skill</button>
       </div>
 

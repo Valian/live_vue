@@ -58,7 +58,9 @@ const skillsArray = form.fieldArray('profile.skills')
     <button @click="skillsArray.add('')">Add Skill</button>
 
     <!-- Form actions -->
-    <button @click="form.submit()" :disabled="!form.isValid.value">Submit</button>
+    <button @click="form.submit()" :disabled="!form.isValid.value || form.isValidating.value">
+      {{ form.isValidating.value ? 'Validating...' : 'Submit' }}
+    </button>
     <button @click="form.reset()">Reset</button>
   </div>
 </template>
@@ -240,6 +242,7 @@ const messageField = form.field('message')
       <p>Valid: {{ form.isValid.value }}</p>
       <p>Dirty: {{ form.isDirty.value }}</p>
       <p>Touched: {{ form.isTouched.value }}</p>
+      <p>Validating: {{ form.isValidating.value }}</p>
     </div>
   </div>
 </template>
@@ -288,6 +291,7 @@ The object returned by `useLiveForm()`:
 | `isValid` | `Ref<boolean>` | No validation errors exist |
 | `isDirty` | `Ref<boolean>` | Form values differ from initial |
 | `isTouched` | `Ref<boolean>` | At least one field has been interacted with |
+| `isValidating` | `Readonly<Ref<boolean>>` | Whether validation requests are in progress (debounced or executing) |
 | `submitCount` | `Readonly<Ref<number>>` | Number of submission attempts. Resets to 0 after successful submission |
 | `initialValues` | `Readonly<Ref<T>>` | Original form values for reset |
 
@@ -318,13 +322,13 @@ Individual form field with reactive state and helpers:
 | `errorMessage` | `Readonly<Ref<string \| undefined>>` | First error message |
 | `isValid` | `Ref<boolean>` | No validation errors |
 | `isDirty` | `Ref<boolean>` | Value differs from initial |
-| `isTouched` | `Ref<boolean>` | Field has been focused/blurred |
+| `isTouched` | `Ref<boolean>` | Field has been blurred |
 
 **Input binding:**
 
 | Property | Description |
 |----------|-------------|
-| `inputAttrs` | Object containing `value`, event handlers (`onInput`, `onFocus`, `onBlur`), `name`, `id`, and accessibility attributes (`aria-invalid`, `aria-describedby`). Designed to be used with `v-bind` |
+| `inputAttrs` | Object containing `value`, event handlers (`onInput`, `onBlur`), `name`, `id`, and accessibility attributes (`aria-invalid`, `aria-describedby`). Designed to be used with `v-bind` |
 
 **Navigation methods:**
 
@@ -337,20 +341,25 @@ Individual form field with reactive state and helpers:
 
 | Method | Description |
 |--------|-------------|
-| `focus()` | Mark field as currently editing |
-| `blur()` | Mark field as touched, stop editing |
+| `blur()` | Mark field as touched |
 
 ### FormFieldArray Interface
 
-Array field with additional methods for array manipulation:
+Array field with additional methods for array manipulation. If `changeEvent` is set, they will return a promise resolving when the item is validated through the server and added. Otherwise, promise resolves immediately.
 
 **Array operations:**
 
 | Method | Description |
 |--------|-------------|
-| `add(item?)` | Add new item to array (optionally with partial data) |
-| `remove(index)` | Remove item by index |
-| `move(from, to)` | Move item to different position |
+| `add(item?)` | Add new item to array (optionally with partial data). Returns a promise. |
+| `remove(index)` | Remove item by index. Returns a promise. |
+| `move(from, to)` | Move item to different position. Returns a promise. |
+
+
+> #### Ecto by default removes empty values {: .tip}
+>
+> If calling `add()` on an array field does not add a new item, it often means that your Ecto changeset is filtering out empty or invalid values (e.g., empty strings in an array). Make sure your changeset doesn't consider value [you're trying to add as empty](https://hexdocs.pm/ecto/Ecto.Changeset.html#cast/4-options), or provide a valid initial value when adding.
+
 
 **Reactive array:**
 
@@ -411,7 +420,6 @@ The `inputAttrs` property provides all necessary attributes for form inputs:
   <input
     :value="nameField.inputAttrs.value.value"
     @input="nameField.inputAttrs.value.onInput"
-    @focus="nameField.inputAttrs.value.onFocus"
     @blur="nameField.inputAttrs.value.onBlur"
     :name="nameField.inputAttrs.value.name"
     :id="nameField.inputAttrs.value.id"
@@ -791,6 +799,10 @@ watch(() => form.isDirty.value, (dirty) => {
     console.log('Form has unsaved changes')
   }
 })
+
+watch(() => form.isValidating.value, (validating) => {
+  console.log('Validation status:', validating ? 'in progress' : 'complete')
+})
 </script>
 
 <template>
@@ -808,6 +820,10 @@ watch(() => form.isDirty.value, (dirty) => {
       User has interacted with the form
     </div>
 
+    <div v-if="form.isValidating.value" class="validating">
+      🔄 Validating changes...
+    </div>
+
     <div>
       Submit attempts: {{ form.submitCount.value }}
     </div>
@@ -816,10 +832,10 @@ watch(() => form.isDirty.value, (dirty) => {
   <!-- Conditional submit button -->
   <button
     @click="form.submit()"
-    :disabled="!form.isValid.value || !form.isDirty.value"
+    :disabled="!form.isValid.value || !form.isDirty.value || form.isValidating.value"
     class="submit-btn"
   >
-    {{ form.isDirty.value ? 'Save Changes' : 'No Changes' }}
+    {{ form.isValidating.value ? 'Validating...' : form.isDirty.value ? 'Save Changes' : 'No Changes' }}
   </button>
 </template>
 ```
@@ -1516,8 +1532,8 @@ const submitForm = async () => {
       <button @click="form.reset()" type="button" :disabled="!form.isDirty.value">
         Reset
       </button>
-      <button @click="submitForm" :disabled="!form.isValid.value" class="primary">
-        Send Message
+      <button @click="submitForm" :disabled="!form.isValid.value || form.isValidating.value" class="primary">
+        {{ form.isValidating.value ? 'Validating...' : 'Send Message' }}
       </button>
     </div>
 
@@ -1526,7 +1542,7 @@ const submitForm = async () => {
         <span :class="{ valid: form.isValid.value, invalid: !form.isValid.value }">
           {{ form.isValid.value ? '✓' : '✗' }}
         </span>
-        {{ form.isDirty.value ? 'Unsaved changes' : 'Form ready' }}
+        {{ form.isValidating.value ? 'Validating...' : form.isDirty.value ? 'Unsaved changes' : 'Form ready' }}
       </small>
     </div>
   </div>

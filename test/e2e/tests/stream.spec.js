@@ -243,8 +243,7 @@ test.describe("LiveVue Stream Integration", () => {
   // Limit operation tests
   test.describe("Limit Operations", () => {
     test.beforeEach(async ({ page }) => {
-      // Start fresh for each limit test
-      await page.click('[data-testid="reset-button"]')
+      await page.goto("/streams")
       await syncLV(page)
     })
 

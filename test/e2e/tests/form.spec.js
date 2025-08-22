@@ -209,6 +209,9 @@ test.describe("useLiveForm E2E Tests", () => {
     await emailInput.fill("john@example.com")
     await ageInput.fill("30")
     await bioInput.fill("This is a comprehensive bio with sufficient content for validation")
+    // let's wait for the debounce to finish
+    await page.waitForTimeout(150)
+    await syncLV(page)
 
     // Add some skills
     await page.locator("[data-pw-add-skill]").click()
