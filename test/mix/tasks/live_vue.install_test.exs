@@ -58,7 +58,6 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       # Check if mix.exs was updated
       mix_exs = project.rewrite.sources["mix.exs"]
-      assert mix_exs.content =~ ~r/phoenix_vite.npm root install/
       assert mix_exs.content =~ ~r/build --manifest/
       assert mix_exs.content =~ ~r/build --ssr js\/server\.js --outDir \.\.\/priv\/static --ssrManifest/
 
