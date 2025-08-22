@@ -283,7 +283,8 @@ export function useLiveForm<T extends object>(
   let debouncedSendChanges: (value?: T) => Promise<any>
   let isValidatingChanges: ComputedRef<boolean>
 
-  if (debounceInMiliseconds && debounceInMiliseconds > 0) {
+  // Only enable debouncing if there's a changeEvent configured and debounce time is set
+  if (changeEvent && debounceInMiliseconds && debounceInMiliseconds > 0) {
     const { debouncedFn, isPending } = debounce(sendChanges, debounceInMiliseconds)
     debouncedSendChanges = debouncedFn
     isValidatingChanges = isPending
