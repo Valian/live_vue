@@ -263,9 +263,7 @@ defmodule LiveVue do
       end)
 
     # Handle insertions third
-    stream.inserts
-    |> Enum.reverse()
-    |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
+    Enum.reduce(stream.inserts, patches, fn {dom_id, at, item, limit, update_only}, patches ->
       item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
 
       patches =
