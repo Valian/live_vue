@@ -35,9 +35,11 @@ defmodule LiveViewDiffTest do
   # Utility function to assert JSON patches are equal by sorting both by path
   defp assert_patches_equal(actual, expected) do
     actual_uncompressed =
-      Enum.map(actual, fn patch ->
+      actual
+      |> Enum.map(fn patch ->
         %{"op" => Enum.at(patch, 0), "path" => Enum.at(patch, 1), "value" => Enum.at(patch, 2)}
       end)
+      |> Enum.reject(fn patch -> patch["op"] == "test" end)
 
     actual_sorted = Enum.sort_by(actual_uncompressed, & &1["path"])
     expected_sorted = Enum.sort_by(expected, & &1["path"])

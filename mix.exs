@@ -16,6 +16,7 @@ defmodule LiveVue.MixProject do
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: [
+        precommit: :test,
         "test.watch": :test,
         coveralls: :test,
         "coveralls.detail": :test,
@@ -142,7 +143,7 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.2"},
       {:igniter, "~> 0.6", optional: true},
-      {:phoenix_vite, "~> 0.3"},
+      {:phoenix_vite, "~> 0.3.3"},
       {:floki, ">= 0.30.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
@@ -165,6 +166,7 @@ defmodule LiveVue.MixProject do
     [
       docs: ["docs", &copy_images/1],
       setup: ["deps.get", "cmd npm install", "assets.build"],
+      precommit: ["test", "format", "assets.build", "e2e.test", "assets.test"],
       "assets.build": ["cmd npm run build"],
       "assets.watch": ["cmd npm run dev"],
       "assets.test": ["cmd npm test"],

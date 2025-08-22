@@ -25,7 +25,7 @@ config :live_vue,
 
   # SSR server bundle path (relative to priv directory)
   # Created by Vite "build-server" command
-  ssr_filepath: "./vue/server.js",
+  ssr_filepath: "./static/server.mjs",
 
   # Testing configuration
   # When false, we will always update full props and not send diffs
@@ -289,7 +289,7 @@ Control SSR behavior globally or per-component:
 # Global SSR settings
 config :live_vue,
   ssr: true,  # Enable SSR by default
-  ssr_filepath: "./vue/server.js"  # Server bundle path
+  ssr_filepath: "./static/server.mjs"  # Server bundle path
 ```
 
 ### SSR Behavior
@@ -366,7 +366,7 @@ children = [
 cd assets && npm run build-server
 ```
 
-The server bundle will be created at `priv/vue/server.js` and used by the NodeJS supervisor.
+The server bundle will be created at `priv/static/server.mjs` and used by the NodeJS supervisor.
 
 ### SSR Troubleshooting
 
@@ -376,7 +376,7 @@ The server bundle will be created at `priv/vue/server.js` and used by the NodeJS
 
 **SSR failing in production?**
 - Ensure Node.js 19+ is installed
-- Check that `priv/vue/server.js` exists after build
+- Check that `priv/static/server.mjs` exists after build
 - Verify NodeJS supervisor is properly configured
 
 **Performance issues?**

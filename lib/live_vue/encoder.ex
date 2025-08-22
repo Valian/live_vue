@@ -167,12 +167,16 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
             %Ecto.Association.NotLoaded{} = not_loaded ->
               raise ArgumentError, """
               Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
-              
+
               Associations must be preloaded before encoding forms for LiveVue.
               Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
               """
-            %{__meta__: _} = value -> Map.delete(value, :__meta__)
-            value -> value
+
+            %{__meta__: _} = value ->
+              Map.delete(value, :__meta__)
+
+            value ->
+              value
           end
       end
     end
@@ -187,12 +191,16 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
             %Ecto.Association.NotLoaded{} = not_loaded ->
               raise ArgumentError, """
               Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
-              
+
               Associations must be preloaded before encoding forms for LiveVue.
               Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
               """
-            [%{__meta__: _} | _] = value -> Enum.map(value, &Map.delete(&1, :__meta__))
-            value -> value
+
+            [%{__meta__: _} | _] = value ->
+              Enum.map(value, &Map.delete(&1, :__meta__))
+
+            value ->
+              value
           end
       end
     end

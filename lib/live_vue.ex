@@ -107,7 +107,7 @@ defmodule LiveVue do
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
-      |> Map.put(:props_diff, Enum.map(props_diff, &compress_diff/1))
+      |> Map.put(:props_diff, prepare_diff(props_diff))
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
@@ -250,22 +250,11 @@ defmodule LiveVue do
   defp generate_stream_patches(stream_name, %LiveStream{} = stream) do
     patches = []
 
-    # Handle insertions third
+    # Handle reset operation first
     patches =
-      stream.inserts
-      |> Enum.reverse()
-      |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
-        patches =
-          if limit,
-            do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
-            else: patches
-
-        item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
-
-        if update_only,
-          do: [%{op: "replace", path: "/#{stream_name}/$$#{dom_id}", value: item} | patches],
-          else: [%{op: "upsert", path: "/#{stream_name}/#{if at == -1, do: "-", else: at}", value: item} | patches]
-      end)
+      if stream.reset?,
+        do: [%{op: "replace", path: "/#{stream_name}", value: []} | patches],
+        else: patches
 
     # Handle deletions second
     patches =
@@ -273,16 +262,30 @@ defmodule LiveVue do
         [%{op: "remove", path: "/#{stream_name}/$$#{dom_id}"} | patches]
       end)
 
-    # Handle reset operation first
-    if stream.reset?,
-      do: [%{op: "replace", path: "/#{stream_name}", value: []} | patches],
-      else: patches
+    # Handle insertions third
+    stream.inserts
+    |> Enum.reverse()
+    |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
+      item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
+
+      patches =
+        if update_only,
+          do: [%{op: "replace", path: "/#{stream_name}/$$#{dom_id}", value: item} | patches],
+          else: [%{op: "upsert", path: "/#{stream_name}/#{if at == -1, do: "-", else: at}", value: item} | patches]
+
+      if limit,
+        do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
+        else: patches
+    end)
   end
 
   # we compress the diff to make it smaller, so it's faster to send to the client
   # then, it's decompressed on the client side
-  defp compress_diff(%{op: op, path: path, value: value}), do: [op, path, value]
-  defp compress_diff(%{op: op, path: path}), do: [op, path]
+  defp prepare_diff(data, acc \\ [])
+  # We add a random test operation to ensure we never have the same diff as before
+  defp prepare_diff([], acc), do: [[:test, "", :rand.uniform(10_000_000)] | acc]
+  defp prepare_diff([%{op: op, path: p, value: value} | rest], acc), do: prepare_diff(rest, [[op, p, value] | acc])
+  defp prepare_diff([%{op: op, path: p} | rest], acc), do: prepare_diff(rest, [[op, p] | acc])
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, %{}, fn {key, value}, acc ->
