@@ -32,6 +32,25 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert vite_config.content =~ "liveVuePlugin()"
       assert vite_config.content =~ "import vue from"
       assert vite_config.content =~ "import liveVuePlugin from"
+      assert vite_config.content =~ "manifest: false"
+      assert vite_config.content =~ "ssrManifest: false"
+      assert vite_config.content =~ "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },"
+
+      # Check if tsconfig.json was updated
+      tsconfig = project.rewrite.sources["tsconfig.json"]
+      assert tsconfig.content =~ ~s("baseUrl": ".")
+      assert tsconfig.content =~ ~s("module": "ESNext")
+      assert tsconfig.content =~ ~s("moduleResolution": "bundler")
+      assert tsconfig.content =~ ~s("noEmit": true)
+      assert tsconfig.content =~ ~s("skipLibCheck": true)
+
+      assert tsconfig.content =~ """
+                 "paths": {
+                   "*": [ "./deps/*", "node_modules/*" ]
+                 },\
+             """
+
+      assert tsconfig.content =~ ~s("types": [ "vite/client" ])
 
       # Check if mix.exs was updated
       mix_exs = project.rewrite.sources["mix.exs"]
@@ -58,6 +77,12 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert live_view_file.content =~ ~r/defmodule TestWeb.VueDemoLive/
       assert live_view_file.content =~ ~r/v-component="VueDemo"/
       assert live_view_file.content =~ ~r/handle_event\(\"add_todo\"/
+
+      # Check that SSR production setup was applied
+      app_file = project.rewrite.sources["lib/test/application.ex"]
+      assert app_file.content =~ ~r/NodeJS\.Supervisor/
+      assert app_file.content =~ ~r/path: LiveVue\.SSR\.NodeJS\.server_path\(\)/
+      assert app_file.content =~ ~r/pool_size: 4/
     end
 
     test "installs successfully with bun flag" do
