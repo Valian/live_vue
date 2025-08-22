@@ -464,7 +464,6 @@ defmodule LiveVue.EncoderFormTest do
   end
 
   describe "form error handling edge cases" do
-
     test "encodes form with deeply nested validation errors and affects parent validity" do
       complex = %Complex{}
 
@@ -572,7 +571,6 @@ defmodule LiveVue.EncoderFormTest do
   end
 
   describe "form values update behavior" do
-
     test "encodes form values from params even when changeset has validation errors" do
       # Start with existing data
       simple = %Simple{name: "Valid Name", age: 30}
@@ -765,15 +763,15 @@ defmodule LiveVue.EncoderFormTest do
     test "form shows all submitted params including invalid types excluded from changeset.changes" do
       # This test verifies that invalid parameters that fail casting are still displayed in forms
       # rather than showing as nil, ensuring users see what they actually submitted
-      
+
       simple = %Simple{}
-      
+
       # Test both with and without :validate action to ensure consistent behavior
       form_params = %{
         "name" => "Valid Name",
         # Invalid types that should show as submitted strings, not nil
         "age" => "not_a_number",
-        "active" => "invalid_bool", 
+        "active" => "invalid_bool",
         "score" => "invalid_float"
       }
 
@@ -794,9 +792,9 @@ defmodule LiveVue.EncoderFormTest do
       # Key fix: invalid fields should show submitted string values, not nil
       # This ensures users see what they typed even if casting failed
       assert encoded.values.age == "not_a_number", "Age should show submitted value, not nil"
-      assert encoded.values.active == "invalid_bool", "Active should show submitted value, not nil" 
+      assert encoded.values.active == "invalid_bool", "Active should show submitted value, not nil"
       assert encoded.values.score == "invalid_float", "Score should show submitted value, not nil"
-      
+
       # Test also works without :validate action
       encoded_without_action = encode_form(simple, form_params)
       assert encoded_without_action.values.age == "not_a_number"
@@ -804,7 +802,6 @@ defmodule LiveVue.EncoderFormTest do
       assert encoded_without_action.values.score == "invalid_float"
     end
   end
-
 
   describe "forms backed by simple maps" do
     test "encodes form backed by simple map data" do
@@ -892,7 +889,6 @@ defmodule LiveVue.EncoderFormTest do
                }
              }
     end
-
 
     test "encodes form with params override" do
       form_data = %{
