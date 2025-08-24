@@ -195,7 +195,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [x] shared props automatically included in all components
 - [ ] VS code extension highlighting `~VUE` sigil
 - [x] ~~try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project~~ ✅ **Done!**
-- [ ] `usePushEvent` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
+- [x] `useEventReply` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [x] `useLiveForm` - an utility to effortlessly use Ecto changesets & server-side validation, similar to HEEX ✅ **Done!**
 - [x] **Phoenix Streams** - Full support for `stream()` operations with transparent patches ✅ **Done!**
 

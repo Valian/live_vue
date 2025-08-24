@@ -128,6 +128,7 @@ defmodule LiveVue.E2E.Router do
       live "/upload/:mode", UploadTestLive
       live "/streams", StreamLive
       live "/form-test", FormTestLive
+      live "/event-reply-test", EventReplyTestLive
     end
   end
 

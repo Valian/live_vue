@@ -193,7 +193,7 @@ The `useLiveForm()` composable provides comprehensive form handling with server-
 
 - `form` - Reactive reference to the form data from LiveView (typically `() => props.form`)
 - `options.changeEvent` - Optional event name for sending field changes to server for validation
-- `options.submitEvent` - Event name for form submission (default: "submit")  
+- `options.submitEvent` - Event name for form submission (default: "submit")
 - `options.debounceInMiliseconds` - Delay before sending change events (default: 300)
 - `options.prepareData` - Function to transform data before sending to server
 
@@ -213,7 +213,7 @@ import { useLiveForm } from 'live_vue'
 
 type UserForm = {
   name: string
-  email: string  
+  email: string
   skills: string[]
 }
 
@@ -251,6 +251,154 @@ const skillsArray = form.fieldArray('skills')
 ```
 
 For comprehensive examples including nested objects, complex arrays, and advanced patterns, see [Forms and Validation](forms.md).
+
+### `useEventReply(eventName, options)`
+
+The `useEventReply` composable provides a reactive way to handle LiveView events that return server responses. Unlike `useLiveEvent` which only listens for server-sent events, `useEventReply` is for bi-directional communication where you send an event to the server and handle the reply.
+
+This is perfect for scenarios like data fetching, API calls, form submissions, or any operation where you need to wait for and handle a server response.
+
+**Parameters:**
+
+- `eventName` (string) - The name of the event to send to LiveView
+- `options` - Configuration object (optional)
+
+**Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `defaultValue` | `T` | Default value to initialize data with |
+| `updateData` | `(reply: T, currentData: T \| null) => T` | Function to transform reply data before storing it (useful for data accumulation) |
+
+**Returns:** [`UseEventReplyReturn<T, P>`](#useeventreplyreturn-interface)
+
+**Basic Example:**
+
+```html
+<script setup lang="ts">
+import { useEventReply } from 'live_vue'
+
+// Simple data fetching
+const { data, isLoading, execute } = useEventReply<User>('fetch_user')
+
+// Fetch user data
+const fetchUser = async (userId: number) => {
+  try {
+    const user = await execute({ id: userId })
+    console.log('User fetched:', user)
+  } catch (error) {
+    console.error('Failed to fetch user:', error)
+  }
+}
+</script>
+
+<template>
+  <div>
+    <button @click="fetchUser(123)" :disabled="isLoading">
+      {{ isLoading ? 'Loading...' : 'Fetch User' }}
+    </button>
+
+    <div v-if="data">
+      <h3>{{ data.name }}</h3>
+      <p>{{ data.email }}</p>
+    </div>
+  </div>
+</template>
+```
+
+**Advanced Example with Data Accumulation:**
+
+```html
+<script setup lang="ts">
+import { useEventReply } from 'live_vue'
+
+interface ChatMessage {
+  id: number
+  text: string
+  user: string
+  timestamp: string
+}
+
+// Accumulate messages from multiple requests
+const { data: messages, isLoading, execute } = useEventReply<ChatMessage[]>('load_messages', {
+  defaultValue: [],
+  updateData: (newMessages, currentMessages) => {
+    // Append new messages to existing ones
+    return currentMessages ? [...currentMessages, ...newMessages] : newMessages
+  }
+})
+
+const loadMoreMessages = async () => {
+  const lastMessageId = messages.value[messages.value.length - 1]?.id || 0
+  await execute({ after: lastMessageId, limit: 10 })
+}
+</script>
+
+<template>
+  <div>
+    <div v-for="message in messages" :key="message.id" class="message">
+      <strong>{{ message.user }}:</strong> {{ message.text }}
+    </div>
+
+    <button @click="loadMoreMessages" :disabled="isLoading">
+      {{ isLoading ? 'Loading...' : 'Load More' }}
+    </button>
+  </div>
+</template>
+```
+
+### UseEventReplyReturn Interface
+
+The object returned by `useEventReply()`:
+
+**Reactive state:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `Ref<T \| null>` | The latest data returned from the server |
+| `isLoading` | `Ref<boolean>` | Whether an event execution is currently in progress |
+
+**Actions:**
+
+| Method | Description |
+|--------|-------------|
+| `execute(params?)` | Execute the event with optional parameters. Returns a Promise that resolves with the server response |
+| `cancel()` | Cancel the current execution if one is in progress |
+
+### Key Features
+
+**Execution Control:**
+- Only one execution can be active at a time
+- Concurrent executions are automatically rejected with a warning
+- Use `cancel()` to stop current execution before starting a new one
+
+**Error Handling:**
+- Executions return promises that can be caught with try/catch
+- Cancelled executions reject with a cancellation error
+- Server errors are propagated through the promise rejection
+
+**Data Management:**
+- Automatic data updates with optional transformation via `updateData`
+- Reactive loading states for UI feedback
+- Default values for initial state
+
+**Server-Side Integration:**
+
+In your LiveView, handle the event and return data using the callback:
+
+```elixir
+def handle_event("fetch_user", %{"id" => user_id}, socket) do
+  case Users.get_user(user_id) do
+    {:ok, user} ->
+      # Reply with success data
+      {:reply, user, socket}
+
+    {:error, :not_found} ->
+      # Reply with error data
+      {:reply, %{error: "User not found"}, socket}
+  end
+end
+```
 
 ## Low-Level API
 

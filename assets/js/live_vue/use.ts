@@ -271,3 +271,90 @@ export const useLiveUpload = (
     valid,
   }
 }
+
+export interface UseEventReplyOptions<T> {
+  /** Default value to initialize data with */
+  defaultValue?: T
+  /** Function to transform reply data before storing it */
+  updateData?: (reply: T, currentData: T | null) => T
+}
+
+export interface UseEventReplyReturn<T, P> {
+  /** Reactive data returned from the event reply */
+  data: Ref<T | null>
+  /** Whether an event is currently executing */
+  isLoading: Ref<boolean>
+  /** Execute the event with optional parameters */
+  execute: (params?: P) => Promise<T>
+  /** Cancel the current event execution */
+  cancel: () => void
+}
+
+/**
+ * A composable for handling LiveView events with replies.
+ * Provides a reactive way to execute events and handle their responses.
+ * @param eventName - The name of the event to send to LiveView
+ * @param options - Configuration options including defaultValue and updateData function
+ * @returns An object with reactive state and control functions
+ */
+export const useEventReply = <T = any, P extends Record<string, any> | void = Record<string, any>>(
+  eventName: string,
+  options?: UseEventReplyOptions<T>
+): UseEventReplyReturn<T, P> => {
+  const live = useLiveVue()
+  
+  const data = ref<T | null>(options?.defaultValue ?? null) as Ref<T | null>
+  const isLoading = ref(false)
+  
+  let executionToken = 0
+  let pendingReject: ((reason?: any) => void) | null = null
+
+  const execute = (params?: P): Promise<T> => {
+    if (isLoading.value) {
+      console.warn(`Event "${eventName}" is already executing. Call cancel() first if you want to start a new execution.`)
+      return Promise.reject(new Error(`Event "${eventName}" is already executing`))
+    }
+
+    // Set loading state
+    isLoading.value = true
+    
+    // Create a unique token for this execution
+    const currentToken = ++executionToken
+    
+    return new Promise<T>((resolve, reject) => {
+      // Store reject function so we can call it on cancel
+      pendingReject = reject
+
+      live.pushEvent(eventName, params, (reply: T) => {
+        // Only update state if this is still the current execution
+        if (currentToken === executionToken) {
+          // Use updateData function if provided, otherwise just set the reply
+          data.value = options?.updateData ? options.updateData(reply, data.value) : reply
+          isLoading.value = false
+          pendingReject = null // Clear pending reject since we're resolving
+          resolve(reply)
+        }
+        // If tokens don't match, this execution was cancelled - ignore the result
+      })
+    })
+  }
+
+  const cancel = () => {
+    // Reject the pending promise if there is one
+    if (pendingReject) {
+      pendingReject(new Error(`Event "${eventName}" was cancelled`))
+      pendingReject = null
+    }
+
+    // Increment token to invalidate any pending callbacks
+    executionToken++
+    isLoading.value = false
+  }
+
+  return {
+    data,
+    isLoading,
+    execute,
+    cancel,
+  }
+}

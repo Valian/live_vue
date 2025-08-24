@@ -11,7 +11,7 @@ export type {
 } from "./types.js"
 export { createLiveVue } from "./app.js"
 export { getHooks } from "./hooks.js"
-export { useLiveVue, useLiveEvent, useLiveNavigation, useLiveUpload } from "./use.js"
+export { useLiveVue, useLiveEvent, useLiveNavigation, useLiveUpload, useEventReply } from "./use.js"
 export { 
   useLiveForm, 
   type Form, 

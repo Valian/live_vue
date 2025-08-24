@@ -6,10 +6,11 @@ vi.mock("vue", () => ({
   inject: vi.fn(),
   onMounted: vi.fn((fn: () => void) => fn()), // Execute immediately for testing
   onUnmounted: vi.fn((fn: () => void) => fn()), // Execute immediately for testing
+  ref: vi.fn((initialValue: any) => ({ value: initialValue })),
 }))
 
 // Import after mocking
-import { useLiveVue, useLiveEvent, useLiveNavigation, liveInjectKey } from "./use"
+import { useLiveVue, useLiveEvent, useLiveNavigation, useEventReply, liveInjectKey } from "./use"
 import { inject } from "vue"
 
 const mockInject = inject as any
@@ -373,5 +374,347 @@ describe("integration tests", () => {
       null,
       null
     )
+  })
+})
+
+describe("useEventReply", () => {
+  let mockLive: LiveHook
+  let mockPushEvent: any
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockPushEvent = vi.fn()
+    mockLive = {
+      ...createMockLiveHook(),
+      pushEvent: mockPushEvent,
+    }
+    mockInject.mockReturnValue(mockLive)
+  })
+
+  it("should initialize with default values", () => {
+    const { data, isLoading } = useEventReply("test-event")
+
+    expect(data.value).toBe(null)
+    expect(isLoading.value).toBe(false)
+  })
+
+  it("should initialize with custom default value", () => {
+    const defaultValue = { message: "hello" }
+    const { data } = useEventReply("test-event", { defaultValue })
+
+    expect(data.value).toEqual(defaultValue)
+  })
+
+  it("should execute event successfully", async () => {
+    const { data, isLoading, execute } = useEventReply<string>("test-event")
+    const testParams = { id: 123 }
+    const expectedReply = "success"
+
+    // Mock pushEvent to call the callback immediately
+    mockPushEvent.mockImplementation((eventName: string, params: any, callback: (reply: any) => void) => {
+      callback(expectedReply)
+    })
+
+    const result = await execute(testParams)
+
+    expect(mockPushEvent).toHaveBeenCalledWith("test-event", testParams, expect.any(Function))
+    expect(result).toBe(expectedReply)
+    expect(data.value).toBe(expectedReply)
+    expect(isLoading.value).toBe(false)
+  })
+
+  it("should execute event without parameters", async () => {
+    const { execute } = useEventReply("test-event")
+    const expectedReply = { status: "ok" }
+
+    mockPushEvent.mockImplementation((eventName: string, params: any, callback: (reply: any) => void) => {
+      callback(expectedReply)
+    })
+
+    const result = await execute()
+
+    expect(mockPushEvent).toHaveBeenCalledWith("test-event", undefined, expect.any(Function))
+    expect(result).toEqual(expectedReply)
+  })
+
+
+  it("should reject concurrent executions", async () => {
+    const { execute } = useEventReply("test-event")
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Mock pushEvent to never call callback (simulating slow response)
+    mockPushEvent.mockImplementation(() => {})
+
+    const firstExecution = execute({ id: 1 })
+    
+    // Second execution should be rejected immediately
+    await expect(execute({ id: 2 })).rejects.toThrow('Event "test-event" is already executing')
+    
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Event "test-event" is already executing. Call cancel() first if you want to start a new execution.'
+    )
+    
+    consoleSpy.mockRestore()
+  })
+
+
+  it("should cancel execution and ignore pending responses", async () => {
+    const { data, isLoading, execute, cancel } = useEventReply<string>("test-event")
+    let pendingCallback: ((reply: string) => void) | null = null
+
+    // Mock pushEvent to store callback without calling it
+    mockPushEvent.mockImplementation((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      pendingCallback = callback
+    })
+
+    const promise = execute({ id: 123 })
+    // Cancel the execution
+    cancel()
+    expect(isLoading.value).toBe(false)
+
+    // The promise should be rejected
+    await expect(promise).rejects.toThrow('Event "test-event" was cancelled')
+
+    // Now call the pending callback - it should be ignored
+    if (pendingCallback) {
+      (pendingCallback as (reply: string) => void)("delayed response")
+    }
+
+    expect(data.value).toBe(null) // Should remain unchanged
+  })
+
+  it("should reject pending promise when cancelled", async () => {
+    const { execute, cancel } = useEventReply<string>("test-event")
+    let pendingCallback: ((reply: string) => void) | null = null
+
+    // Mock pushEvent to store callback without calling it
+    mockPushEvent.mockImplementation((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      pendingCallback = callback
+    })
+
+    // Start execution and get the promise
+    const promise = execute({ id: 123 })
+
+    // Cancel the execution - this should reject the promise
+    cancel()
+
+    // The promise should be rejected with a cancellation error
+    await expect(promise).rejects.toThrow('Event "test-event" was cancelled')
+
+    // Calling the pending callback should not affect anything
+    if (pendingCallback) {
+      (pendingCallback as (reply: string) => void)("delayed response")
+    }
+  })
+
+  it("should handle multiple cancel calls safely", () => {
+    const { cancel, isLoading } = useEventReply("test-event")
+
+    // Multiple cancels when there's no pending execution should be safe
+    cancel()
+    cancel()
+    cancel()
+
+    expect(isLoading.value).toBe(false)
+  })
+
+  it("should handle cancel after execution completes", async () => {
+    const { execute, cancel } = useEventReply<string>("test-event")
+
+    mockPushEvent.mockImplementation((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      callback("response")
+    })
+
+    // Execute and complete
+    await execute()
+
+    // Cancel after completion should be safe (no pending promise to reject)
+    cancel()
+    cancel() // Multiple calls should also be safe
+  })
+
+  it("should allow new execution after cancel", async () => {
+    const { execute, cancel, data } = useEventReply<string>("test-event")
+    let pendingCallback: ((reply: string) => void) | null = null
+
+    // First execution
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      pendingCallback = callback
+    })
+
+    const firstPromise = execute({ id: 1 })
+    cancel()
+
+    // First promise should be rejected
+    await expect(firstPromise).rejects.toThrow('Event "test-event" was cancelled')
+
+    // Second execution should work
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      callback("second response")
+    })
+
+    await execute({ id: 2 })
+    expect(data.value).toBe("second response")
+
+    // Original callback should still be ignored
+    if (pendingCallback) {
+      (pendingCallback as (reply: string) => void)("first response")
+    }
+    expect(data.value).toBe("second response")
+  })
+
+  it("should work with typed parameters", async () => {
+    interface UserParams {
+      id: number
+      name: string
+    }
+    
+    interface UserResponse {
+      user: {
+        id: number
+        name: string
+        email: string
+      }
+    }
+
+    const { execute } = useEventReply<UserResponse, UserParams>("get-user")
+    const params: UserParams = { id: 123, name: "John" }
+    const expectedResponse: UserResponse = {
+      user: { id: 123, name: "John", email: "john@example.com" }
+    }
+
+    mockPushEvent.mockImplementation((eventName: string, params: any, callback: (reply: any) => void) => {
+      callback(expectedResponse)
+    })
+
+    const result = await execute(params)
+    
+    expect(mockPushEvent).toHaveBeenCalledWith("get-user", params, expect.any(Function))
+    expect(result).toEqual(expectedResponse)
+  })
+
+  it("should return correct interface", () => {
+    const result = useEventReply("test-event")
+
+    expect(result).toHaveProperty("data")
+    expect(result).toHaveProperty("isLoading")
+    expect(result).toHaveProperty("execute")
+    expect(result).toHaveProperty("cancel")
+    expect(typeof result.execute).toBe("function")
+    expect(typeof result.cancel).toBe("function")
+  })
+
+  it("should use updateData function when provided", async () => {
+    const updateData = vi.fn((reply: string, currentData: string | null) => {
+      return currentData ? `${currentData},${reply}` : reply
+    })
+
+    const { data, execute } = useEventReply<string>("test-event", { updateData })
+
+    // First execution
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback("first")
+    })
+
+    await execute({ id: 1 })
+    expect(updateData).toHaveBeenCalledWith("first", null)
+    expect(data.value).toBe("first")
+
+    // Second execution should accumulate
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback("second")
+    })
+
+    await execute({ id: 2 })
+    expect(updateData).toHaveBeenCalledWith("second", "first")
+    expect(data.value).toBe("first,second")
+  })
+
+  it("should use updateData with default value", async () => {
+    const updateData = vi.fn((reply: number, currentData: number | null) => {
+      return (currentData || 0) + reply
+    })
+
+    const { data, execute } = useEventReply<number>("test-event", { 
+      defaultValue: 10, 
+      updateData 
+    })
+
+    expect(data.value).toBe(10)
+
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback(5)
+    })
+
+    await execute()
+    expect(updateData).toHaveBeenCalledWith(5, 10)
+    expect(data.value).toBe(15)
+  })
+
+  it("should use updateData for array accumulation", async () => {
+    interface Item {
+      id: number
+      name: string
+    }
+
+    const updateData = vi.fn((reply: Item[], currentData: Item[] | null) => {
+      return currentData ? [...currentData, ...reply] : reply
+    })
+
+    const { data, execute } = useEventReply<Item[]>("test-event", { updateData })
+
+    // First item
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback([{ id: 1, name: "first" }])
+    })
+
+    await execute()
+    expect(data.value).toEqual([{ id: 1, name: "first" }])
+
+    // Second item
+    mockPushEvent.mockImplementationOnce((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback([{ id: 2, name: "second" }])
+    })
+
+    await execute()
+    expect(data.value).toEqual([
+      { id: 1, name: "first" },
+      { id: 2, name: "second" }
+    ])
+  })
+
+  it("should not call updateData when execution is cancelled", async () => {
+    const updateData = vi.fn((reply: string, _currentData: string | null) => reply)
+
+    const { execute, cancel } = useEventReply<string>("test-event", { updateData })
+    let pendingCallback: ((reply: string) => void) | null = null
+
+    mockPushEvent.mockImplementation((_eventName: string, _params: any, callback: (reply: string) => void) => {
+      pendingCallback = callback
+    })
+
+    const promise = execute()
+    cancel()
+
+    // The promise should be rejected due to cancellation
+    await expect(promise).rejects.toThrow('Event "test-event" was cancelled')
+
+    // Call the pending callback - updateData should not be called
+    if (pendingCallback) {
+      (pendingCallback as (reply: string) => void)("delayed response")
+    }
+
+    expect(updateData).not.toHaveBeenCalled()
+  })
+
+  it("should work without updateData function (default behavior)", async () => {
+    const { data, execute } = useEventReply<string>("test-event")
+
+    mockPushEvent.mockImplementation((_eventName: string, _params: any, callback: (reply: any) => void) => {
+      callback("response")
+    })
+
+    await execute()
+    expect(data.value).toBe("response")
   })
 })
