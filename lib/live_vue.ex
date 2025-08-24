@@ -226,8 +226,7 @@ defmodule LiveVue do
 
         # For complex types which didn't change type, use Jsonpatch to find minimal diff
         old_value ->
-          # TODO - replace by Jsonpatch library when all PRs are merged
-          LiveVue.Diff.diff(old_value, new_value,
+          Jsonpatch.diff(old_value, new_value,
             ancestor_path: "/#{k}",
             prepare_map: fn
               struct when is_struct(struct) -> Encoder.encode(struct)

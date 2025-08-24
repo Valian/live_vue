@@ -141,7 +141,7 @@ defmodule LiveVue.MixProject do
       {:phoenix, ">= 1.7.0"},
       {:phoenix_live_view, ">= 0.18.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:jsonpatch, "~> 2.2"},
+      {:jsonpatch, "~> 2.3"},
       {:igniter, "~> 0.6", optional: true},
       {:phoenix_vite, "~> 0.3.3"},
       {:floki, ">= 0.30.0", optional: true},
