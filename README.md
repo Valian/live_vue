@@ -11,15 +11,16 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 ## Features
 
 -   ⚡ **End-To-End Reactivity** with LiveView
+-   🧙‍♂️ **One-line Install** - Automated setup via Igniter installer
 -   🔋 **Server-Side Rendered** (SSR) Vue
 -   🐌 **Lazy-loading** Vue Components
 -   📦 **Efficient Props Diffing** - Only changed data is sent over WebSocket
--   🪄 **Sigil** as an [Alternative LiveView DSL](#using-vue-sigil-to-inline-vue-components)
+-   🪄 **~VUE Sigil** as an alternative LiveView DSL
 -   🎯 **Phoenix Streams** Support with efficient patches
 -   🦄 **Tailwind** Support
--   💀 **Dead View** Support
 -   🦥 **Slot Interoperability**
 -   📁 **File Upload Composable** - `useLiveUpload()` for seamless Vue integration with LiveView uploads
+-   📝 **Comprehensive Form Handling** - `useLiveForm()` with server-side validation via Ecto changesets
 -   🚀 **Amazing DX** with Vite
 
 
