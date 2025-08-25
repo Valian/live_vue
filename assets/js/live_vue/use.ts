@@ -358,3 +358,63 @@ export const useEventReply = <T = any, P extends Record<string, any> | void = Re
     cancel,
   }
 }
+
+export interface UseLiveConnectionReturn {
+  /** Reactive connection state: "connecting" | "open" | "closing" | "closed" */
+  connectionState: Ref<string>
+  /** Whether the socket is currently connected */
+  isConnected: ComputedRef<boolean>
+}
+
+/**
+ * A composable for monitoring LiveView WebSocket connectivity status.
+ * Provides reactive connection state and convenience methods.
+ * @returns An object with reactive connection state and computed connection status
+ */
+export const useLiveConnection = (): UseLiveConnectionReturn => {
+  const live = useLiveVue()
+  const liveSocket = live.liveSocket
+  if (!liveSocket) throw new Error("LiveSocket not initialized")
+  
+  const socket = liveSocket.socket
+  if (!socket) throw new Error("Socket not available")
+
+  // Initialize with current connection state
+  const connectionState = ref(socket.connectionState())
+  
+  // Computed convenience property
+  const isConnected = computed(() => connectionState.value === "open")
+
+  let openRef: string | null = null
+  let closeRef: string | null = null
+  let errorRef: string | null = null
+
+  onMounted(() => {
+    // Register connection event listeners
+    openRef = socket.onOpen(() => {
+      connectionState.value = "open"
+    })
+    
+    closeRef = socket.onClose(() => {
+      connectionState.value = "closed"
+    })
+    
+    errorRef = socket.onError(() => {
+      // Update state to reflect current socket state after error
+      connectionState.value = socket.connectionState()
+    })
+  })
+
+  onUnmounted(() => {
+    // Clean up event listeners
+    const refs = [openRef, closeRef, errorRef].filter(ref => ref !== null) as string[]
+    if (refs.length > 0) {
+      socket.off(refs)
+    }
+  })
+
+  return {
+    connectionState,
+    isConnected,
+  }
+}

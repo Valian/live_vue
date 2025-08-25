@@ -21,7 +21,7 @@ const mockLive: Partial<Omit<ViewHook, "el">> & {
   vue: Omit<VueArgs, "app"> & { app: object }
 } = {
   el: {},
-  liveSocket: {} as any,
+  liveSocket: { socket: { connectionState: () => "closed" } } as any,
   pushEvent: () => Promise.resolve(0),
   pushEventTo: () => Promise.resolve([]),
   handleEvent: () => ({ event: "", callback: () => {} }),
