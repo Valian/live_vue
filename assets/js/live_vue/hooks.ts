@@ -82,6 +82,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
 
     const props = reactive(getProps(this.el, this.liveSocket))
     const slots = reactive(getSlots(this.el))
+    this.vue = { props, slots, app: null}
     const app = setup({
       createApp: makeApp,
       component,
@@ -99,7 +100,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
 
     if (!app) throw new Error("Setup function did not return a Vue app!")
 
-    this.vue = { props, slots, app }
+    this.vue.app = app
   },
   updated() {
     if (this.el.getAttribute("data-use-diff") === "true") {
