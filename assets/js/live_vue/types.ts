@@ -70,6 +70,14 @@ export type UploadOptions = {
   submitEvent: string
 }
 
+// Phoenix LiveView AsyncResult type for client-side use
+export interface AsyncResult<T = unknown> {
+  ok: boolean
+  loading: string[] | null
+  failed: any | null
+  result: T | null
+}
+
 export interface SetupContext {
   createApp: typeof createSSRApp | typeof createApp
   component: VueComponentInternal

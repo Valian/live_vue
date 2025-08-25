@@ -385,6 +385,26 @@ defimpl LiveVue.Encoder, for: Any do
   end
 end
 
+# Phoenix LiveView AsyncResult struct
+defimpl LiveVue.Encoder, for: Phoenix.LiveView.AsyncResult do
+  def encode(%Phoenix.LiveView.AsyncResult{} = struct, opts) do
+    LiveVue.Encoder.encode(
+      %{
+        ok: struct.ok?,
+        loading: struct.loading,
+        failed: encode_failed(struct.failed),
+        result: struct.result
+      },
+      opts
+    )
+  end
+
+  # Unwrap error tuples for JSON compatibility
+  defp encode_failed({:error, reason}), do: reason
+  defp encode_failed({:exit, reason}), do: reason
+  defp encode_failed(other), do: other
+end
+
 # Phoenix LiveView Upload structs
 # Explicit implementation of LiveVue.Encoder for UploadConfig
 defimpl LiveVue.Encoder, for: Phoenix.LiveView.UploadConfig do
