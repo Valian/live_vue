@@ -8,6 +8,7 @@ export type {
   UploadConfig,
   UploadEntry,
   UploadOptions,
+  AsyncResult,
 } from "./types.js"
 export { createLiveVue } from "./app.js"
 export { getHooks } from "./hooks.js"

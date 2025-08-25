@@ -714,6 +714,91 @@ let liveSocket = new LiveSocket("/live", Socket, {
 })
 ```
 
+## AsyncResult Type
+
+LiveVue provides full TypeScript support for Phoenix LiveView's `AsyncResult` struct, allowing type-safe handling of async operations in your Vue components.
+
+### Overview
+
+`AsyncResult<T>` represents the state of an asynchronous operation (like `assign_async`, `stream_async`, or `start_async`) with the following fields:
+
+- `ok`: Boolean indicating if the operation has completed successfully at least once
+- `loading`: Loading state - can be `null`, `string[]` (list of keys from `assign_async`), or custom loading data
+- `failed`: Error state - unwrapped from Elixir error tuples for JSON compatibility
+- `result`: The successful result data of type `T`
+
+### Usage Examples
+
+```typescript
+import type { AsyncResult } from 'live_vue'
+
+// Basic async result for a single value
+interface Props {
+  userResult: AsyncResult<User>
+}
+
+// Multi-key async result (from assign_async with multiple keys)
+interface MultiProps {
+  dataResult: AsyncResult<{ users: User[], posts: Post[] }>
+}
+
+const props = defineProps<Props>()
+
+// Check if data is available
+if (props.userResult.ok && props.userResult.result) {
+  console.log('User:', props.userResult.result.name)
+}
+
+// Handle different loading states
+if (props.userResult.loading === true) {
+  console.log('Loading...')
+} else if (Array.isArray(props.userResult.loading)) {
+  console.log('Loading keys:', props.userResult.loading) // ['users', 'posts']
+} else if (props.userResult.loading) {
+  console.log('Custom loading state:', props.userResult.loading)
+}
+
+// Handle errors (automatically unwrapped from {:error, reason} tuples)
+if (props.userResult.failed) {
+  console.error('Failed:', props.userResult.failed) // Direct access to error reason
+}
+```
+
+### LiveView Integration
+
+In your LiveView, use async operations that create `AsyncResult` structs:
+
+```elixir
+def mount(_params, _session, socket) do
+  socket =
+    socket
+    |> assign_async(:user, fn ->
+      case Users.get_current_user() do
+        {:ok, user} -> {:ok, %{user: user}}
+        {:error, reason} -> {:error, reason}
+      end
+    end)
+
+  {:ok, socket}
+end
+
+def handle_event("refresh_data", _params, socket) do
+  socket =
+    socket
+    |> assign_async([:users, :posts], fn ->
+      # This creates loading: ["users", "posts"] in the AsyncResult
+      {:ok, %{
+        users: Users.list_users(),
+        posts: Posts.list_posts()
+      }}
+    end)
+
+  {:noreply, socket}
+end
+```
+
+The `AsyncResult` will automatically be encoded and passed to your Vue components with proper TypeScript types.
+
 ## TypeScript Support
 
 ### Type Definitions
@@ -743,8 +828,8 @@ const emit = defineEmits<{
 const live = useLiveVue()
 // live is fully typed with all available methods
 
-// Upload types (imported from 'live_vue')
-import type { UploadConfig, UploadEntry } from 'live_vue'
+// Upload and AsyncResult types (imported from 'live_vue')
+import type { UploadConfig, UploadEntry, AsyncResult } from 'live_vue'
 
 interface UploadProps {
   upload: UploadConfig
@@ -758,6 +843,33 @@ const { entries, showFilePicker, submit } = useLiveUpload(() => props.upload, {
 // entries: Ref<UploadEntry[]>
 // showFilePicker: () => void
 // submit: () => void
+
+// AsyncResult for handling async operations
+interface AsyncProps {
+  userAsyncResult: AsyncResult<User>
+  dataLoadingResult: AsyncResult<any[], string[]>
+}
+
+const props = defineProps<AsyncProps>()
+
+// Type-safe access to async state
+if (props.userAsyncResult.ok && props.userAsyncResult.result) {
+  console.log('User loaded:', props.userAsyncResult.result.name)
+}
+
+// Handle loading states (can be boolean, string array, or custom data)
+if (props.dataLoadingResult.loading) {
+  if (Array.isArray(props.dataLoadingResult.loading)) {
+    console.log('Loading keys:', props.dataLoadingResult.loading) // e.g., ['users', 'posts']
+  } else {
+    console.log('Loading state:', props.dataLoadingResult.loading)
+  }
+}
+
+// Handle error states (automatically unwrapped from Elixir tuples)
+if (props.userAsyncResult.failed) {
+  console.error('Load failed:', props.userAsyncResult.failed) // Direct access to error reason
+}
 ```
 
 ## Common Patterns

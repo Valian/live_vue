@@ -4,6 +4,7 @@ defmodule LiveVue.EncoderTest do
   alias LiveVue.Encoder
   alias Phoenix.LiveView.UploadConfig
   alias Phoenix.LiveView.UploadEntry
+  alias Phoenix.LiveView.AsyncResult
 
   describe "primitive types" do
     test "encodes integers" do
@@ -543,6 +544,148 @@ defmodule LiveVue.EncoderTest do
       }
 
       assert Encoder.encode(config) == expected
+    end
+  end
+
+  describe "Phoenix.LiveView.AsyncResult" do
+    test "encodes AsyncResult in loading state" do
+      async_result = AsyncResult.loading()
+
+      expected = %{
+        ok: false,
+        loading: true,
+        failed: nil,
+        result: nil
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult with custom loading state" do
+      async_result = AsyncResult.loading(%{progress: 50, step: "processing"})
+
+      expected = %{
+        ok: false,
+        loading: %{progress: 50, step: "processing"},
+        failed: nil,
+        result: nil
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult in successful state" do
+      async_result = AsyncResult.ok(%{users: ["alice", "bob"], count: 2})
+
+      expected = %{
+        ok: true,
+        loading: nil,
+        failed: nil,
+        result: %{users: ["alice", "bob"], count: 2}
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult in failed state" do
+      async_result = 
+        AsyncResult.loading()
+        |> AsyncResult.failed({:error, "Network timeout"})
+
+      expected = %{
+        ok: false,
+        loading: nil,
+        failed: "Network timeout",
+        result: nil
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult that was successful then failed" do
+      async_result = 
+        AsyncResult.ok("initial data")
+        |> AsyncResult.failed({:exit, :crashed})
+
+      expected = %{
+        ok: true,
+        loading: nil,
+        failed: :crashed,
+        result: "initial data"
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult that was successful then loading again" do
+      async_result = 
+        AsyncResult.ok("cached data")
+        |> AsyncResult.loading("refreshing")
+
+      expected = %{
+        ok: true,
+        loading: "refreshing",
+        failed: nil,
+        result: "cached data"
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult with loading keys list (assign_async)" do
+      # This simulates what happens in assign_async when multiple keys are being loaded
+      async_result = %AsyncResult{
+        ok?: false,
+        loading: [:users, :posts],
+        failed: nil,
+        result: nil
+      }
+
+      expected = %{
+        ok: false,
+        loading: [:users, :posts],
+        failed: nil,
+        result: nil
+      }
+
+      assert Encoder.encode(async_result) == expected
+    end
+
+    test "encodes AsyncResult with complex error structures" do
+      # Test unwrapping of various error tuple formats
+      error_result = %AsyncResult{
+        ok?: false,
+        loading: nil,
+        failed: {:error, %{message: "Database connection failed", code: 500}},
+        result: nil
+      }
+
+      expected = %{
+        ok: false,
+        loading: nil,
+        failed: %{message: "Database connection failed", code: 500},
+        result: nil
+      }
+
+      assert Encoder.encode(error_result) == expected
+    end
+
+    test "encodes AsyncResult with exit reason tuple" do
+      exit_result = %AsyncResult{
+        ok?: true,
+        loading: nil,
+        failed: {:exit, {{:nocatch, "unexpected error"}, []}},
+        result: "some data"
+      }
+
+      expected = %{
+        ok: true,
+        loading: nil,
+        failed: {{:nocatch, "unexpected error"}, []},
+        result: "some data"
+      }
+
+      assert Encoder.encode(exit_result) == expected
     end
   end
 end
