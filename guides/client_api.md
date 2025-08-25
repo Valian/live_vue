@@ -252,6 +252,152 @@ const skillsArray = form.fieldArray('skills')
 
 For comprehensive examples including nested objects, complex arrays, and advanced patterns, see [Forms and Validation](forms.md).
 
+### `useLiveConnection()`
+
+The `useLiveConnection` composable provides reactive monitoring of the LiveView WebSocket connectivity status. This is useful for showing connection indicators, handling offline scenarios, or implementing retry logic based on connection state.
+
+**Returns:**
+
+- `connectionState` - Reactive connection state: "connecting", "open", "closing", or "closed"
+- `isConnected` - Computed boolean indicating if the socket is currently connected
+
+**Basic Example:**
+
+```html
+<script setup>
+import { useLiveConnection } from 'live_vue'
+import { watch } from 'vue'
+
+const { connectionState, isConnected } = useLiveConnection()
+
+// React to connection changes
+watch(connectionState, (state) => {
+  console.log(`Connection state changed to: ${state}`)
+
+  if (state === 'closed') {
+    // Handle disconnection - maybe show a reconnecting message
+    console.log('Lost connection to server')
+  } else if (state === 'open') {
+    // Handle reconnection - maybe hide offline indicators
+    console.log('Connected to server')
+  }
+})
+</script>
+
+<template>
+  <div>
+    <!-- Connection indicator -->
+    <div class="connection-status" :class="{ 'connected': isConnected, 'disconnected': !isConnected }">
+      {{ isConnected ? 'Connected' : 'Disconnected' }}
+    </div>
+
+    <!-- Show detailed state for debugging -->
+    <div v-if="!isConnected" class="text-sm text-gray-500">
+      Status: {{ connectionState }}
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.connection-status.connected {
+  color: green;
+}
+.connection-status.disconnected {
+  color: red;
+}
+</style>
+```
+
+**Advanced Example - Offline Indicator with Retry:**
+
+```html
+<script setup>
+import { useLiveConnection, useLiveVue } from 'live_vue'
+import { ref, computed, watch } from 'vue'
+
+const { connectionState, isConnected } = useLiveConnection()
+const live = useLiveVue()
+
+const showOfflineBanner = ref(false)
+
+// Show offline banner after being disconnected for 3 seconds
+let offlineTimeout: NodeJS.Timeout | null = null
+
+watch(isConnected, (connected) => {
+  if (!connected) {
+    // Start offline timer
+    offlineTimeout = setTimeout(() => {
+      showOfflineBanner.value = true
+    }, 3000)
+  } else {
+    // Clear offline timer and hide banner
+    if (offlineTimeout) {
+      clearTimeout(offlineTimeout)
+      offlineTimeout = null
+    }
+    showOfflineBanner.value = false
+  }
+})
+
+const connectionLabel = computed(() => {
+  switch (connectionState.value) {
+    case 'connecting':
+      return 'Connecting...'
+    case 'open':
+      return 'Connected'
+    case 'closing':
+      return 'Disconnecting...'
+    case 'closed':
+      return 'Offline'
+    default:
+      return 'Unknown'
+  }
+})
+</script>
+
+<template>
+  <div>
+    <!-- Persistent connection indicator -->
+    <div class="fixed top-4 right-4 px-3 py-1 rounded text-sm font-medium z-50"
+         :class="{
+           'bg-green-100 text-green-800': isConnected,
+           'bg-red-100 text-red-800': !isConnected,
+           'bg-yellow-100 text-yellow-800': connectionState === 'connecting'
+         }">
+      {{ connectionLabel }}
+    </div>
+
+    <!-- Offline banner -->
+    <div v-if="showOfflineBanner"
+         class="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 z-40">
+      <p>
+        You're offline. Check your internet connection.
+      </p>
+    </div>
+
+    <!-- Your app content -->
+    <main :class="{ 'mt-12': showOfflineBanner }">
+      <!-- App content here -->
+    </main>
+  </div>
+</template>
+```
+
+**Key Features:**
+
+- **Real-time updates**: Connection state updates automatically when WebSocket events occur
+- **Automatic cleanup**: Event listeners are properly cleaned up when component unmounts
+- **Typed states**: Connection state is typed with exact string values for better TypeScript support
+- **Convenience computed**: `isConnected` provides a simple boolean check for most use cases
+
+**Use Cases:**
+
+- Connection status indicators in the UI
+- Disabling forms or features when offline
+- Implementing custom retry logic
+- Showing appropriate messaging during connection issues
+- Analytics tracking of connection stability
+
 ### `useEventReply(eventName, options)`
 
 The `useEventReply` composable provides a reactive way to handle LiveView events that return server responses. Unlike `useLiveEvent` which only listens for server-sent events, `useEventReply` is for bi-directional communication where you send an event to the server and handle the reply.
