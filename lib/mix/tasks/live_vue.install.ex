@@ -645,11 +645,24 @@ defmodule Mix.Tasks.LiveVue.Install do
       Igniter.update_file(igniter, router_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
           # Add the vue_demo route to the dev section after live_dashboard
-          String.replace(
-            content,
-            ~r/(live_dashboard.*)/,
-            "\\1\n      live \"/vue_demo\", #{web_module_name}.VueDemoLive"
-          )
+          if String.contains?(content, "live \"/vue_demo\"") do
+            content
+          else
+            if String.contains?(content, "live_dashboard") do
+              String.replace(
+                content,
+                ~r/(live_dashboard.*)/,
+                "\\1\n      live \"/vue_demo\", #{web_module_name}.VueDemoLive"
+              )
+            else
+              # there is no live_dashboard, so we need to add the route to the browser pipeline
+              String.replace(
+                content,
+                ~r/(pipe_through :browser.*)/,
+                "\\1\n      live \"/dev/vue_demo\", #{web_module_name}.VueDemoLive"
+              )
+            end
+          end
         end)
       end)
     end
