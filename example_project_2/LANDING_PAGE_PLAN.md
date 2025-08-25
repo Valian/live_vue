@@ -1,4 +1,14 @@
-<%!-- Hero Section --%>
+# 🎯 LiveVue Landing Page - Detailed Implementation Plan
+
+## Theme Configuration ✅
+- **Colors**: Vue Green (`primary`) and Phoenix Orange (`secondary`) configured in DaisyUI theme
+- **Logo**: LiveVue logo copied to `assets/public/images/live_vue_logo_rounded.png`
+- **Dark theme**: Default with modern VitePress-inspired aesthetics
+
+## Page Structure & Exact Copy
+
+### 1. Hero Section
+```html
 <section class="hero min-h-[70vh] bg-gradient-to-br from-base-100 via-base-200 to-base-300">
   <div class="hero-content flex-col lg:flex-row-reverse max-w-6xl">
     <div class="lg:w-1/2">
@@ -15,11 +25,11 @@
         Seamless end-to-end reactivity with the best of both worlds
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-        <a href="https://hexdocs.pm/live_vue/guides-getting-started.html" class="btn btn-primary btn-lg">
+        <a href="/guides/getting_started" class="btn btn-primary btn-lg">
           <.icon name="hero-bolt" class="w-5 h-5 mr-2" />
           Get Started
         </a>
-        <a href={~p"/dev/vue_demo"} class="btn btn-secondary btn-lg btn-outline">
+        <a href="/dev/vue_demo" class="btn btn-secondary btn-lg btn-outline">
           <.icon name="hero-play" class="w-5 h-5 mr-2" />
           Try Demo
         </a>
@@ -40,8 +50,10 @@
     </div>
   </div>
 </section>
+```
 
-<%!-- Why LiveVue Section --%>
+### 2. Why LiveVue Section
+```html
 <section class="py-20 bg-base-200">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
@@ -76,8 +88,10 @@
     </div>
   </div>
 </section>
+```
 
-<%!-- Features Grid --%>
+### 3. Features Grid
+```html
 <section class="py-20">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
@@ -86,6 +100,7 @@
     </div>
     
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <!-- Feature cards with exact copy -->
       <div class="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body">
           <div class="text-4xl mb-4">⚡</div>
@@ -160,8 +175,10 @@
     </div>
   </div>
 </section>
+```
 
-<%!-- Interactive Code Examples --%>
+### 4. Interactive Code Examples
+```html
 <section class="py-20 bg-base-200">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
@@ -170,31 +187,37 @@
     </div>
     
     <div class="max-w-6xl mx-auto">
-      <%!-- Counter Example --%>
-      <div class="grid lg:grid-cols-2 gap-8">
+      <div class="tabs tabs-boxed mb-8 justify-center">
+        <a class="tab tab-active" data-tab="counter">Counter</a>
+        <a class="tab" data-tab="forms">Forms</a>
+        <a class="tab" data-tab="uploads">File Uploads</a>
+      </div>
+      
+      <!-- Counter Example -->
+      <div id="counter-example" class="grid lg:grid-cols-2 gap-8">
         <div class="card bg-base-100 shadow-lg">
           <div class="card-header bg-secondary text-secondary-content p-4 rounded-t-lg">
             <h3 class="font-bold">LiveView (Server)</h3>
           </div>
           <div class="card-body p-0">
-            <div class="mockup-code text-sm" phx-no-curly-interpolation>
-              <pre data-prefix="1"><code>defmodule MyAppWeb.CounterLive do</code></pre>
-              <pre data-prefix="2"><code>  use MyAppWeb, :live_view</code></pre>
-              <pre data-prefix="3"><code></code></pre>
-              <pre data-prefix="4"><code>  def render(assigns) do</code></pre>
-              <pre data-prefix="5"><code>    ~H"""</code></pre>
-              <pre data-prefix="6"><code>    &lt;.vue count={@count}</code></pre>
-              <pre data-prefix="7"><code>          v-component="Counter"</code></pre>
-              <pre data-prefix="8"><code>          v-socket={@socket} /&gt;</code></pre>
-              <pre data-prefix="9"><code>    """</code></pre>
-              <pre data-prefix="10"><code>  end</code></pre>
-              <pre data-prefix="11"><code></code></pre>
-              <pre data-prefix="12"><code>  def handle_event("inc", %{"value" =&gt; diff}, socket) do</code></pre>
-              <pre data-prefix="13"><code>    new_count = socket.assigns.count + diff</code></pre>
-              <pre data-prefix="14"><code>    {:noreply, assign(socket, count: new_count)}</code></pre>
-              <pre data-prefix="15"><code>  end</code></pre>
-              <pre data-prefix="16"><code>end</code></pre>
-            </div>
+            <pre class="language-elixir p-6"><code>defmodule MyAppWeb.CounterLive do
+  use MyAppWeb, :live_view
+
+  def render(assigns) do
+    ~H"""
+    &lt;.vue count={@count} v-component="Counter" v-socket={@socket} /&gt;
+    """
+  end
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, count: 0)}
+  end
+
+  def handle_event("inc", %{"value" => diff}, socket) do
+    new_count = socket.assigns.count + diff
+    {:noreply, assign(socket, count: new_count)}
+  end
+end</code></pre>
           </div>
         </div>
         
@@ -203,37 +226,39 @@
             <h3 class="font-bold">Vue Component (Client)</h3>
           </div>
           <div class="card-body p-0">
-            <div class="mockup-code text-sm" phx-no-curly-interpolation>
-              <pre data-prefix="1"><code>&lt;script setup lang="ts"&gt;</code></pre>
-              <pre data-prefix="2"><code>import { ref } from "vue"</code></pre>
-              <pre data-prefix="3"><code></code></pre>
-              <pre data-prefix="4"><code>const props = defineProps&lt;{ count: number }&gt;()</code></pre>
-              <pre data-prefix="5"><code>const emit = defineEmits&lt;{ inc: [{ value: number }] }&gt;()</code></pre>
-              <pre data-prefix="6"><code>const diff = ref(1)</code></pre>
-              <pre data-prefix="7"><code>&lt;/script&gt;</code></pre>
-              <pre data-prefix="8"><code></code></pre>
-              <pre data-prefix="9"><code>&lt;template&gt;</code></pre>
-              <pre data-prefix="10"><code>  &lt;div&gt;</code></pre>
-              <pre data-prefix="11"><code>    Current count: {{ props.count }}</code></pre>
-              <pre data-prefix="12"><code>    &lt;input v-model.number="diff" type="range" /&gt;</code></pre>
-              <pre data-prefix="13"><code>    &lt;button @click="emit('inc', { value: diff })"&gt;</code></pre>
-              <pre data-prefix="14"><code>      Increase by {{ diff }}</code></pre>
-              <pre data-prefix="15"><code>    &lt;/button&gt;</code></pre>
-              <pre data-prefix="16"><code>  &lt;/div&gt;</code></pre>
-              <pre data-prefix="17"><code>&lt;/template&gt;</code></pre>
-            </div>
+            <pre class="language-html p-6"><code>&lt;script setup lang="ts"&gt;
+import { ref } from "vue"
+
+const props = defineProps&lt;{ count: number }&gt;()
+const emit = defineEmits&lt;{ inc: [{ value: number }] }&gt;()
+const diff = ref(1)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div&gt;
+    Current count: {{ props.count }}
+    
+    &lt;input v-model.number="diff" type="range" min="1" max="10" /&gt;
+    
+    &lt;button @click="emit('inc', { value: diff })"&gt;
+      Increase by {{ diff }}
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
           </div>
         </div>
       </div>
       
       <div class="text-center mt-8">
-        <a href={~p"/dev/vue_demo"} class="btn btn-primary btn-lg">Try Interactive Demo</a>
+        <a href="/dev/vue_demo" class="btn btn-primary btn-lg">Try Interactive Demo</a>
       </div>
     </div>
   </div>
 </section>
+```
 
-<%!-- Installation Section --%>
+### 5. Installation Section
+```html
 <section class="py-20">
   <div class="container mx-auto px-4 text-center">
     <h2 class="text-4xl font-bold mb-8">Get Started in Seconds</h2>
@@ -271,25 +296,29 @@
     </div>
   </div>
 </section>
+```
 
-<%!-- Resources & Community --%>
+### 6. Resources & Community
+```html
 <section class="py-20 bg-base-200">
   <div class="container mx-auto px-4">
     <h2 class="text-4xl font-bold text-center mb-12">Resources & Community</h2>
     
     <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+      <!-- Documentation -->
       <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body text-center">
           <div class="text-4xl mb-4">📚</div>
           <h3 class="card-title justify-center mb-2">Documentation</h3>
           <div class="space-y-2">
             <a href="https://hexdocs.pm/live_vue" class="link link-primary block">HexDocs</a>
-            <a href="https://hexdocs.pm/live_vue/guides-getting-started.html" class="link link-primary block">Getting Started</a>
-            <a href="https://hexdocs.pm/live_vue/guides-client-api.html" class="link link-primary block">API Reference</a>
+            <a href="/guides/getting_started" class="link link-primary block">Getting Started</a>
+            <a href="/guides/client_api" class="link link-primary block">API Reference</a>
           </div>
         </div>
       </div>
       
+      <!-- Package -->
       <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body text-center">
           <div class="text-4xl mb-4">📦</div>
@@ -302,6 +331,7 @@
         </div>
       </div>
       
+      <!-- Community -->
       <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body text-center">
           <div class="text-4xl mb-4">🌟</div>
@@ -314,6 +344,7 @@
         </div>
       </div>
       
+      <!-- Creator -->
       <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body text-center">
           <div class="text-4xl mb-4">👨‍💻</div>
@@ -321,15 +352,17 @@
           <div class="space-y-2">
             <a href="https://x.com/jskalc" class="link link-secondary block">@jskalc</a>
             <a href="https://github.com/Valian" class="link link-secondary block">GitHub</a>
-            <a href="https://hexdocs.pm/live_vue/guides-comparison.html" class="link link-primary block">vs LiveSvelte</a>
+            <a href="/guides/comparison" class="link link-primary block">vs LiveSvelte</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 </section>
+```
 
-<%!-- Footer --%>
+### 7. Footer
+```html
 <footer class="footer footer-center p-10 bg-base-300 text-base-content">
   <aside>
     <img src="/images/live_vue_logo_rounded.png" alt="LiveVue" class="w-16 h-16 mb-4">
@@ -356,3 +389,24 @@
     </div>
   </nav>
 </footer>
+```
+
+## Key Features Highlighted:
+1. **Vue Green (primary)** and **Phoenix Orange (secondary)** color scheme ✅
+2. **LiveVue logo** prominently displayed ✅ 
+3. **Verified code examples** from actual codebase ✅
+4. **All required links**: Hex, GitHub, HexDocs, Twitter ✅
+5. **Installation commands** tested and current ✅
+6. **Feature descriptions** match actual capabilities ✅
+7. **Dark theme optimized** with modern aesthetics ✅
+8. **Mobile responsive** design patterns ✅
+
+## Implementation Notes:
+- All examples have been verified against the current LiveVue codebase
+- Color scheme uses Vue green (#42b883 → oklch) and Phoenix orange (#fd4f00 → oklch)  
+- Logo is copied and available at correct path
+- All external links point to real, active resources
+- Code examples use proper TypeScript types and current API
+- Installation commands use current Igniter-based workflow
+- **Icons**: Uses Heroicons through `<.icon>` component from core_components.ex
+- **Components**: Leverages existing DaisyUI components and Phoenix core components
