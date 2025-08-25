@@ -121,8 +121,6 @@ defimpl LiveVue.Encoder, for: [Date, Time, NaiveDateTime, DateTime] do
 end
 
 defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
-  @relations [:embed, :assoc]
-
   def encode(%Phoenix.HTML.Form{} = form, opts) do
     LiveVue.Encoder.encode(
       %{
@@ -133,19 +131,45 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
       },
       opts
     )
+  rescue
+    error in [Protocol.UndefinedError] ->
+      error =
+        if Code.ensure_loaded?(Ecto) do
+          case error.value do
+            %Ecto.Association.NotLoaded{} ->
+              Map.update!(error, :description, fn description ->
+                [first | rest] = String.split(description, "\n\n")
+
+                addition = """
+                To prevent this error from happening in forms, you can explicitly encode form using LiveVue.Encoder.encode(form, nillify_not_loaded: true) option.
+                """
+
+                Enum.join([first | [addition | rest]], "\n\n")
+              end)
+
+            _val ->
+              error
+          end
+        else
+          error
+        end
+
+      reraise error, __STACKTRACE__
   end
 
   defp get_form_validity(%{source: %{valid?: valid}}), do: valid
   defp get_form_validity(_), do: true
 
   if Code.ensure_loaded?(Ecto) do
+    @relations [:embed, :assoc]
+
     # for changeset, we need to collect actual values from the changeset
     # - if there are changes, we need to use changed values
     # - if there are no changes, we should use params (possibly invalid, to reflect intermediate state)
     # - if there are not changes and no params, we should use the data
     # it's a bit tricky, because we need to traverse embeds and assocs
-    defp collect_changeset_values(%Ecto.Changeset{} = source) do
-      data = Map.new(source.types, fn {field, type} -> {field, get_field_value(source, field, type)} end)
+    defp collect_changeset_values(%Ecto.Changeset{} = source, opts) do
+      data = Map.new(source.types, fn {field, type} -> {field, get_field_value(source, field, type, opts)} end)
 
       result = if is_struct(source.data), do: Map.merge(source.data, data), else: data
 
@@ -153,24 +177,21 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
       Map.delete(result, :__meta__)
     end
 
-    defp get_field_value(source, field, {tag, %{cardinality: :one}}) when tag in @relations do
+    defp get_field_value(source, field, {tag, %{cardinality: :one}}, opts) when tag in @relations do
       case Map.fetch(source.changes, field) do
         {:ok, nil} ->
           nil
 
         {:ok, %Ecto.Changeset{} = changeset} ->
-          collect_changeset_values(changeset)
+          collect_changeset_values(changeset, opts)
 
         # there are no changes underneath, so we can just use the data
         :error ->
           case Map.fetch!(source.data, field) do
             %Ecto.Association.NotLoaded{} = not_loaded ->
-              raise ArgumentError, """
-              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
-
-              Associations must be preloaded before encoding forms for LiveVue.
-              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
-              """
+              # I was thinking how to solve this correctly
+              # but for now I think ignoring this is the best option
+              if opts[:nillify_not_loaded], do: nil, else: not_loaded
 
             %{__meta__: _} = value ->
               Map.delete(value, :__meta__)
@@ -181,20 +202,16 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
       end
     end
 
-    defp get_field_value(source, field, {tag, %{cardinality: :many}}) when tag in @relations do
+    defp get_field_value(source, field, {tag, %{cardinality: :many}}, opts) when tag in @relations do
       case Map.fetch(source.changes, field) do
         {:ok, changesets} ->
-          Enum.map(changesets, &collect_changeset_values/1)
+          Enum.map(changesets, &collect_changeset_values(&1, opts))
 
         :error ->
           case Map.fetch!(source.data, field) do
             %Ecto.Association.NotLoaded{} = not_loaded ->
-              raise ArgumentError, """
-              Cannot encode form with NotLoaded association: #{inspect(not_loaded)}
-
-              Associations must be preloaded before encoding forms for LiveVue.
-              Use Ecto.Query.preload/2 or Repo.preload/2 to load the association.
-              """
+              # let's return nil for not loaded associations
+              if opts[:nillify_not_loaded], do: nil, else: not_loaded
 
             [%{__meta__: _} | _] = value ->
               Enum.map(value, &Map.delete(&1, :__meta__))
@@ -205,12 +222,12 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
       end
     end
 
-    defp get_field_value(source, field, _type) do
+    defp get_field_value(source, field, _type, _opts) do
       Phoenix.HTML.FormData.Ecto.Changeset.input_value(source, %{params: source.params}, field)
     end
 
     def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset, source: source}, opts) do
-      source |> collect_changeset_values() |> LiveVue.Encoder.encode(opts)
+      source |> collect_changeset_values(opts) |> LiveVue.Encoder.encode(opts)
     end
   end
 

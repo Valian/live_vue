@@ -2,9 +2,9 @@ defmodule LiveVue.EncoderTest do
   use ExUnit.Case
 
   alias LiveVue.Encoder
+  alias Phoenix.LiveView.AsyncResult
   alias Phoenix.LiveView.UploadConfig
   alias Phoenix.LiveView.UploadEntry
-  alias Phoenix.LiveView.AsyncResult
 
   describe "primitive types" do
     test "encodes integers" do
@@ -588,9 +588,7 @@ defmodule LiveVue.EncoderTest do
     end
 
     test "encodes AsyncResult in failed state" do
-      async_result = 
-        AsyncResult.loading()
-        |> AsyncResult.failed({:error, "Network timeout"})
+      async_result = AsyncResult.failed(AsyncResult.loading(), {:error, "Network timeout"})
 
       expected = %{
         ok: false,
@@ -603,8 +601,9 @@ defmodule LiveVue.EncoderTest do
     end
 
     test "encodes AsyncResult that was successful then failed" do
-      async_result = 
-        AsyncResult.ok("initial data")
+      async_result =
+        "initial data"
+        |> AsyncResult.ok()
         |> AsyncResult.failed({:exit, :crashed})
 
       expected = %{
@@ -618,8 +617,9 @@ defmodule LiveVue.EncoderTest do
     end
 
     test "encodes AsyncResult that was successful then loading again" do
-      async_result = 
-        AsyncResult.ok("cached data")
+      async_result =
+        "cached data"
+        |> AsyncResult.ok()
         |> AsyncResult.loading("refreshing")
 
       expected = %{

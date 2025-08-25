@@ -4,6 +4,7 @@ defmodule LiveVue.EncoderFormTest do
   import Ecto.Changeset
   import Phoenix.Component, only: [to_form: 2]
 
+  alias Ecto.Association.NotLoaded
   alias LiveVue.Encoder
   alias Phoenix.HTML.FormData
 
@@ -1022,6 +1023,50 @@ defmodule LiveVue.EncoderFormTest do
     end
   end
 
+  # Test module for excluded association testing
+  defmodule TestWithExcludedAssoc do
+    @moduledoc false
+    use Ecto.Schema
+
+    import Ecto.Changeset
+
+    alias LiveVue.EncoderFormTest.AssocProfile
+
+    # Exclude the association field
+    @derive {Encoder, except: [:profile]}
+    schema "test_with_excluded_assoc" do
+      field(:title, :string)
+      has_one(:profile, AssocProfile)
+    end
+
+    def changeset(struct, attrs) do
+      cast(struct, attrs, [:title])
+    end
+  end
+
+  # Test module for multiple excluded fields
+  defmodule TestMultipleExcluded do
+    @moduledoc false
+    use Ecto.Schema
+
+    import Ecto.Changeset
+
+    alias LiveVue.EncoderFormTest.AssocComment
+    alias LiveVue.EncoderFormTest.AssocProfile
+
+    @derive {Encoder, except: [:profile, :secret, :comments]}
+    schema "test_multiple_excluded" do
+      field(:title, :string)
+      field(:secret, :string)
+      has_one(:profile, AssocProfile)
+      has_many(:comments, AssocComment)
+    end
+
+    def changeset(struct, attrs) do
+      cast(struct, attrs, [:title, :secret])
+    end
+  end
+
   describe "association handling" do
     test "encodes form with loaded has_one association" do
       # Simulate a loaded association from database
@@ -1092,9 +1137,10 @@ defmodule LiveVue.EncoderFormTest do
       attrs = %{title: "Updated Article"}
 
       # Should raise an error that the association is not loaded
-      exception = assert_raise ArgumentError, fn -> encode_form(complex_assoc, attrs) end
-      assert String.contains?(exception.message, "Cannot encode form with NotLoaded association")
-      assert String.contains?(exception.message, "association :profile is not loaded")
+      exception = assert_raise Protocol.UndefinedError, fn -> encode_form(complex_assoc, attrs) end
+      message = Exception.format_banner(:error, exception)
+      assert String.contains?(message, "association :profile is not loaded")
+      assert String.contains?(message, "nillify_not_loaded: true")
     end
 
     test "encodes form with loaded has_many associations" do
@@ -1186,9 +1232,10 @@ defmodule LiveVue.EncoderFormTest do
       attrs = %{title: "Updated Article"}
 
       # Should raise an error that the association is not loaded
-      exception = assert_raise ArgumentError, fn -> encode_form(complex_assoc, attrs) end
-      assert String.contains?(exception.message, "Cannot encode form with NotLoaded association")
-      assert String.contains?(exception.message, "association :comments is not loaded")
+      exception = assert_raise Protocol.UndefinedError, fn -> encode_form(complex_assoc, attrs) end
+      message = Exception.format_banner(:error, exception)
+      assert String.contains?(message, "association :comments is not loaded")
+      assert String.contains?(message, "nillify_not_loaded: true")
     end
 
     test "encodes form with cast_assoc changes for has_one association" do
@@ -1410,6 +1457,68 @@ defmodule LiveVue.EncoderFormTest do
                # private_data excluded by encoder
                profile: nil,
                comments: []
+             }
+    end
+
+    test "handles NotLoaded associations when nillify_not_loaded option is used" do
+      # Create a struct with NotLoaded association that is excluded by encoder
+      test_struct = %TestWithExcludedAssoc{
+        id: 1,
+        title: "Test with NotLoaded Association",
+        # This field is excluded by encoder but would normally cause an error
+        profile: %NotLoaded{
+          __field__: :profile,
+          __owner__: TestWithExcludedAssoc,
+          __cardinality__: :one
+        }
+      }
+
+      attrs = %{title: "Updated Title"}
+
+      # This should work without error when nillify_not_loaded is true
+      changeset = TestWithExcludedAssoc.changeset(test_struct, attrs)
+      form = FormData.to_form(changeset, as: :test_with_excluded_assoc)
+
+      # Test with nillify_not_loaded option - should not try to access excluded profile field
+      encoded = Encoder.encode(form, nillify_not_loaded: true)
+
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Title"
+               # profile excluded by encoder (and never accessed due to nillify_not_loaded)
+             }
+    end
+
+    test "nillify_not_loaded works with multiple excluded fields" do
+      test_struct = %TestMultipleExcluded{
+        id: 1,
+        title: "Test",
+        secret: "secret data",
+        profile: %NotLoaded{
+          __field__: :profile,
+          __owner__: TestMultipleExcluded,
+          __cardinality__: :one
+        },
+        comments: %NotLoaded{
+          __field__: :comments,
+          __owner__: TestMultipleExcluded,
+          __cardinality__: :many
+        }
+      }
+
+      attrs = %{title: "Updated Title", secret: "new secret"}
+
+      changeset = TestMultipleExcluded.changeset(test_struct, attrs)
+      form = FormData.to_form(changeset, as: :test_multiple_excluded)
+
+      # Should work without accessing NotLoaded associations
+      encoded = Encoder.encode(form, nillify_not_loaded: true)
+
+      # Should only include non-excluded fields
+      assert encoded.values == %{
+               id: 1,
+               title: "Updated Title"
+               # secret, profile, comments all excluded by encoder
              }
     end
   end
