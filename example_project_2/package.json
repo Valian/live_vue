@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@vueuse/core": "^13.7.0",
+    "live_vue": "file:./deps/live_vue",
+    "phoenix": "file:./deps/phoenix",
+    "phoenix_html": "file:./deps/phoenix_html",
+    "phoenix_live_view": "file:./deps/phoenix_live_view",
+    "topbar": "^3.0.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "daisyui": "^5.0.0",
+    "phoenix_vite": "file:./deps/phoenix_vite",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.4.5",
+    "vite": "^6.3.0",
+    "vue-tsc": "^2.0.13"
+  }
+}
