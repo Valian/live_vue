@@ -199,8 +199,8 @@ defmodule LiveVue do
           prop = get_in(socket_assigns, socket_keys)
           assigns = Map.put(assigns, prop_name, prop)
 
-          if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, socket_key) do
-            put_in(assigns.__changed__[prop_name], socket_changed[socket_key])
+          if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, hd(socket_keys)) do
+            put_in(assigns.__changed__[prop_name], get_in(socket_changed, socket_keys))
           else
             assigns
           end
