@@ -414,6 +414,15 @@ Shared props can be configured in two ways:
    shared_props: [{:current_user, :user}, {:user_preferences, :prefs}]
    ```
 
+3. **Nested mapping**: Use a tuple `{[:parent, :child], prop_name}` to pass a extract a nested value from the socket
+   ```elixir
+   shared_props: [
+    {[:scope, :user], :user},
+    {[:streams, :items], :items}
+   ]
+   ```
+
+
 ### How It Works
 
 The `merge_socket_props/2` function automatically:

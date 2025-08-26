@@ -179,9 +179,14 @@ defmodule LiveVue do
     Enum.reduce(props, assigns, fn prop_config, assigns ->
       {socket_key, prop_name} =
         case prop_config do
-          atom when is_atom(atom) -> {atom, atom}
-          {prop, key} -> {prop, key}
-          other -> raise "Invalid shared prop config: #{inspect(other)}, expected prop name or {socket_name, prop_name}"
+          atom when is_atom(atom) ->
+            {atom, atom}
+
+          {prop, key} ->
+            {prop, key}
+
+          other ->
+            raise "Invalid shared prop config: #{inspect(other)}, expected prop name or {socket_name, prop_name} or {[:parent, :child], prop_name}"
         end
 
       case assigns do
@@ -190,7 +195,8 @@ defmodule LiveVue do
           assigns
 
         _ ->
-          prop = Map.get(socket_assigns, socket_key)
+          socket_keys = List.wrap(socket_key)
+          prop = get_in(socket_assigns, socket_keys)
           assigns = Map.put(assigns, prop_name, prop)
 
           if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, socket_key) do

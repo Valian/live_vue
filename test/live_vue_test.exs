@@ -250,6 +250,22 @@ defmodule LiveVueTest do
       assert result.__changed__ == %{}
     end
 
+    test "merges nested atom props from socket" do
+      # Create socket with no changes (same current and previous assigns)
+      socket = create_socket(%{current_user: %{name: "john"}, theme: "dark", user: %{name: "john"}})
+      assigns = %{"v-socket": socket, existing_prop: "value", __changed__: %{}}
+      config = [{[:current_user, :name], :user_name}, :theme]
+
+      result = LiveVue.merge_socket_props(config, assigns)
+
+      assert result[:user_name] == "john"
+      assert result[:theme] == "dark"
+      assert result[:existing_prop] == "value"
+      assert result[:"v-socket"] == socket
+      # we shouldn't add any changed props, since original socket changed didn't have it
+      assert result.__changed__ == %{}
+    end
+
     test "returns assigns unchanged when socket is missing" do
       assigns = %{existing_prop: "value", __changed__: %{}}
       config = [:current_user]
