@@ -322,7 +322,26 @@ export function useLiveForm<T extends object>(
       value: fieldValue.value,
       onInput: (event: Event) => {
         const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        fieldValue.value = target.value as V
+        if (target.type === "checkbox") {
+          // For checkboxes, use checked property
+          // If the field value is an array, handle multi-checkbox (array of values)
+          if (Array.isArray(fieldValue.value)) {
+            const value = (target as HTMLInputElement).value
+            const checked = (target as HTMLInputElement).checked
+            const arr = [...(fieldValue.value as unknown as any[])]
+            const idx = arr.indexOf(value)
+            if (checked && idx === -1) {
+              arr.push(value)
+            } else if (!checked && idx !== -1) {
+              arr.splice(idx, 1)
+            }
+            fieldValue.value = arr as V
+          } else {
+            fieldValue.value = (target as HTMLInputElement).checked as V
+          }
+        } else {
+          fieldValue.value = target.value as V
+        }
       },
       onBlur: () => {
         touchedFields.add(path)
