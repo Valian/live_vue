@@ -421,7 +421,7 @@ defmodule LiveVueTest do
       assert result[:user_name] == "john"
       assert result[:app_theme] == "dark"
       assert result[:existing_prop] == "value"
-
+      
       # For nested keys, __changed__ contains the old nested value when parent changed
       # The function uses get_in(socket_changed, socket_keys) to get the old value
       assert result.__changed__[:user_name] == "jane"
@@ -433,10 +433,8 @@ defmodule LiveVueTest do
       # Test when structure changes from map to string
       socket =
         create_socket(
-          # current: just a string
-          %{user: "Jane"},
-          # previous: was a map
-          %{user: %{name: "Jane", age: 25}}
+          %{user: "Jane"},  # current: just a string
+          %{user: %{name: "Jane", age: 25}}  # previous: was a map
         )
 
       config = [{[:user, :name], :user_name}]
@@ -445,23 +443,19 @@ defmodule LiveVueTest do
       result = LiveVue.merge_socket_props(config, assigns)
 
       # Should handle gracefully when trying to access nested path on non-map value
-      # get_in returns nil when path doesn't exist
-      assert result[:user_name] == nil
+      assert result[:user_name] == nil  # get_in returns nil when path doesn't exist
       assert result[:existing_prop] == "value"
-
+      
       # The change tracking should still work based on parent key change
-      # gets the old nested value
-      assert result.__changed__[:user_name] == "Jane"
+      assert result.__changed__[:user_name] == "Jane"  # gets the old nested value
     end
 
     test "handles structure change from non-nested to nested object" do
       # Test when structure changes from string to map
       socket =
         create_socket(
-          # current: now a map
-          %{user: %{name: "John", age: 30}},
-          # previous: was just a string
-          %{user: "John"}
+          %{user: %{name: "John", age: 30}},  # current: now a map
+          %{user: "John"}  # previous: was just a string
         )
 
       config = [{[:user, :name], :user_name}]
@@ -469,10 +463,9 @@ defmodule LiveVueTest do
 
       result = LiveVue.merge_socket_props(config, assigns)
 
-      # gets the new nested value
-      assert result[:user_name] == "John"
+      assert result[:user_name] == "John"  # gets the new nested value
       assert result[:existing_prop] == "value"
-
+      
       # When get_in fails on non-map values, we rescue and return true (complete change)
       assert result.__changed__[:user_name] == true
     end
