@@ -201,7 +201,7 @@ export interface UseLiveFormReturn<T extends object> {
   ): PathValue<T, P> extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Form actions
-  submit: () => Promise<void>
+  submit: () => Promise<Form<T>>
   reset: () => void
 }
 
@@ -269,9 +269,13 @@ export function useLiveForm<T extends object>(
     if (changeEvent) {
       const values = deepToRaw(currentValues)
       const data = prepareData(values)
-      return await live.pushEvent(changeEvent, { [initialForm.name]: data })
+      return new Promise(resolve =>
+        live.pushEvent(changeEvent, { [initialForm.name]: data }, (result: any) => {
+          resolve(result)
+        })
+      )
     } else {
-      return Promise.resolve()
+      return Promise.resolve(null)
     }
   }
 
@@ -482,37 +486,16 @@ export function useLiveForm<T extends object>(
     if (live) {
       const data = prepareData(deepToRaw(currentValues))
 
-      return await new Promise<void>((resolve, reject) => {
+      return await new Promise<Form<T>>(resolve => {
         // Send submit event to LiveView
-        const result = live.pushEvent(submitEvent, { [initialForm.name]: data })
-
-        // If pushEvent returns a promise, wait for it
-        if (result && typeof result.then === "function") {
-          result
-            .then(() => {
-              // On successful submission:
-              // 1. Update initial values to match current values (server accepted changes)
-              initialValues.value = deepClone(toValue(form).values)
-              reset()
-              resolve()
-            })
-            .catch(error => {
-              // On failed submission, keep the incremented submit count
-              reject(error)
-            })
-        } else {
-          // Non-promise result means immediate success
-          // Update initial values to match current values
-          initialValues.value = deepClone(toValue(form).values)
-          // Reset touched state and submit count
-          reset()
-          resolve()
-        }
+        live.pushEvent(submitEvent, { [initialForm.name]: data }, (result: any) => {
+          resolve(result)
+        })
       })
     } else {
       // Fallback when not in LiveView context
       console.warn("LiveView hook not available, form submission skipped")
-      return Promise.resolve()
+      return Promise.resolve(toValue(form))
     }
   }
 
