@@ -7,6 +7,9 @@ type TestForm = {
   name: string
   email: string
   age: number
+  acceptTerms: boolean
+  newsletter: boolean
+  preferences: string[]
   profile: {
     bio: string
     skills: string[]
@@ -31,6 +34,11 @@ const form = useLiveForm(() => props.form, {
 const nameField = form.field("name")
 const emailField = form.field("email")
 const ageField = form.field("age")
+
+// Checkbox fields
+const acceptTermsField = form.field("acceptTerms")
+const newsletterField = form.field("newsletter")
+const preferencesField = form.field("preferences")
 
 // Nested object fields
 const profileField = form.field("profile")
@@ -112,6 +120,75 @@ const submitForm = async () => {
         <input v-bind="ageField.inputAttrs.value" data-pw-age-input type="number" placeholder="Enter age" />
         <div v-if="ageField.errorMessage.value" class="error" data-pw-age-error>
           {{ ageField.errorMessage.value }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkbox Fields -->
+    <div class="checkbox-fields">
+      <h3>Checkboxes</h3>
+
+      <!-- Single Checkbox -->
+      <div class="field checkbox-field">
+        <label>
+          <input
+            type="checkbox"
+            :checked="acceptTermsField.value.value"
+            @input="acceptTermsField.inputAttrs.value.onInput"
+            @blur="acceptTermsField.inputAttrs.value.onBlur"
+            :name="acceptTermsField.inputAttrs.value.name"
+            :id="acceptTermsField.inputAttrs.value.id"
+            :aria-invalid="acceptTermsField.inputAttrs.value['aria-invalid']"
+            :aria-describedby="acceptTermsField.inputAttrs.value['aria-describedby']"
+            data-pw-accept-terms
+          />
+          Accept Terms and Conditions
+        </label>
+        <div v-if="acceptTermsField.errorMessage.value" class="error" data-pw-accept-terms-error>
+          {{ acceptTermsField.errorMessage.value }}
+        </div>
+      </div>
+
+      <!-- Another Single Checkbox -->
+      <div class="field checkbox-field">
+        <label>
+          <input
+            type="checkbox"
+            :checked="newsletterField.value.value"
+            @input="newsletterField.inputAttrs.value.onInput"
+            @blur="newsletterField.inputAttrs.value.onBlur"
+            :name="newsletterField.inputAttrs.value.name"
+            :id="newsletterField.inputAttrs.value.id"
+            :aria-invalid="newsletterField.inputAttrs.value['aria-invalid']"
+            :aria-describedby="newsletterField.inputAttrs.value['aria-describedby']"
+            data-pw-newsletter
+          />
+          Subscribe to Newsletter
+        </label>
+        <div v-if="newsletterField.errorMessage.value" class="error" data-pw-newsletter-error>
+          {{ newsletterField.errorMessage.value }}
+        </div>
+      </div>
+
+      <!-- Multi-Checkbox (Array of Values) -->
+      <div class="field">
+        <label>Preferences (select multiple)</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-email />
+            Email Notifications
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-sms />
+            SMS Notifications
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-push />
+            Push Notifications
+          </label>
+        </div>
+        <div v-if="preferencesField.errorMessage.value" class="error" data-pw-preferences-error>
+          {{ preferencesField.errorMessage.value }}
         </div>
       </div>
     </div>
@@ -342,5 +419,45 @@ button {
 
 button:hover:not(:disabled) {
   background: #2980b9;
+}
+
+.checkbox-fields {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-option input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 </style>

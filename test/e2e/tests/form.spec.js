@@ -23,6 +23,7 @@ test.describe("useLiveForm E2E Tests", () => {
   test("basic field validation and form state tracking", async ({ page }) => {
     const nameInput = page.locator("[data-pw-name-input]")
     const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
 
     // Fill name field (but not enough characters) - use type instead of fill
     await nameInput.type("A")
@@ -42,6 +43,7 @@ test.describe("useLiveForm E2E Tests", () => {
     await nameInput.clear()
     await nameInput.type("John Doe")
     await emailInput.type("john@example.com")
+    await acceptTermsCheckbox.check() // Accept terms is now required
     await page.waitForTimeout(500) // Give time for debounced events
     await syncLV(page)
 
@@ -54,10 +56,12 @@ test.describe("useLiveForm E2E Tests", () => {
     const nameInput = page.locator("[data-pw-name-input]")
     const emailInput = page.locator("[data-pw-email-input]")
     const bioInput = page.locator("[data-pw-bio-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
 
     // Fill required fields first
     await nameInput.fill("John Doe")
     await emailInput.fill("john@example.com")
+    await acceptTermsCheckbox.check()
 
     // Fill bio with insufficient content
     await bioInput.fill("Short")
@@ -384,5 +388,247 @@ test.describe("useLiveForm E2E Tests", () => {
 
     // Form should be valid again
     await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: true")
+  })
+
+  test("single checkbox functionality", async ({ page }) => {
+    const nameInput = page.locator("[data-pw-name-input]")
+    const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
+    const newsletterCheckbox = page.locator("[data-pw-newsletter]")
+
+    // Fill required fields first
+    await nameInput.fill("John Doe")
+    await emailInput.fill("john@example.com")
+    await syncLV(page)
+
+    // Initially checkboxes should be unchecked
+    await expect(acceptTermsCheckbox).not.toBeChecked()
+    await expect(newsletterCheckbox).not.toBeChecked()
+
+    // Form should be invalid because acceptTerms is required
+    await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: false")
+
+    // Check accept terms
+    await acceptTermsCheckbox.check()
+    await syncLV(page)
+
+    // Form should now be valid
+    await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: true")
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).not.toBeChecked()
+
+    // Check newsletter (optional)
+    await newsletterCheckbox.check()
+    await syncLV(page)
+
+    // Form should still be valid, both checkboxes checked
+    await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: true")
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+
+    // Uncheck accept terms - form should become invalid
+    await acceptTermsCheckbox.uncheck()
+    await syncLV(page)
+
+    await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: false")
+    await expect(acceptTermsCheckbox).not.toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+
+    // Should show error message for accept terms
+    await expect(page.locator("[data-pw-accept-terms-error]")).toBeVisible()
+  })
+
+  test("multi-checkbox array functionality", async ({ page }) => {
+    const nameInput = page.locator("[data-pw-name-input]")
+    const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
+    const emailPrefCheckbox = page.locator("[data-pw-preferences-email]")
+    const smsPrefCheckbox = page.locator("[data-pw-preferences-sms]")
+    const pushPrefCheckbox = page.locator("[data-pw-preferences-push]")
+
+    // Fill required fields
+    await nameInput.fill("John Doe")
+    await emailInput.fill("john@example.com")
+    await acceptTermsCheckbox.check()
+    await syncLV(page)
+
+    // Initially all preference checkboxes should be unchecked
+    await expect(emailPrefCheckbox).not.toBeChecked()
+    await expect(smsPrefCheckbox).not.toBeChecked()
+    await expect(pushPrefCheckbox).not.toBeChecked()
+
+    // Check email preference
+    await emailPrefCheckbox.check()
+    await syncLV(page)
+
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).not.toBeChecked()
+    await expect(pushPrefCheckbox).not.toBeChecked()
+
+    // Check SMS preference as well
+    await smsPrefCheckbox.check()
+    await syncLV(page)
+
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+    await expect(pushPrefCheckbox).not.toBeChecked()
+
+    // Check all preferences
+    await pushPrefCheckbox.check()
+    await syncLV(page)
+
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+    await expect(pushPrefCheckbox).toBeChecked()
+
+    // Uncheck middle one (SMS)
+    await smsPrefCheckbox.uncheck()
+    await syncLV(page)
+
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).not.toBeChecked()
+    await expect(pushPrefCheckbox).toBeChecked()
+
+    // Uncheck all
+    await emailPrefCheckbox.uncheck()
+    await pushPrefCheckbox.uncheck()
+    await syncLV(page)
+
+    await expect(emailPrefCheckbox).not.toBeChecked()
+    await expect(smsPrefCheckbox).not.toBeChecked()
+    await expect(pushPrefCheckbox).not.toBeChecked()
+  })
+
+  test("checkbox state persistence during form operations", async ({ page }) => {
+    const nameInput = page.locator("[data-pw-name-input]")
+    const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
+    const newsletterCheckbox = page.locator("[data-pw-newsletter]")
+    const emailPrefCheckbox = page.locator("[data-pw-preferences-email]")
+    const smsPrefCheckbox = page.locator("[data-pw-preferences-sms]")
+
+    // Fill form with valid data and check some boxes
+    await nameInput.fill("John Doe")
+    await emailInput.fill("john@example.com")
+    await acceptTermsCheckbox.check()
+    await newsletterCheckbox.check()
+    await emailPrefCheckbox.check()
+    await smsPrefCheckbox.check()
+    await syncLV(page)
+
+    // Verify all are checked
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+
+    // Add some dynamic content (array items) to trigger more server updates
+    await page.locator("[data-pw-add-skill]").click()
+    await page.locator('[data-pw-skill-input="0"]').fill("JavaScript")
+    await syncLV(page)
+
+    // Checkbox states should be preserved
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+
+    // Make some changes to trigger validation
+    await nameInput.fill("J") // Too short, will cause validation error
+    await nameInput.blur()
+    await syncLV(page)
+
+    // Checkbox states should still be preserved even with validation errors
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+
+    // Fix the name
+    await nameInput.fill("John Doe")
+    await nameInput.blur()
+    await syncLV(page)
+
+    // Checkbox states should still be preserved
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(smsPrefCheckbox).toBeChecked()
+  })
+
+  test("checkbox form reset functionality", async ({ page }) => {
+    const nameInput = page.locator("[data-pw-name-input]")
+    const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
+    const newsletterCheckbox = page.locator("[data-pw-newsletter]")
+    const emailPrefCheckbox = page.locator("[data-pw-preferences-email]")
+    const pushPrefCheckbox = page.locator("[data-pw-preferences-push]")
+
+    // Fill form and check boxes
+    await nameInput.fill("John Doe")
+    await emailInput.fill("john@example.com")
+    await acceptTermsCheckbox.check()
+    await newsletterCheckbox.check()
+    await emailPrefCheckbox.check()
+    await pushPrefCheckbox.check()
+    await syncLV(page)
+
+    // Verify everything is set
+    await expect(acceptTermsCheckbox).toBeChecked()
+    await expect(newsletterCheckbox).toBeChecked()
+    await expect(emailPrefCheckbox).toBeChecked()
+    await expect(pushPrefCheckbox).toBeChecked()
+    await expect(page.locator("[data-pw-is-dirty]")).toHaveText("Dirty: true")
+
+    // Reset the form
+    await page.locator("[data-pw-reset]").click()
+
+    // All checkboxes should be unchecked
+    await expect(acceptTermsCheckbox).not.toBeChecked()
+    await expect(newsletterCheckbox).not.toBeChecked()
+    await expect(emailPrefCheckbox).not.toBeChecked()
+    await expect(pushPrefCheckbox).not.toBeChecked()
+    await expect(page.locator("[data-pw-is-dirty]")).toHaveText("Dirty: false")
+  })
+
+  test("checkbox form submission with all checkbox states", async ({ page }) => {
+    const nameInput = page.locator("[data-pw-name-input]")
+    const emailInput = page.locator("[data-pw-email-input]")
+    const ageInput = page.locator("[data-pw-age-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
+    const newsletterCheckbox = page.locator("[data-pw-newsletter]")
+    const emailPrefCheckbox = page.locator("[data-pw-preferences-email]")
+    const smsPrefCheckbox = page.locator("[data-pw-preferences-sms]")
+
+    // Fill form with valid data
+    await nameInput.fill("John Doe")
+    await emailInput.fill("john@example.com")
+    await ageInput.fill("30")
+    await acceptTermsCheckbox.check()
+    await newsletterCheckbox.check()
+    await emailPrefCheckbox.check()
+    await smsPrefCheckbox.check()
+    
+    // Add bio to make form valid
+    const bioInput = page.locator("[data-pw-bio-input]")
+    await bioInput.fill("This is a comprehensive bio with sufficient content for validation")
+    
+    await syncLV(page)
+
+    // Form should be valid
+    await expect(page.locator("[data-pw-is-valid]")).toHaveText("Valid: true")
+    await expect(page.locator("[data-pw-submit]")).toBeEnabled()
+
+    // Submit the form
+    await page.locator("[data-pw-submit]").click()
+    await syncLV(page)
+
+    // Form should be reset after successful submission
+    await expect(acceptTermsCheckbox).not.toBeChecked()
+    await expect(newsletterCheckbox).not.toBeChecked()
+    await expect(emailPrefCheckbox).not.toBeChecked()
+    await expect(smsPrefCheckbox).not.toBeChecked()
+    await expect(page.locator("[data-pw-is-dirty]")).toHaveText("Dirty: false")
+    await expect(page.locator("[data-pw-is-touched]")).toHaveText("Touched: false")
   })
 })
