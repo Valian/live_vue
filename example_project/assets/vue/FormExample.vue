@@ -8,6 +8,7 @@ type ProjectForm = {
   status: string
   is_public: boolean
   notifications: string[]
+  is_public: boolean
   owner: {
     name: string
     email: string
@@ -43,12 +44,12 @@ const form = useLiveForm<ProjectForm>(() => props.form, {
 const nameField = form.field("name")
 const descriptionField = form.field("description")
 const statusField = form.field("status")
-const isPublicField = form.field("is_public", { type: "checkbox" })
 
 // Checkbox fields with different approaches
 const emailNotifyField = form.field("notifications", { type: "checkbox", value: "email" })
 const smsNotifyField = form.field("notifications", { type: "checkbox", value: "sms" })
 const pushNotifyField = form.field("notifications", { type: "checkbox", value: "push" })
+const isPublicField = form.field("is_public", { type: "checkbox" })
 
 // Nested object fields
 const ownerField = form.field("owner")
@@ -221,6 +222,19 @@ const submitForm = async () => {
               />
               <label :for="pushNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 Push Notifications
+              </label>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="flex items-center">
+              <input
+                v-bind="isPublicField.inputAttrs.value"
+                type="checkbox"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="isPublicField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                Make this project public
               </label>
             </div>
           </div>
