@@ -196,11 +196,17 @@ defmodule LiveVue do
 
         _ ->
           socket_keys = List.wrap(socket_key)
-          prop = get_in(socket_assigns, socket_keys)
+
+          # When structure changes (e.g., from map to string or vice versa), get_in might fail
+          # In such cases, we handle it gracefully and return nil for the current value
+          prop = safe_get_in(socket_assigns, socket_keys)
           assigns = Map.put(assigns, prop_name, prop)
 
           if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, hd(socket_keys)) do
-            put_in(assigns.__changed__[prop_name], get_in(socket_changed, socket_keys))
+            # Similarly handle structure changes for the old value in __changed__
+            # We mark it as a complete change with `true` when get_in fails
+            old_value = safe_get_in(socket_changed, socket_keys, true)
+            put_in(assigns.__changed__[prop_name], old_value)
           else
             assigns
           end
@@ -209,6 +215,12 @@ defmodule LiveVue do
   end
 
   def merge_socket_props(_props, assigns), do: assigns
+
+  defp safe_get_in(source, keys, default \\ nil) do
+    get_in(source, keys)
+  rescue
+    FunctionClauseError -> default
+  end
 
   # Calculates minimal JSON Patch operations for changed props only.
   # Uses Phoenix LiveView's __changed__ tracking to identify what props have changed.

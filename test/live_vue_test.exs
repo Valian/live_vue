@@ -405,6 +405,71 @@ defmodule LiveVueTest do
       assert result.__changed__ == %{}
     end
 
+    test "correctly updates __changed__ for nested keys" do
+      # Test when nested value changes
+      socket =
+        create_socket(
+          %{user: %{profile: %{name: "john", age: 30}}, settings: %{theme: "dark"}},
+          %{user: %{profile: %{name: "jane", age: 25}}, settings: %{theme: "dark"}}
+        )
+
+      config = [{[:user, :profile, :name], :user_name}, {[:settings, :theme], :app_theme}]
+      assigns = %{"v-socket": socket, existing_prop: "value", __changed__: %{}}
+
+      result = LiveVue.merge_socket_props(config, assigns)
+
+      assert result[:user_name] == "john"
+      assert result[:app_theme] == "dark"
+      assert result[:existing_prop] == "value"
+      
+      # For nested keys, __changed__ contains the old nested value when parent changed
+      # The function uses get_in(socket_changed, socket_keys) to get the old value
+      assert result.__changed__[:user_name] == "jane"
+      # app_theme should not be in changed since settings.theme didn't change
+      refute Map.has_key?(result.__changed__, :app_theme)
+    end
+
+    test "handles structure change from nested to non-nested object" do
+      # Test when structure changes from map to string
+      socket =
+        create_socket(
+          %{user: "Jane"},  # current: just a string
+          %{user: %{name: "Jane", age: 25}}  # previous: was a map
+        )
+
+      config = [{[:user, :name], :user_name}]
+      assigns = %{"v-socket": socket, existing_prop: "value", __changed__: %{}}
+
+      result = LiveVue.merge_socket_props(config, assigns)
+
+      # Should handle gracefully when trying to access nested path on non-map value
+      assert result[:user_name] == nil  # get_in returns nil when path doesn't exist
+      assert result[:existing_prop] == "value"
+      
+      # The change tracking should still work based on parent key change
+      assert result.__changed__[:user_name] == "Jane"  # gets the old nested value
+    end
+
+    test "handles structure change from non-nested to nested object" do
+      # Test when structure changes from string to map
+      socket =
+        create_socket(
+          %{user: %{name: "John", age: 30}},  # current: now a map
+          %{user: "John"}  # previous: was just a string
+        )
+
+      config = [{[:user, :name], :user_name}]
+      assigns = %{"v-socket": socket, existing_prop: "value", __changed__: %{}}
+
+      result = LiveVue.merge_socket_props(config, assigns)
+
+      assert result[:user_name] == "John"  # gets the new nested value
+      assert result[:existing_prop] == "value"
+      
+      # When get_in fails on non-map values, we rescue and return true (complete change)
+      assert result.__changed__[:user_name] == true
+    end
+
     test "keeps existing props when socket has given prop" do
       socket = create_socket(%{current_user: "socket_user", theme: "dark"})
       config = [:current_user, :theme]
