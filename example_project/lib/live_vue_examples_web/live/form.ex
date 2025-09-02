@@ -114,6 +114,7 @@ defmodule LiveVueExamplesWeb.LiveForm do
       field :name, :string
       field :description, :string
       field :status, :string, default: "planning"
+      field :is_public, :boolean, default: false
       embeds_one :owner, Owner
       embeds_many :team_members, TeamMember
       embeds_many :tasks, Task
@@ -121,7 +122,7 @@ defmodule LiveVueExamplesWeb.LiveForm do
 
     def changeset(project, attrs) do
       project
-      |> cast(attrs, [:name, :description, :status])
+      |> cast(attrs, [:name, :description, :status, :is_public])
       |> validate_required([:name, :description, :status])
       |> validate_length(:name, min: 3, max: 100)
       |> validate_length(:description, min: 10, max: 500)

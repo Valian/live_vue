@@ -6,6 +6,7 @@ type ProjectForm = {
   name: string
   description: string
   status: string
+  is_public: boolean
   owner: {
     name: string
     email: string
@@ -41,6 +42,7 @@ const form = useLiveForm<ProjectForm>(() => props.form, {
 const nameField = form.field("name")
 const descriptionField = form.field("description")
 const statusField = form.field("status")
+const isPublicField = form.field("is_public")
 
 // Nested object fields
 const ownerField = form.field("owner")
@@ -172,6 +174,19 @@ const submitForm = async () => {
               class="text-red-500 text-sm mt-1"
             >
               {{ descriptionField.errorMessage.value }}
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="flex items-center">
+              <input
+                v-bind="isPublicField.inputAttrs.value"
+                type="checkbox"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="isPublicField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                Make this project public
+              </label>
             </div>
           </div>
         </div>
