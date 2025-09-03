@@ -14,6 +14,7 @@ If you don't need SSR, you can easily disable it with one line of configuration.
 
 - Node.js installed (version 19 or later recommended)
 - Elixir 1.13+
+- **Phoenix 1.8+** (required for Igniter installer)
 - [Igniter](https://hexdocs.pm/igniter/) installed (see below)
 
 ## Quick Start (Recommended)
@@ -42,7 +43,7 @@ This command will:
 
 ### Existing Project
 
-To add LiveVue to an existing Phoenix project:
+To add LiveVue to an existing Phoenix 1.8+ project:
 
 ```bash
 mix igniter.install live_vue
@@ -50,21 +51,27 @@ mix igniter.install live_vue
 
 This will automatically configure your project with all necessary LiveVue setup.
 
+> #### Important Limitations {: .warning}
+>
+> - **Phoenix 1.8+ required**: The Igniter installer depends on `phoenix_vite` and modern Phoenix features that are only available in Phoenix 1.8+
+> - **Pre-Igniter LiveVue upgrade not supported**: If you have an existing LiveVue installation from before the Igniter installer was introduced, upgrading via `mix igniter.install live_vue` is not supported due to significant changes in the installation process. On the other hand, you should be able to bump version of LiveVue in your `mix.exs` file and everything should still work.
+> - **LiveVue itself works with Phoenix 1.7**: While the automated installer requires Phoenix 1.8+, the LiveVue library itself is compatible with Phoenix 1.7 if installed manually
+
 ## Manual Installation
 
 > #### Outdated Manual Instructions {: .warning}
 >
-> Manual installation instructions are currently outdated and don't work with current versions of dependencies (Tailwind, Phoenix, etc). 
-> 
+> Manual installation instructions are currently outdated and don't work with current versions of dependencies (Tailwind, Phoenix, etc).
+>
 > If you need manual installation for LiveVue <= 0.7, see the [v0.7 documentation](https://hexdocs.pm/live_vue/0.7.3/installation.html).
-> 
+>
 > **We strongly recommend using the Igniter installation above.**
 
 The manual installation process involves many complex steps including:
 - Configuring Vite and Vue dependencies
 - Setting up TypeScript and PostCSS
 - Updating Phoenix configuration files
-- Configuring Tailwind for Vue files  
+- Configuring Tailwind for Vue files
 - Setting up SSR for production
 - And many more manual steps...
 

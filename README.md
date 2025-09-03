@@ -100,12 +100,12 @@ mix archive.install hex igniter_new
 mix igniter.new my_app --with phx.new --install live_vue
 ```
 
-**Existing project:**
+**Existing project (Phoenix 1.8+ only):**
 ```bash
 mix igniter.install live_vue
 ```
 
-For detailed installation instructions, see the [Installation Guide](guides/installation.md).
+Igniter installer works only for Phoenix 1.8+ projects. For detailed installation instructions, see the [Installation Guide](guides/installation.md).
 
 ## Guides
 

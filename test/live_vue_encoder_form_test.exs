@@ -1523,6 +1523,27 @@ defmodule LiveVue.EncoderFormTest do
     end
   end
 
+  describe "error translation" do
+    test "translate_error interpolates multiple placeholders in form errors" do
+      # Create a changeset with validation errors that have interpolation placeholders
+      simple = %Simple{}
+
+      changeset =
+        simple
+        |> Simple.changeset(%{name: "x", age: 150})
+        |> add_error(:name, "field %{fields} must have at least %{min} characters", min: 2, fields: ["name"])
+        |> add_error(:score, "must be between %{min} and %{max}", min: 0.0, max: 100.0)
+        |> Map.put(:valid?, false)
+
+      form = FormData.to_form(changeset, as: Simple.__schema__(:source))
+      encoded = Encoder.encode(form)
+
+      # Verify interpolation worked correctly in the encoded form errors
+      assert encoded.errors.name == ["field name must have at least 2 characters"]
+      assert encoded.errors.score == ["must be between 0.0 and 100.0"]
+    end
+  end
+
   describe "multiple checkbox field handling" do
     # Schema for testing multiple checkboxes
     defmodule MultipleChoiceForm do
