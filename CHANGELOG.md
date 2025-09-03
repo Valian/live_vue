@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 1.0.0-rc - 2025-09-03
+
+### Features
+
+- **New `useLiveForm` Composable**: Added comprehensive form handling with server-side validation, nested objects, and dynamic arrays [#70](https://github.com/Valian/live_vue/pull/70)
+- **New `useEventReply` Composable**: Added reactive composable for bi-directional LiveView event communication with server responses [#75](https://github.com/Valian/live_vue/pull/75)
+- **New `useLiveConnection` Composable**: Added reactive WebSocket connectivity monitoring for connection status indicators and offline handling [#76](https://github.com/Valian/live_vue/pull/76)
+- added support for **Phoenix Streams** [#72](https://github.com/Valian/live_vue/pull/72)
+- added support for **Phoenix AsyncResult** - `assign_async` should work correctly out of the box when passed as a prop. On the Vue side, it can be typed as [#77](https://github.com/Valian/live_vue/pull/77)
+- added support for **shared props** - props that are shared between all components [#78](https://github.com/Valian/live_vue/pull/71)
+
+### Improvements
+
+- aded Igniter installer instead of a lengthy manual installation process [#73](https://github.com/Valian/live_vue/pull/73)
+- added `usage-rules.md` to help with AI-assisted development using LiveVue
+
+
 ## 0.7.3 - 2025-08-18
 
 ### Improvements

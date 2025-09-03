@@ -1,7 +1,7 @@
 defmodule LiveVue.MixProject do
   use Mix.Project
 
-  @version "0.7.3"
+  @version "1.0.0-rc"
   @repo_url "https://github.com/Valian/live_vue"
 
   def project do
