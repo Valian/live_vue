@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useLiveForm, type Form } from "live_vue"
-import { watch } from "vue"
 
 // Define a simple form structure for testing
 type TestForm = {
@@ -36,9 +35,13 @@ const emailField = form.field("email")
 const ageField = form.field("age")
 
 // Checkbox fields
-const acceptTermsField = form.field("acceptTerms")
-const newsletterField = form.field("newsletter")
-const preferencesField = form.field("preferences")
+const acceptTermsField = form.field("acceptTerms", { type: "checkbox" })
+const newsletterField = form.field("newsletter", { type: "checkbox" })
+
+// Multi-checkbox fields for preferences
+const emailPrefField = form.field("preferences", { type: "checkbox", value: "email" })
+const smsPrefField = form.field("preferences", { type: "checkbox", value: "sms" })
+const pushPrefField = form.field("preferences", { type: "checkbox", value: "push" })
 
 // Nested object fields
 const profileField = form.field("profile")
@@ -47,14 +50,6 @@ const bioField = profileField.field("bio")
 // Array fields
 const skillsArray = form.fieldArray("profile.skills")
 const itemsArray = form.fieldArray("items")
-
-watch(
-  () => skillsArray,
-  newSkills => {
-    console.log("skillsArray changed", newSkills.value.value.length)
-  },
-  { deep: true }
-)
 
 const submitForm = async () => {
   try {
@@ -74,6 +69,10 @@ const submitForm = async () => {
       <div data-pw-is-valid>Valid: {{ form.isValid.value ? "true" : "false" }}</div>
       <div data-pw-is-dirty>Dirty: {{ form.isDirty.value ? "true" : "false" }}</div>
       <div data-pw-is-touched>Touched: {{ form.isTouched.value ? "true" : "false" }}</div>
+      <div data-pw-values>
+        Values:
+        <pre>{{ JSON.stringify(props.form, null, 2) }}</pre>
+      </div>
     </div>
 
     <!-- Basic Fields -->
@@ -131,17 +130,7 @@ const submitForm = async () => {
       <!-- Single Checkbox -->
       <div class="field checkbox-field">
         <label>
-          <input
-            type="checkbox"
-            :checked="acceptTermsField.value.value"
-            @input="acceptTermsField.inputAttrs.value.onInput"
-            @blur="acceptTermsField.inputAttrs.value.onBlur"
-            :name="acceptTermsField.inputAttrs.value.name"
-            :id="acceptTermsField.inputAttrs.value.id"
-            :aria-invalid="acceptTermsField.inputAttrs.value['aria-invalid']"
-            :aria-describedby="acceptTermsField.inputAttrs.value['aria-describedby']"
-            data-pw-accept-terms
-          />
+          <input v-bind="acceptTermsField.inputAttrs.value" data-pw-accept-terms />
           Accept Terms and Conditions
         </label>
         <div v-if="acceptTermsField.errorMessage.value" class="error" data-pw-accept-terms-error>
@@ -152,17 +141,7 @@ const submitForm = async () => {
       <!-- Another Single Checkbox -->
       <div class="field checkbox-field">
         <label>
-          <input
-            type="checkbox"
-            :checked="newsletterField.value.value"
-            @input="newsletterField.inputAttrs.value.onInput"
-            @blur="newsletterField.inputAttrs.value.onBlur"
-            :name="newsletterField.inputAttrs.value.name"
-            :id="newsletterField.inputAttrs.value.id"
-            :aria-invalid="newsletterField.inputAttrs.value['aria-invalid']"
-            :aria-describedby="newsletterField.inputAttrs.value['aria-describedby']"
-            data-pw-newsletter
-          />
+          <input v-bind="newsletterField.inputAttrs.value" data-pw-newsletter />
           Subscribe to Newsletter
         </label>
         <div v-if="newsletterField.errorMessage.value" class="error" data-pw-newsletter-error>
@@ -175,20 +154,20 @@ const submitForm = async () => {
         <label>Preferences (select multiple)</label>
         <div class="checkbox-group">
           <label class="checkbox-option">
-            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-email />
+            <input v-bind="emailPrefField.inputAttrs.value" data-pw-preferences-email />
             Email Notifications
           </label>
           <label class="checkbox-option">
-            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-sms />
+            <input v-bind="smsPrefField.inputAttrs.value" data-pw-preferences-sms />
             SMS Notifications
           </label>
           <label class="checkbox-option">
-            <input type="checkbox" v-bind="preferencesField.inputAttrs.value" data-pw-preferences-push />
+            <input v-bind="pushPrefField.inputAttrs.value" data-pw-preferences-push />
             Push Notifications
           </label>
         </div>
-        <div v-if="preferencesField.errorMessage.value" class="error" data-pw-preferences-error>
-          {{ preferencesField.errorMessage.value }}
+        <div v-if="emailPrefField.errorMessage.value" class="error" data-pw-preferences-error>
+          {{ emailPrefField.errorMessage.value }}
         </div>
       </div>
     </div>

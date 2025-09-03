@@ -1522,4 +1522,156 @@ defmodule LiveVue.EncoderFormTest do
              }
     end
   end
+
+  describe "multiple checkbox field handling" do
+    # Schema for testing multiple checkboxes
+    defmodule MultipleChoiceForm do
+      @moduledoc false
+      use Ecto.Schema
+
+      import Ecto.Changeset
+
+      @derive {Encoder, except: [:internal_data]}
+      embedded_schema do
+        field(:title, :string)
+        field(:preferences, {:array, :string})
+        field(:tags, {:array, :string})
+        field(:internal_data, :string)
+      end
+
+      def changeset(form, attrs) do
+        form
+        |> cast(attrs, [:title, :preferences, :tags, :internal_data])
+        |> validate_required([:title])
+      end
+    end
+
+    test "encodes form with multiple checkbox fields (array values)" do
+      form_data = %MultipleChoiceForm{}
+
+      # Simulate form submission with multiple checkbox selections
+      attrs = %{
+        "title" => "User Preferences",
+        "preferences" => ["email_notifications", "sms_alerts", "push_notifications"],
+        "tags" => ["developer", "elixir", "phoenix"]
+      }
+
+      encoded = encode_form(form_data, attrs)
+
+      assert encoded.values == %{
+               id: nil,
+               title: "User Preferences",
+               preferences: ["email_notifications", "sms_alerts", "push_notifications"],
+               tags: ["developer", "elixir", "phoenix"]
+               # internal_data excluded by encoder
+             }
+    end
+
+    test "encodes form with partial checkbox selections" do
+      form_data = %MultipleChoiceForm{}
+
+      attrs = %{
+        "title" => "Partial Selection",
+        # Only one selected
+        "preferences" => ["email_notifications"],
+        # None selected
+        "tags" => []
+      }
+
+      encoded = encode_form(form_data, attrs)
+
+      assert encoded.values == %{
+               id: nil,
+               title: "Partial Selection",
+               preferences: ["email_notifications"],
+               tags: []
+               # internal_data excluded by encoder
+             }
+    end
+
+    test "encodes form with no checkbox selections" do
+      form_data = %MultipleChoiceForm{}
+
+      attrs = %{
+        "title" => "No Selections",
+        "preferences" => [],
+        "tags" => []
+      }
+
+      encoded = encode_form(form_data, attrs)
+
+      assert encoded.values == %{
+               id: nil,
+               title: "No Selections",
+               preferences: [],
+               tags: []
+               # internal_data excluded by encoder
+             }
+    end
+
+    test "handles form with Phoenix multiple field pattern" do
+      # This tests the pattern from core_components.ex:295
+      # where multiple=true causes field.name <> "[]"
+
+      form_data = %MultipleChoiceForm{}
+
+      form_params = %{
+        "title" => "Multiple Field Test",
+        "preferences" => ["email_notifications", "sms_alerts"],
+        "tags" => ["elixir", "phoenix"]
+      }
+
+      changeset = MultipleChoiceForm.changeset(form_data, form_params)
+      base_form = FormData.to_form(changeset, as: :multiple_choice_form)
+
+      # Simulate what happens when Phoenix.HTML creates field names with []
+      # This is what would happen in the HTML when multiple=true
+      modified_form = %{
+        base_form
+        | params:
+            Map.merge(base_form.params, %{
+              "preferences[]" => ["email_notifications", "sms_alerts"],
+              "tags[]" => ["elixir", "phoenix"]
+            })
+      }
+
+      encoded = Encoder.encode(modified_form)
+
+      # The encoder should handle [] field names correctly
+      # by looking for the base field name when [] suffix is present
+      assert encoded.values.preferences == ["email_notifications", "sms_alerts"]
+      assert encoded.values.tags == ["elixir", "phoenix"]
+    end
+
+    test "real Phoenix form behavior simulation" do
+      # This simulates what happens in a real Phoenix controller
+      # where Phoenix.Controller.params would normalize "field[]" params
+
+      # Simulate incoming controller params (what Phoenix would give us)
+      controller_params = %{
+        "multiple_choice_form" => %{
+          "title" => "Real Form Test",
+          "preferences" => ["email_notifications", "sms_alerts"],
+          "tags" => ["elixir", "phoenix"]
+        }
+      }
+
+      form_params = controller_params["multiple_choice_form"]
+      form_data = %MultipleChoiceForm{}
+
+      # This is how forms typically work in Phoenix controllers
+      changeset = MultipleChoiceForm.changeset(form_data, form_params)
+      form = FormData.to_form(changeset, as: :multiple_choice_form)
+
+      encoded = Encoder.encode(form)
+
+      assert encoded.values == %{
+               id: nil,
+               title: "Real Form Test",
+               preferences: ["email_notifications", "sms_alerts"],
+               tags: ["elixir", "phoenix"]
+               # internal_data excluded by encoder
+             }
+    end
+  end
 end

@@ -224,6 +224,19 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
 
     defp get_field_value(source, field, _type, _opts) do
       Phoenix.HTML.FormData.Ecto.Changeset.input_value(source, %{params: source.params}, field)
+
+      # # First try to get the value using the standard Phoenix input_value function
+      # case Phoenix.HTML.FormData.Ecto.Changeset.input_value(source, %{params: source.params}, field) do
+      #   nil ->
+      #     # If that returns nil, check if there's a field with [] suffix in params
+      #     # This handles the case where multiple checkbox fields have names like "preferences[]"
+      #     field_with_brackets = "#{field}[]"
+      #     case Map.get(source.params, field_with_brackets) do
+      #       nil -> nil
+      #       value -> value
+      #     end
+      #   value -> value
+      # end
     end
 
     def encode_form_values(%{impl: Phoenix.HTML.FormData.Ecto.Changeset, source: source}, opts) do

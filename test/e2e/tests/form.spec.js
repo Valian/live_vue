@@ -168,12 +168,14 @@ test.describe("useLiveForm E2E Tests", () => {
   test("form validation lifecycle with server errors", async ({ page }) => {
     const nameInput = page.locator("[data-pw-name-input]")
     const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
 
     // Fill invalid data that will trigger server validation
     await nameInput.fill("A") // Too short
     await emailInput.fill("invalid-email") // Invalid format
     await nameInput.blur()
     await emailInput.blur()
+    await acceptTermsCheckbox.check()
     await syncLV(page)
 
     // Should show validation errors
@@ -207,12 +209,14 @@ test.describe("useLiveForm E2E Tests", () => {
     const emailInput = page.locator("[data-pw-email-input]")
     const ageInput = page.locator("[data-pw-age-input]")
     const bioInput = page.locator("[data-pw-bio-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
 
     // Fill valid form data
     await nameInput.fill("John Doe")
     await emailInput.fill("john@example.com")
     await ageInput.fill("30")
     await bioInput.fill("This is a comprehensive bio with sufficient content for validation")
+    await acceptTermsCheckbox.check()
     // let's wait for the debounce to finish
     await page.waitForTimeout(150)
     await syncLV(page)
@@ -350,10 +354,12 @@ test.describe("useLiveForm E2E Tests", () => {
   test("complex nested validation with items and tags", async ({ page }) => {
     const nameInput = page.locator("[data-pw-name-input]")
     const emailInput = page.locator("[data-pw-email-input]")
+    const acceptTermsCheckbox = page.locator("[data-pw-accept-terms]")
 
     // Fill required fields
     await nameInput.fill("John Doe")
     await emailInput.fill("john@example.com")
+    await acceptTermsCheckbox.check()
 
     // Add item with invalid title (too short)
     await page.locator("[data-pw-add-item]").click()
@@ -608,11 +614,11 @@ test.describe("useLiveForm E2E Tests", () => {
     await newsletterCheckbox.check()
     await emailPrefCheckbox.check()
     await smsPrefCheckbox.check()
-    
+
     // Add bio to make form valid
     const bioInput = page.locator("[data-pw-bio-input]")
     await bioInput.fill("This is a comprehensive bio with sufficient content for validation")
-    
+
     await syncLV(page)
 
     // Form should be valid

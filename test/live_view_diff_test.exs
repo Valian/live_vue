@@ -5,6 +5,7 @@ defmodule LiveViewDiffTest do
 
   alias LiveVue.Test
   alias Phoenix.LiveView.JS
+  alias Phoenix.LiveView.LiveStream
 
   defmodule Company do
     @moduledoc false
@@ -34,16 +35,24 @@ defmodule LiveViewDiffTest do
 
   # Utility function to assert JSON patches are equal by sorting both by path
   defp assert_patches_equal(actual, expected) do
-    actual_uncompressed =
-      actual
-      |> Enum.map(fn patch ->
-        %{"op" => Enum.at(patch, 0), "path" => Enum.at(patch, 1), "value" => Enum.at(patch, 2)}
-      end)
-      |> Enum.reject(fn patch -> patch["op"] == "test" end)
-
+    actual_uncompressed = decode_patch(actual)
     actual_sorted = Enum.sort_by(actual_uncompressed, & &1["path"])
     expected_sorted = Enum.sort_by(expected, & &1["path"])
     assert actual_sorted == expected_sorted
+  end
+
+  defp decode_patch(patch_list) do
+    patch_list
+    |> Enum.map(fn patch ->
+      %{"op" => Enum.at(patch, 0), "path" => Enum.at(patch, 1), "value" => Enum.at(patch, 2)}
+    end)
+    |> Enum.reject(fn patch -> patch["op"] == "test" end)
+  end
+
+  defp apply_patch!(patch_list, initial_data) do
+    patch_list
+    |> decode_patch()
+    |> Jsonpatch.apply_patch!(initial_data)
   end
 
   describe "props_diff functionality" do
@@ -595,6 +604,160 @@ defmodule LiveViewDiffTest do
       assert_patches_equal(vue.props_diff, [
         %{"op" => "replace", "path" => "/date", "value" => "2025-01-01T15:00:00Z"}
       ])
+    end
+
+    test "correctly clears nested arrays" do
+      initial_form = %{"values" => %{"preferences" => ["email", "sms"]}}
+      updated_form = %{"values" => %{"preferences" => []}}
+
+      assigns = %{
+        form: initial_form,
+        "v-component": "TestComponent",
+        __changed__: %{}
+      }
+
+      assigns = assign(assigns, :form, updated_form)
+      vue = render_vue_assigns(assigns)
+
+      assert apply_patch!(vue.props_diff, %{"form" => initial_form}) == %{"form" => updated_form}
+    end
+  end
+
+  describe "LiveStream diff functionality" do
+    defmodule StreamUser do
+      @moduledoc false
+      @derive LiveVue.Encoder
+      defstruct [:id, :name, :age]
+    end
+
+    test "initial render with LiveStream has empty props_diff" do
+      users = [
+        %StreamUser{id: 1, name: "Alice", age: 30},
+        %StreamUser{id: 2, name: "Bob", age: 25}
+      ]
+
+      stream = LiveStream.new(:users, make_ref(), users, [])
+
+      assigns = %{
+        users: stream,
+        "v-component": "TestComponent",
+        __changed__: nil
+      }
+
+      vue = render_vue_assigns(assigns)
+
+      assert vue.component == "TestComponent"
+
+      expected_users = [
+        %{"id" => 1, "name" => "Alice", "age" => 30, "__dom_id" => "users-1"},
+        %{"id" => 2, "name" => "Bob", "age" => 25, "__dom_id" => "users-2"}
+      ]
+
+      assert vue.props == %{"users" => expected_users}
+      assert_patches_equal(vue.props_diff, [])
+    end
+
+    test "inserting item to LiveStream creates upsert operation" do
+      # Create stream with just the new item to be inserted
+      new_user = %StreamUser{id: 3, name: "Charlie", age: 28}
+      stream = LiveStream.new(:users, make_ref(), [], [])
+      stream = LiveStream.insert_item(stream, new_user, -1, nil, false)
+
+      assigns = %{
+        users: stream,
+        "v-component": "TestComponent",
+        __changed__: %{users: LiveStream.new(:users, make_ref(), [], [])}
+      }
+
+      vue = render_vue_assigns(assigns)
+
+      expected_patches = [
+        %{
+          "op" => "upsert",
+          "path" => "/users/-",
+          "value" => %{"id" => 3, "name" => "Charlie", "age" => 28, "__dom_id" => "users-3"}
+        }
+      ]
+
+      assert_patches_equal(vue.props_diff, expected_patches)
+    end
+
+    test "deleting item from LiveStream creates remove operation" do
+      # Create stream and delete an item from it
+      user_to_delete = %StreamUser{id: 2, name: "Bob", age: 25}
+      stream = LiveStream.new(:users, make_ref(), [], [])
+      stream = LiveStream.delete_item(stream, user_to_delete)
+
+      assigns = %{
+        users: stream,
+        "v-component": "TestComponent",
+        __changed__: %{users: LiveStream.new(:users, make_ref(), [], [])}
+      }
+
+      vue = render_vue_assigns(assigns)
+
+      expected_patches = [
+        %{"op" => "remove", "path" => "/users/$$users-2", "value" => nil}
+      ]
+
+      assert_patches_equal(vue.props_diff, expected_patches)
+    end
+
+    test "resetting LiveStream creates replace operation" do
+      # Create stream and reset it
+      stream = LiveStream.new(:users, make_ref(), [], [])
+      stream = LiveStream.reset(stream)
+
+      assigns = %{
+        users: stream,
+        "v-component": "TestComponent",
+        __changed__: %{users: LiveStream.new(:users, make_ref(), [], [])}
+      }
+
+      vue = render_vue_assigns(assigns)
+
+      expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []}
+      ]
+
+      assert_patches_equal(vue.props_diff, expected_patches)
+    end
+
+    test "complex LiveStream operations create multiple patch operations" do
+      # Perform multiple operations on a stream: insert, delete, reset, and insert again with limit
+      stream =
+        :users
+        |> LiveStream.new(make_ref(), [], [])
+        |> LiveStream.insert_item(%StreamUser{id: 2, name: "Bob", age: 25}, -1, nil, false)
+        |> LiveStream.delete_item(%StreamUser{id: 1, name: "Alice", age: 30})
+        |> LiveStream.reset()
+        |> LiveStream.insert_item(%StreamUser{id: 3, name: "Charlie", age: 28}, -1, 10, false)
+
+      assigns = %{
+        users: stream,
+        "v-component": "TestComponent",
+        __changed__: %{users: LiveStream.new(:users, make_ref(), [], [])}
+      }
+
+      vue = render_vue_assigns(assigns)
+
+      expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []},
+        %{"op" => "remove", "path" => "/users/$$users-1", "value" => nil},
+        %{"op" => "limit", "path" => "/users", "value" => 10},
+        %{
+          "op" => "upsert",
+          "path" => "/users/-",
+          "value" => %{"id" => 3, "name" => "Charlie", "age" => 28, "__dom_id" => "users-3"}
+        },
+        %{
+          "op" => "upsert",
+          "path" => "/users/-",
+          "value" => %{"id" => 2, "name" => "Bob", "age" => 25, "__dom_id" => "users-2"}
+        }
+      ]
+
+      assert_patches_equal(vue.props_diff, expected_patches)
     end
   end
 end

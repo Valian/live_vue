@@ -334,12 +334,16 @@ defmodule LiveVue.E2E.FormTestLive do
 
     defp validate_preferences(changeset) do
       case get_field(changeset, :preferences) do
-        nil -> changeset
-        [] -> changeset
+        nil ->
+          changeset
+
+        [] ->
+          changeset
+
         preferences ->
           valid_preferences = ["email", "sms", "push"]
           invalid_preferences = Enum.filter(preferences, fn pref -> pref not in valid_preferences end)
-          
+
           if Enum.empty?(invalid_preferences) do
             changeset
           else
@@ -376,10 +380,12 @@ defmodule LiveVue.E2E.FormTestLive do
           IO.inspect(data, pretty: true, limit: :infinity)
           IO.puts("\n====================================")
 
-          {:noreply,
+          form = %TestForm{} |> TestForm.changeset(%{}) |> to_form(as: :test_form)
+
+          {:reply, %{reset: true},
            socket
            |> put_flash(:info, "Form submitted successfully!")
-           |> assign(:form, %TestForm{} |> TestForm.changeset(%{}) |> to_form(as: :test_form))}
+           |> assign(:form, form)}
 
         {:error, changeset} ->
           form = to_form(changeset, as: :test_form)
@@ -387,7 +393,6 @@ defmodule LiveVue.E2E.FormTestLive do
       end
     else
       form = to_form(%{changeset | action: :insert}, as: :test_form)
-
       {:noreply, assign(socket, :form, form)}
     end
   end

@@ -333,3 +333,31 @@ export function replaceReactiveObject(target: any, source: any) {
     }
   }
 }
+
+/**
+ * Deep equality comparison for objects
+ */
+export function deepEqual(a: any, b: any): boolean {
+  if (a === b) return true
+  if (a == null || b == null) return false
+  if (typeof a !== 'object' || typeof b !== 'object') return false
+  
+  const keysA = Object.keys(a).sort()
+  const keysB = Object.keys(b).sort()
+  
+  if (keysA.length !== keysB.length) return false
+  
+  for (let i = 0; i < keysA.length; i++) {
+    if (keysA[i] !== keysB[i]) return false
+    if (!deepEqual(a[keysA[i]], b[keysB[i]])) return false
+  }
+  
+  return true
+}
+
+/**
+ * Sanitizes a string for use as an HTML ID attribute
+ */
+export function sanitizeId(input: string): string {
+  return input.replace(/\./g, "_").replace(/\[|\]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")
+}
