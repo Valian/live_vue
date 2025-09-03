@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useLiveForm, type Form } from "live_vue"
-import { watch } from "vue"
 
 // Define a simple form structure for testing
 type TestForm = {
   name: string
   email: string
   age: number
+  acceptTerms: boolean
+  newsletter: boolean
+  preferences: string[]
   profile: {
     bio: string
     skills: string[]
@@ -32,6 +34,15 @@ const nameField = form.field("name")
 const emailField = form.field("email")
 const ageField = form.field("age")
 
+// Checkbox fields
+const acceptTermsField = form.field("acceptTerms", { type: "checkbox" })
+const newsletterField = form.field("newsletter", { type: "checkbox" })
+
+// Multi-checkbox fields for preferences
+const emailPrefField = form.field("preferences", { type: "checkbox", value: "email" })
+const smsPrefField = form.field("preferences", { type: "checkbox", value: "sms" })
+const pushPrefField = form.field("preferences", { type: "checkbox", value: "push" })
+
 // Nested object fields
 const profileField = form.field("profile")
 const bioField = profileField.field("bio")
@@ -39,14 +50,6 @@ const bioField = profileField.field("bio")
 // Array fields
 const skillsArray = form.fieldArray("profile.skills")
 const itemsArray = form.fieldArray("items")
-
-watch(
-  () => skillsArray,
-  newSkills => {
-    console.log("skillsArray changed", newSkills.value.value.length)
-  },
-  { deep: true }
-)
 
 const submitForm = async () => {
   try {
@@ -66,6 +69,10 @@ const submitForm = async () => {
       <div data-pw-is-valid>Valid: {{ form.isValid.value ? "true" : "false" }}</div>
       <div data-pw-is-dirty>Dirty: {{ form.isDirty.value ? "true" : "false" }}</div>
       <div data-pw-is-touched>Touched: {{ form.isTouched.value ? "true" : "false" }}</div>
+      <div data-pw-values>
+        Values:
+        <pre>{{ JSON.stringify(props.form, null, 2) }}</pre>
+      </div>
     </div>
 
     <!-- Basic Fields -->
@@ -112,6 +119,55 @@ const submitForm = async () => {
         <input v-bind="ageField.inputAttrs.value" data-pw-age-input type="number" placeholder="Enter age" />
         <div v-if="ageField.errorMessage.value" class="error" data-pw-age-error>
           {{ ageField.errorMessage.value }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkbox Fields -->
+    <div class="checkbox-fields">
+      <h3>Checkboxes</h3>
+
+      <!-- Single Checkbox -->
+      <div class="field checkbox-field">
+        <label>
+          <input v-bind="acceptTermsField.inputAttrs.value" data-pw-accept-terms />
+          Accept Terms and Conditions
+        </label>
+        <div v-if="acceptTermsField.errorMessage.value" class="error" data-pw-accept-terms-error>
+          {{ acceptTermsField.errorMessage.value }}
+        </div>
+      </div>
+
+      <!-- Another Single Checkbox -->
+      <div class="field checkbox-field">
+        <label>
+          <input v-bind="newsletterField.inputAttrs.value" data-pw-newsletter />
+          Subscribe to Newsletter
+        </label>
+        <div v-if="newsletterField.errorMessage.value" class="error" data-pw-newsletter-error>
+          {{ newsletterField.errorMessage.value }}
+        </div>
+      </div>
+
+      <!-- Multi-Checkbox (Array of Values) -->
+      <div class="field">
+        <label>Preferences (select multiple)</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input v-bind="emailPrefField.inputAttrs.value" data-pw-preferences-email />
+            Email Notifications
+          </label>
+          <label class="checkbox-option">
+            <input v-bind="smsPrefField.inputAttrs.value" data-pw-preferences-sms />
+            SMS Notifications
+          </label>
+          <label class="checkbox-option">
+            <input v-bind="pushPrefField.inputAttrs.value" data-pw-preferences-push />
+            Push Notifications
+          </label>
+        </div>
+        <div v-if="emailPrefField.errorMessage.value" class="error" data-pw-preferences-error>
+          {{ emailPrefField.errorMessage.value }}
         </div>
       </div>
     </div>
@@ -342,5 +398,45 @@ button {
 
 button:hover:not(:disabled) {
   background: #2980b9;
+}
+
+.checkbox-fields {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-option input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 </style>

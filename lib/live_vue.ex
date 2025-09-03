@@ -107,7 +107,7 @@ defmodule LiveVue do
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
-      |> Map.put(:props_diff, prepare_diff(props_diff))
+      |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
@@ -196,11 +196,17 @@ defmodule LiveVue do
 
         _ ->
           socket_keys = List.wrap(socket_key)
-          prop = get_in(socket_assigns, socket_keys)
+
+          # When structure changes (e.g., from map to string or vice versa), get_in might fail
+          # In such cases, we handle it gracefully and return nil for the current value
+          prop = safe_get_in(socket_assigns, socket_keys)
           assigns = Map.put(assigns, prop_name, prop)
 
           if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, hd(socket_keys)) do
-            put_in(assigns.__changed__[prop_name], get_in(socket_changed, socket_keys))
+            # Similarly handle structure changes for the old value in __changed__
+            # We mark it as a complete change with `true` when get_in fails
+            old_value = safe_get_in(socket_changed, socket_keys, true)
+            put_in(assigns.__changed__[prop_name], old_value)
           else
             assigns
           end
@@ -210,6 +216,12 @@ defmodule LiveVue do
 
   def merge_socket_props(_props, assigns), do: assigns
 
+  defp safe_get_in(source, keys, default \\ nil) do
+    get_in(source, keys)
+  rescue
+    FunctionClauseError -> default
+  end
+
   # Calculates minimal JSON Patch operations for changed props only.
   # Uses Phoenix LiveView's __changed__ tracking to identify what props have changed.
   # For simple values, generates direct replace operations.
@@ -218,7 +230,8 @@ defmodule LiveVue do
   defp calculate_props_diff(props, %{__changed__: changed}) do
     # For simple types: changed[k] == true
     # For complex types: changed[k] is the old value
-    Enum.flat_map(props, fn {k, new_value} ->
+    props
+    |> Enum.flat_map(fn {k, new_value} ->
       case changed[k] do
         nil ->
           []
@@ -242,6 +255,8 @@ defmodule LiveVue do
           )
       end
     end)
+    # let's add a harmless test operation to ensure we never have the same diff as before
+    |> then(fn diff -> [%{op: "test", path: "", value: :rand.uniform(10_000_000)} | diff] end)
   end
 
   # this function tells which field of the struct should be used as a key for the diff
@@ -268,7 +283,8 @@ defmodule LiveVue do
       end)
 
     # Handle insertions third
-    Enum.reduce(stream.inserts, patches, fn {dom_id, at, item, limit, update_only}, patches ->
+    stream.inserts
+    |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
       item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
 
       patches =
@@ -280,15 +296,13 @@ defmodule LiveVue do
         do: [%{op: "limit", path: "/#{stream_name}", value: limit} | patches],
         else: patches
     end)
+    |> Enum.reverse()
   end
 
   # we compress the diff to make it smaller, so it's faster to send to the client
   # then, it's decompressed on the client side
-  defp prepare_diff(data, acc \\ [])
-  # We add a random test operation to ensure we never have the same diff as before
-  defp prepare_diff([], acc), do: [[:test, "", :rand.uniform(10_000_000)] | acc]
-  defp prepare_diff([%{op: op, path: p, value: value} | rest], acc), do: prepare_diff(rest, [[op, p, value] | acc])
-  defp prepare_diff([%{op: op, path: p} | rest], acc), do: prepare_diff(rest, [[op, p] | acc])
+  defp prepare_diff(%{op: op, path: p, value: value}), do: [op, p, value]
+  defp prepare_diff(%{op: op, path: p}), do: [op, p]
 
   defp extract(assigns, type) do
     Enum.reduce(assigns, %{}, fn {key, value}, acc ->

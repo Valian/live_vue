@@ -114,6 +114,8 @@ defmodule LiveVueExamplesWeb.LiveForm do
       field :name, :string
       field :description, :string
       field :status, :string, default: "planning"
+      field :notifications, {:array, :string}, default: []
+      field :is_public, :boolean, default: false
       embeds_one :owner, Owner
       embeds_many :team_members, TeamMember
       embeds_many :tasks, Task
@@ -121,7 +123,7 @@ defmodule LiveVueExamplesWeb.LiveForm do
 
     def changeset(project, attrs) do
       project
-      |> cast(attrs, [:name, :description, :status])
+      |> cast(attrs, [:name, :description, :status, :is_public, :notifications])
       |> validate_required([:name, :description, :status])
       |> validate_length(:name, min: 3, max: 100)
       |> validate_length(:description, min: 10, max: 500)
@@ -156,29 +158,27 @@ defmodule LiveVueExamplesWeb.LiveForm do
   def handle_event("submit", %{"project" => project_params}, socket) do
     changeset = Project.changeset(%Project{}, project_params)
 
-    if changeset.valid? do
-      # In a real app, you would save the data here
-      case Ecto.Changeset.apply_action(changeset, :insert) do
-        {:ok, data} ->
-          IO.puts("\n=== PROJECT SUBMITTED SUCCESSFULLY ===")
-          IO.inspect(data, pretty: true, limit: :infinity)
-          IO.puts("\n=====================================")
+    # In a real app, you would save the data here
+    case Ecto.Changeset.apply_action(changeset, :insert) do
+      {:ok, data} ->
+        IO.puts("\n=== PROJECT SUBMITTED SUCCESSFULLY ===")
+        IO.inspect(data, pretty: true, limit: :infinity)
+        IO.puts("\n=====================================")
 
-          {:noreply,
-           socket
-           |> put_flash(:info, "Project created successfully!")
-           |> assign(:form, Project.changeset(%Project{}, %{}) |> to_form(as: :project))}
+        socket = socket
+        |> put_flash(:info, "Project created successfully!")
+        |> assign(:form, Project.changeset(%Project{}, %{}) |> to_form(as: :project))
 
-        {:error, changeset} ->
-          form = changeset |> to_form(as: :project)
-          {:noreply, assign(socket, :form, form)}
-      end
-    else
-      form =
-        %{changeset | action: :insert}
-        |> to_form(as: :project)
+        {:reply, %{reset: true}, socket}
 
-      {:noreply, assign(socket, :form, form)}
+      {:error, changeset} ->
+        form = changeset |> to_form(as: :project)
+
+        socket = socket
+        |> put_flash(:error, "Project creation failed, check errors")
+        |> assign(:form, form)
+
+        {:noreply, socket}
     end
   end
 

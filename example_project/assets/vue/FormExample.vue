@@ -6,6 +6,8 @@ type ProjectForm = {
   name: string
   description: string
   status: string
+  is_public: boolean
+  notifications: string[]
   owner: {
     name: string
     email: string
@@ -41,11 +43,17 @@ const form = useLiveForm<ProjectForm>(() => props.form, {
 const nameField = form.field("name")
 const descriptionField = form.field("description")
 const statusField = form.field("status")
+const isPublicField = form.field("is_public", { type: "checkbox" })
+
+// Checkbox fields with different approaches
+const emailNotifyField = form.field("notifications", { type: "checkbox", value: "email" })
+const smsNotifyField = form.field("notifications", { type: "checkbox", value: "sms" })
+const pushNotifyField = form.field("notifications", { type: "checkbox", value: "push" })
 
 // Nested object fields
 const ownerField = form.field("owner")
 const ownerNameField = ownerField.field("name")
-const ownerEmailField = ownerField.field("email")
+const ownerEmailField = ownerField.field("email", { type: "email" })
 const ownerRoleField = ownerField.field("role")
 
 // Array fields
@@ -103,12 +111,8 @@ const removeAssigneeFromTask = (taskIndex: number, assigneeIndex: number) => {
 }
 
 const submitForm = async () => {
-  try {
-    await form.submit()
-    console.log("Form submitted successfully")
-  } catch (error) {
-    console.error("Form submission failed:", error)
-  }
+  const result = await form.submit()
+  console.log("Form submission result:", result)
 }
 </script>
 
@@ -174,6 +178,52 @@ const submitForm = async () => {
               {{ descriptionField.errorMessage.value }}
             </div>
           </div>
+
+          <div class="mt-4">
+            <div class="flex items-center">
+              <input
+                v-bind="isPublicField.inputAttrs.value"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="isPublicField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                Make this project public
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Preferences (Multi-Checkbox Demo) -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <h2 class="text-xl font-semibold mb-4 text-gray-900">Notification Preferences</h2>
+          <div class="space-y-3">
+            <div class="flex items-center">
+              <input
+                v-bind="emailNotifyField.inputAttrs.value"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="emailNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                Email Notifications
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input
+                v-bind="smsNotifyField.inputAttrs.value"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="smsNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                SMS Notifications
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input
+                v-bind="pushNotifyField.inputAttrs.value"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label :for="pushNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
+                Push Notifications
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- Project Owner -->
@@ -205,7 +255,6 @@ const submitForm = async () => {
               >
               <input
                 v-bind="ownerEmailField.inputAttrs.value"
-                type="email"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 :class="{ 'border-red-500': ownerEmailField.isTouched.value && ownerEmailField.errorMessage.value }"
                 placeholder="owner@example.com"
@@ -296,8 +345,7 @@ const submitForm = async () => {
                   >Email</label
                 >
                 <input
-                  v-bind="memberField.field('email').inputAttrs.value"
-                  type="email"
+                  v-bind="memberField.field('email', { type: 'email' }).inputAttrs.value"
                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   :class="{
                     'border-red-500':
@@ -527,7 +575,6 @@ const submitForm = async () => {
             </button>
             <button
               @click="submitForm"
-              :disabled="!form.isValid.value"
               class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
               Submit Project

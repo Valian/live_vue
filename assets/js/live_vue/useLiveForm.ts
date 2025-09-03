@@ -23,11 +23,13 @@ import {
   debounce,
   replaceReactiveObject,
   deepToRaw,
+  deepEqual,
+  sanitizeId,
 } from "./utils"
 
 // Injection key for providing form instances to child components
 export const LIVE_FORM_INJECTION_KEY = Symbol("LiveForm") as InjectionKey<{
-  field: (path: string) => FormField<any>
+  field: (path: string, options?: FieldOptions) => FormField<any>
   fieldArray: (path: string) => FormFieldArray<any>
 }>
 
@@ -130,6 +132,13 @@ type ArrayFieldArrayPath<T, P extends string | number> = P extends number
     : never
   : never
 
+export interface FieldOptions {
+  /** HTML input type - supports any valid input type */
+  type?: string
+  /** For checkbox/radio: the value this input represents when selected */
+  value?: any
+}
+
 export interface FormOptions {
   /** Event name to send to the server when form values change. Set to null to disable validation events */
   changeEvent?: string | null
@@ -158,13 +167,21 @@ export interface FormField<T> {
       onBlur: () => void
       name: string
       id: string
+      type?: string
+      checked?: boolean
       "aria-invalid": boolean
       "aria-describedby"?: string
     }>
   >
 
+  // Internal options storage (for cache comparison)
+  _options: FieldOptions
+
   // Type-safe sub-field creation (enables fluent interface)
-  field<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<T[K]>
+  field<K extends keyof T>(
+    key: K,
+    options?: FieldOptions
+  ): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<T[K]>
   fieldArray<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Field actions
@@ -181,7 +198,7 @@ export interface FormFieldArray<T> extends Omit<FormField<T[]>, "field" | "field
   fields: Readonly<Ref<FormField<T>[]>>
 
   // Get individual array item fields
-  field: <P extends string | number>(path: P) => ArrayFieldPath<T, P>
+  field: <P extends string | number>(path: P, options?: FieldOptions) => ArrayFieldPath<T, P>
   fieldArray: <P extends string | number>(path: P) => ArrayFieldArrayPath<T, P>
 }
 
@@ -192,16 +209,16 @@ export interface UseLiveFormReturn<T extends object> {
   isTouched: Ref<boolean>
   isValidating: Readonly<Ref<boolean>>
   submitCount: Readonly<Ref<number>>
-  initialValues: Readonly<Ref<T>>
+  initialValues: Readonly<T>
 
   // Type-safe field factory functions
-  field<P extends PathsToStringProps<T>>(path: P): FormField<PathValue<T, P>>
+  field<P extends PathsToStringProps<T>>(path: P, options?: FieldOptions): FormField<PathValue<T, P>>
   fieldArray<P extends PathsToStringProps<T>>(
     path: P
   ): PathValue<T, P> extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Form actions
-  submit: () => Promise<void>
+  submit: () => Promise<Form<T>>
   reset: () => void
 }
 
@@ -218,7 +235,7 @@ export function useLiveForm<T extends object>(
 
   // Get initial form data
   const initialForm = toValue(form)
-  const initialValues = ref(deepClone(initialForm.values)) as Ref<T>
+  const initialValues = reactive(deepClone(initialForm.values)) as T
   const currentValues = reactive(deepClone(initialForm.values)) as T
   const currentErrors = reactive(deepClone(initialForm.errors)) as FormErrors<T>
 
@@ -227,7 +244,7 @@ export function useLiveForm<T extends object>(
   const submitCount = ref(0)
 
   // Memoization for field instances to prevent recreation
-  const fieldCache = new Map<string, FormField<any>>()
+  const fieldCache = new Map<string, FormField<any>[]>()
   const fieldArrayCache = new Map<string, FormFieldArray<any>>()
 
   // Helper function to check if any errors exist in nested error structure
@@ -254,7 +271,7 @@ export function useLiveForm<T extends object>(
   const isValid = computed(() => !hasAnyErrors(currentErrors))
 
   const isDirty = computed(() => {
-    return JSON.stringify(currentValues) !== JSON.stringify(initialValues.value)
+    return JSON.stringify(currentValues) !== JSON.stringify(initialValues)
   })
 
   const isTouched = computed(() => {
@@ -269,9 +286,13 @@ export function useLiveForm<T extends object>(
     if (changeEvent) {
       const values = deepToRaw(currentValues)
       const data = prepareData(values)
-      return await live.pushEvent(changeEvent, { [initialForm.name]: data })
+      return new Promise(resolve =>
+        live.pushEvent(changeEvent, { [initialForm.name]: data }, (result: any) => {
+          resolve(result)
+        })
+      )
     } else {
-      return Promise.resolve()
+      return Promise.resolve(null)
     }
   }
 
@@ -280,13 +301,23 @@ export function useLiveForm<T extends object>(
   const { debouncedFn: debouncedSendChanges, isPending: isValidatingChanges } = debounce(sendChanges, debounceWait)
 
   // Create a form field for a given path
-  function createFormField<V>(path: string): FormField<V> {
-    // Check cache first
-    if (fieldCache.has(path)) {
-      return fieldCache.get(path) as FormField<V>
+  function createFormField<V>(path: string, options: FieldOptions = {}): FormField<V> {
+    // Get or create array of fields for this path
+    if (!fieldCache.has(path)) {
+      fieldCache.set(path, [])
+    }
+    const fieldsForPath = fieldCache.get(path)!
+
+    // Find existing field with matching options
+    const existingField = fieldsForPath.find(f => deepEqual(f._options, options))
+    if (existingField) {
+      return existingField as FormField<V>
     }
 
+    // For checkboxes with values, determine multi-checkbox behavior based on current value type
+
     const keys = parsePath(path)
+    const fieldId = sanitizeId(path) + (options.value !== undefined ? `_${sanitizeId(String(options.value))}` : "")
 
     const fieldValue = computed({
       get(): V {
@@ -311,48 +342,65 @@ export function useLiveForm<T extends object>(
     const fieldIsValid = computed(() => fieldErrors.value.length === 0)
     const fieldIsTouched = computed(() => submitCount.value > 0 || touchedFields.has(path))
     const fieldIsDirty = computed(() => {
-      const currentVal = getValueByPath(currentValues, keys)
-      const initialVal = getValueByPath(initialValues.value, keys)
-      return JSON.stringify(currentVal) !== JSON.stringify(initialVal)
+      const initialVal = getValueByPath(initialValues, keys)
+      return JSON.stringify(fieldValue.value) !== JSON.stringify(initialVal)
     })
 
-    // Create sanitized ID from path (replace dots with underscores, remove brackets)
-    const fieldId = path.replace(/\./g, "_").replace(/\[|\]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")
-    const fieldInputAttrs = computed(() => ({
-      value: fieldValue.value,
-      onInput: (event: Event) => {
-        const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        if (target.type === "checkbox") {
-          // For checkboxes, use checked property
-          // If the field value is an array, handle multi-checkbox (array of values)
-          if (Array.isArray(fieldValue.value)) {
-            const value = (target as HTMLInputElement).value
-            const checked = (target as HTMLInputElement).checked
-            const arr = [...(fieldValue.value as unknown as any[])]
-            const idx = arr.indexOf(value)
-            if (checked && idx === -1) {
-              arr.push(value)
-            } else if (!checked && idx !== -1) {
-              arr.splice(idx, 1)
-            }
-            fieldValue.value = arr as V
-          } else {
-            fieldValue.value = (target as HTMLInputElement).checked as V
-          }
-        } else {
-          fieldValue.value = target.value as V
-        }
-      },
-      onBlur: () => {
-        touchedFields.add(path)
-      },
-      name: path,
-      id: fieldId,
-      "aria-invalid": !fieldIsValid.value,
-      ...(fieldErrors.value.length > 0 ? { "aria-describedby": `${fieldId}-error` } : {}),
-    }))
+    const setTouched = () => touchedFields.add(path)
+    const isMultiCheckboxValue = options.type === "checkbox" && Array.isArray(fieldValue.value)
 
-    const field = {
+    const fieldInputAttrs = computed(() => {
+      const baseAttrs = {
+        name: path,
+        id: fieldId,
+        type: options.type,
+        onBlur: setTouched,
+        "aria-invalid": !fieldIsValid.value,
+        ...(fieldErrors.value.length > 0 ? { "aria-describedby": `${fieldId}-error` } : {}),
+      }
+
+      // if it's a multi-checkbox, we need to set or unset the value in the array
+      if (isMultiCheckboxValue) {
+        return {
+          ...baseAttrs,
+          value: options.value,
+          checked: ((fieldValue.value as V[]) || []).includes(options.value),
+          onInput: (event: Event) => {
+            const target = event.target as HTMLInputElement
+            const currentArray = fieldValue.value as V[]
+            const idx = currentArray.indexOf(options.value)
+            if (target.checked && idx === -1) {
+              currentArray.push(options.value)
+            } else if (!target.checked && idx !== -1) {
+              currentArray.splice(idx, 1)
+            }
+          },
+        }
+      } else if (options.type === "checkbox") {
+        const optionsValue = options.value !== undefined ? options.value : true
+        return {
+          ...baseAttrs,
+          value: options.value,
+          checked: fieldValue.value === optionsValue,
+          onInput: (event: Event) => {
+            const target = event.target as HTMLInputElement
+            fieldValue.value = target.checked ? optionsValue : null
+          },
+        }
+      } else {
+        // Regular input
+        return {
+          ...baseAttrs,
+          value: fieldValue.value,
+          onInput: (event: Event) => {
+            const target = event.target as HTMLInputElement
+            fieldValue.value = target.value as V
+          },
+        }
+      }
+    })
+
+    const field: FormField<V> = {
       value: fieldValue,
       errors: fieldErrors as Readonly<Ref<string[]>>,
       errorMessage: fieldErrorMessage as Readonly<Ref<string | undefined>>,
@@ -360,10 +408,16 @@ export function useLiveForm<T extends object>(
       isDirty: fieldIsDirty,
       isTouched: fieldIsTouched,
       inputAttrs: fieldInputAttrs,
+      _options: options,
 
-      field<K extends keyof V>(key: K): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]> {
+      field<K extends keyof V>(
+        key: K,
+        options?: FieldOptions
+      ): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]> {
         const subPath = path ? `${path}.${String(key)}` : String(key)
-        return createFormField(subPath) as V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]>
+        return createFormField(subPath, options) as V[K] extends readonly (infer U)[]
+          ? FormFieldArray<U>
+          : FormField<V[K]>
       },
 
       fieldArray<K extends keyof V>(key: K): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : never {
@@ -376,8 +430,9 @@ export function useLiveForm<T extends object>(
       },
     }
 
-    // Cache the field instance
-    fieldCache.set(path, field as any)
+    // Add to cache
+    fieldsForPath.push(field)
+
     return field
   }
 
@@ -425,13 +480,13 @@ export function useLiveForm<T extends object>(
         return array.map((_, index) => createFormField<V>(`${path}[${index}]`))
       }) as Readonly<Ref<FormField<V>[]>>,
 
-      field<P extends string | number>(pathOrIndex: P): ArrayFieldPath<V, P> {
+      field<P extends string | number>(pathOrIndex: P, options?: FieldOptions): ArrayFieldPath<V, P> {
         // Handle number shortcut: convert 0 to "[0]"
         if (typeof pathOrIndex === "number") {
-          return createFormField(`${path}[${pathOrIndex}]`) as ArrayFieldPath<V, P>
+          return createFormField(`${path}[${pathOrIndex}]`, options) as ArrayFieldPath<V, P>
         }
         // Handle string path: use as-is, could be "[0]", "[0].name", etc.
-        return createFormField(`${path}${pathOrIndex}`) as ArrayFieldPath<V, P>
+        return createFormField(`${path}${pathOrIndex}`, options) as ArrayFieldPath<V, P>
       },
 
       fieldArray<P extends string | number>(pathOrIndex: P): ArrayFieldArrayPath<V, P> {
@@ -470,7 +525,7 @@ export function useLiveForm<T extends object>(
   )
 
   const reset = () => {
-    Object.assign(currentValues, deepClone(initialValues.value))
+    Object.assign(currentValues, deepClone(initialValues))
     touchedFields.clear()
     submitCount.value = 0
   }
@@ -482,37 +537,28 @@ export function useLiveForm<T extends object>(
     if (live) {
       const data = prepareData(deepToRaw(currentValues))
 
-      return await new Promise<void>((resolve, reject) => {
+      return await new Promise<Form<T>>(resolve => {
         // Send submit event to LiveView
-        const result = live.pushEvent(submitEvent, { [initialForm.name]: data })
-
-        // If pushEvent returns a promise, wait for it
-        if (result && typeof result.then === "function") {
-          result
-            .then(() => {
-              // On successful submission:
-              // 1. Update initial values to match current values (server accepted changes)
-              initialValues.value = deepClone(toValue(form).values)
+        live.pushEvent(submitEvent, { [initialForm.name]: data }, (result: any) => {
+          // if it was successful, we want to reset the form, but it's hard to determine if it was successfull or not in an automated way
+          // because eg initial form might have errors
+          // so, user should reset his form manually if it was successfull
+          // we provide a shortcut: if there's a reply with {reset: true},
+          // it means it should be resetted on the client side as well
+          if (result && result.reset) {
+            setTimeout(() => {
+              // let's wait for update from the server to be processed
+              Object.assign(initialValues, deepClone(currentValues))
               reset()
-              resolve()
-            })
-            .catch(error => {
-              // On failed submission, keep the incremented submit count
-              reject(error)
-            })
-        } else {
-          // Non-promise result means immediate success
-          // Update initial values to match current values
-          initialValues.value = deepClone(toValue(form).values)
-          // Reset touched state and submit count
-          reset()
-          resolve()
-        }
+            }, 0)
+          }
+          resolve(result)
+        })
       })
     } else {
       // Fallback when not in LiveView context
       console.warn("LiveView hook not available, form submission skipped")
-      return Promise.resolve()
+      return Promise.resolve(undefined as any)
     }
   }
 
@@ -527,11 +573,11 @@ export function useLiveForm<T extends object>(
     isTouched,
     isValidating: readonly(isValidatingChanges) as Readonly<Ref<boolean>>,
     submitCount: readonly(submitCount),
-    initialValues: readonly(initialValues) as Readonly<Ref<T>>,
+    initialValues: readonly(initialValues) as Readonly<T>,
     submit: submit,
     reset: reset,
-    field<P extends PathsToStringProps<T>>(path: P): FormField<PathValue<T, P>> {
-      return createFormField<PathValue<T, P>>(path as string)
+    field<P extends PathsToStringProps<T>>(path: P, options?: FieldOptions): FormField<PathValue<T, P>> {
+      return createFormField<PathValue<T, P>>(path as string, options)
     },
 
     fieldArray<P extends PathsToStringProps<T>>(path: P): any {
@@ -551,7 +597,7 @@ export function useLiveForm<T extends object>(
  * @throws Error if no form was provided via inject
  * @returns FormField instance for the specified path
  */
-export function useField<T = any>(path: string): FormField<T> {
+export function useField<T = any>(path: string, options?: FieldOptions): FormField<T> {
   const form = inject(LIVE_FORM_INJECTION_KEY)
 
   if (!form) {
@@ -561,7 +607,7 @@ export function useField<T = any>(path: string): FormField<T> {
     )
   }
 
-  return form.field(path) as FormField<T>
+  return form.field(path, options) as FormField<T>
 }
 
 /**

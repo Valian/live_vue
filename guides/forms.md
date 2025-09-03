@@ -176,7 +176,7 @@ const form = useLiveForm(() => props.form, {
 
 // Create typed field references
 const nameField = form.field('name')
-const emailField = form.field('email')
+const emailField = form.field('email', { type: 'email' })
 const subjectField = form.field('subject')
 const messageField = form.field('message')
 </script>
@@ -198,7 +198,6 @@ const messageField = form.field('message')
       <label :for="emailField.inputAttrs.value.id">Email</label>
       <input
         v-bind="emailField.inputAttrs.value"
-        type="email"
         :class="{ error: emailField.isTouched.value && emailField.errorMessage.value }"
       />
       <div v-if="emailField.errorMessage.value" class="error-message">
@@ -299,7 +298,7 @@ The object returned by `useLiveForm()`:
 
 | Method | Description |
 |--------|-------------|
-| `field(path)` | Get a typed field instance for the given path (e.g., "name", "user.email", "users[0].name") |
+| `field(path, options?)` | Get a typed field instance for the given path (e.g., "name", "user.email", "users[0].name") with optional field configuration |
 | `fieldArray(path)` | Get an array field instance for managing dynamic lists |
 
 **Form actions:**
@@ -375,6 +374,40 @@ Array field with additional methods for array manipulation. If `changeEvent` is 
 | `fieldArray(path)` | Get nested array fields within array items |
 
 > **Note:** Array fields inherit all properties and methods from `FormField` except `field()` and `fieldArray()` navigation methods, which are replaced with array-specific versions.
+
+### Field Options
+
+When creating fields, you can pass an optional `options` parameter to configure field behavior:
+
+```typescript
+interface FieldOptions {
+  type?: string     // HTML input type (e.g., "email", "password", "checkbox")
+  value?: any       // For checkbox/radio: the value this field represents when selected
+}
+```
+
+**Examples:**
+
+```javascript
+// Basic field (infers type from data)
+const nameField = form.field('name')
+
+// Email input with validation
+const emailField = form.field('email', { type: 'email' })
+
+// Password input
+const passwordField = form.field('password', { type: 'password' })
+
+// Boolean checkbox
+const acceptTerms = form.field('acceptTerms', { type: 'checkbox' })
+
+// Single checkbox with custom value
+const planField = form.field('plan', { type: 'checkbox', value: 'premium' })
+
+// Multiple checkboxes (automatically detected when same field has different values)
+const emailPrefs = form.field('preferences', { type: 'checkbox', value: 'email' })
+const smsPrefs = form.field('preferences', { type: 'checkbox', value: 'sms' })
+```
 
 ## Working with Fields
 
@@ -476,8 +509,88 @@ const props = withDefaults(defineProps<Props>(), {
 Usage:
 ```html
 <TextInput :field="form.field('name')" label="Full Name" placeholder="Enter your name" />
-<TextInput :field="form.field('email')" label="Email" type="email" />
+<TextInput :field="form.field('email', { type: 'email' })" label="Email" />
 ```
+
+### Checkbox Fields
+
+LiveVue supports three checkbox patterns that automatically handle different use cases:
+
+#### 1. Boolean Checkbox
+
+For simple true/false fields:
+
+```html
+<script setup>
+const acceptTerms = form.field('acceptTerms', { type: 'checkbox' })
+</script>
+
+<template>
+  <label>
+    <input v-bind="acceptTerms.inputAttrs.value" />
+    I accept the terms and conditions
+  </label>
+</template>
+```
+
+#### 2. Single Checkbox with Custom Value
+
+For fields that should have a specific value when checked:
+
+```html
+<script setup>
+const plan = form.field('plan', { type: 'checkbox', value: 'premium' })
+</script>
+
+<template>
+  <label>
+    <input v-bind="plan.inputAttrs.value" />
+    Upgrade to Premium ($9.99/month)
+  </label>
+  <!-- When checked: plan.value = 'premium', when unchecked: plan.value = null -->
+</template>
+```
+
+#### 3. Multiple Checkboxes (Array)
+
+When you create multiple checkboxes for the same field path with different values, LiveVue automatically detects this as a multi-checkbox scenario and manages an array:
+
+```html
+<script setup>
+// These automatically become array-aware
+const emailPref = form.field('preferences', { type: 'checkbox', value: 'email' })
+const smsPref = form.field('preferences', { type: 'checkbox', value: 'sms' })
+const pushPref = form.field('preferences', { type: 'checkbox', value: 'push' })
+</script>
+
+<template>
+  <fieldset>
+    <legend>Notification Preferences</legend>
+    
+    <label>
+      <input v-bind="emailPref.inputAttrs.value" />
+      Email notifications
+    </label>
+    
+    <label>
+      <input v-bind="smsPref.inputAttrs.value" />
+      SMS notifications  
+    </label>
+    
+    <label>
+      <input v-bind="pushPref.inputAttrs.value" />
+      Push notifications
+    </label>
+  </fieldset>
+  <!-- When checked, values are added/removed from the array automatically -->
+  <!-- e.g., preferences.value = ['email', 'push'] -->
+</template>
+```
+
+The checkbox behavior is automatically determined by:
+- **Boolean**: `type: 'checkbox'` without `value` option
+- **Single with value**: `type: 'checkbox'` with `value` option  
+- **Multiple**: Same field path used with different `value` options
 
 ## Nested Fields
 
@@ -1408,6 +1521,152 @@ defmodule MyApp.Users do
 end
 ```
 
+### Form Reset on Successful Submission
+
+By default, `useLiveForm` does not automatically reset form state after submission. This allows for flexible handling of different success scenarios (redirects, modals, etc.). However, you can opt into automatic form reset by returning `{:reply, %{reset: true}, socket}` from your submit event handler.
+
+#### Manual Form Management (Default Behavior)
+
+```elixir
+def handle_event("submit", %{"user" => user_params}, socket) do
+  case save_user(socket.assigns.user, user_params) do
+    {:ok, user} ->
+      # Redirect after successful save
+      {:noreply, redirect(socket, to: ~p"/users/#{user}")}
+
+    {:error, changeset} ->
+      # Show validation errors
+      {:noreply, assign(socket, form: to_form(changeset, as: :user))}
+  end
+end
+```
+
+#### Automatic Form Reset
+
+When you want the form to reset after successful submission (useful for "create another" workflows or staying on the same page), use the `{:reply, %{reset: true}, socket}` pattern:
+
+```elixir
+def handle_event("submit", %{"contact" => contact_params}, socket) do
+  case create_contact(contact_params) do
+    {:ok, contact} ->
+      socket =
+        socket
+        |> put_flash(:info, "Contact created successfully!")
+        |> assign(:form, to_form(Contact.changeset(%Contact{}, %{}), as: :contact))
+
+      # Tell the Vue component to reset form state
+      {:reply, %{reset: true}, socket}
+
+    {:error, changeset} ->
+      {:noreply, assign(socket, form: to_form(changeset, as: :contact))}
+  end
+end
+```
+
+#### What Gets Reset
+
+When `{reset: true}` is received, the Vue form component will:
+
+- Reset all field values to their current server state (from `form.values`)
+- Clear all touched states (`isTouched` becomes `false`)
+- Reset submit count to 0
+- Clear dirty states (`isDirty` becomes `false`)
+- Update `initialValues` to match current form values
+
+#### Multi-Step Form Reset
+
+For multi-step forms or complex workflows, you can conditionally reset:
+
+```elixir
+def handle_event("submit", %{"order" => order_params}, socket) do
+  case create_order(order_params) do
+    {:ok, order} ->
+      socket = put_flash(socket, :info, "Order created successfully!")
+
+      case socket.assigns.action do
+        :create_another ->
+          # Reset form to create another order
+          socket = assign(socket, form: to_form(Order.changeset(%Order{}, %{}), as: :order))
+          {:reply, %{reset: true}, socket}
+
+        :checkout ->
+          # Redirect to checkout
+          {:noreply, redirect(socket, to: ~p"/checkout/#{order}")}
+
+        :view_order ->
+          # Redirect to order details
+          {:noreply, redirect(socket, to: ~p"/orders/#{order}")}
+      end
+
+    {:error, changeset} ->
+      {:noreply, assign(socket, form: to_form(changeset, as: :order))}
+  end
+end
+```
+
+#### Vue Component Handling
+
+The Vue component automatically handles the reset response:
+
+```html
+<script setup>
+const form = useLiveForm(() => props.form, {
+  submitEvent: 'submit'
+})
+
+const handleSubmit = async () => {
+  try {
+    const result = await form.submit()
+    
+    // If server returned {reset: true}, form is already reset
+    if (result?.reset) {
+      console.log('Form was reset after successful submission')
+    }
+    
+    // Additional success handling if needed
+  } catch (error) {
+    console.error('Submission failed:', error)
+  }
+}
+</script>
+```
+
+#### Best Practices
+
+1. **Use reset for "create another" workflows** where users typically want to submit multiple similar forms
+2. **Don't use reset when redirecting** - if you're redirecting after success, reset is unnecessary
+3. **Reset with fresh form data** - always assign a new form with fresh initial values before returning `{:reply, %{reset: true}, socket}`
+4. **Consider user experience** - reset only when it improves the user flow, not as a default behavior
+
+```elixir
+# Good: Reset for contact form that stays on same page
+def handle_event("submit", %{"contact" => params}, socket) do
+  case MyApp.Contacts.create_contact(params) do
+    {:ok, _contact} ->
+      socket =
+        socket
+        |> put_flash(:info, "Message sent successfully!")
+        |> assign(:form, to_form(Contact.changeset(%Contact{}, %{}), as: :contact))
+      
+      {:reply, %{reset: true}, socket}
+      
+    {:error, changeset} ->
+      {:noreply, assign(socket, form: to_form(changeset, as: :contact))}
+  end
+end
+
+# Also good: No reset when redirecting
+def handle_event("submit", %{"user" => params}, socket) do
+  case MyApp.Accounts.create_user(params) do
+    {:ok, user} ->
+      {:noreply, redirect(socket, to: ~p"/users/#{user}")}
+      
+    {:error, changeset} ->
+      {:noreply, assign(socket, form: to_form(changeset, as: :user))}
+  end
+end
+```
+
 ## Complete Examples
 
 ### Simple Contact Form
@@ -1437,11 +1696,11 @@ const form = useLiveForm(() => props.form, {
 })
 
 const nameField = form.field('name')
-const emailField = form.field('email')
+const emailField = form.field('email', { type: 'email' })
 const subjectField = form.field('subject')
 const messageField = form.field('message')
 const contactMethodField = form.field('contact_method')
-const phoneField = form.field('phone')
+const phoneField = form.field('phone', { type: 'tel' })
 
 const needsPhone = computed(() =>
   contactMethodField.value.value === 'phone'
@@ -1477,7 +1736,6 @@ const submitForm = async () => {
         <label :for="emailField.inputAttrs.value.id">Email *</label>
         <input
           v-bind="emailField.inputAttrs.value"
-          type="email"
           :class="{ error: emailField.isTouched.value && emailField.errorMessage.value }"
         />
         <div v-if="emailField.errorMessage.value" class="error-message">
@@ -1510,7 +1768,7 @@ const submitForm = async () => {
 
     <div v-if="needsPhone" class="field">
       <label :for="phoneField.inputAttrs.value.id">Phone Number</label>
-      <input v-bind="phoneField.inputAttrs.value" type="tel" />
+      <input v-bind="phoneField.inputAttrs.value" />
       <div v-if="phoneField.errorMessage.value" class="error-message">
         {{ phoneField.errorMessage.value }}
       </div>

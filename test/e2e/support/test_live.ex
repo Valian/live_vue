@@ -312,19 +312,44 @@ defmodule LiveVue.E2E.FormTestLive do
       field(:name, :string)
       field(:email, :string)
       field(:age, :integer)
+      field(:acceptTerms, :boolean, default: false)
+      field(:newsletter, :boolean, default: false)
+      field(:preferences, {:array, :string}, default: [])
       embeds_one(:profile, Profile)
       embeds_many(:items, Item)
     end
 
     def changeset(form, attrs) do
       form
-      |> cast(attrs, [:name, :email, :age])
+      |> cast(attrs, [:name, :email, :age, :acceptTerms, :newsletter, :preferences])
       |> validate_required([:name, :email], message: "is required")
       |> validate_length(:name, min: 2, max: 50)
       |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email address")
       |> validate_number(:age, greater_than: 0, less_than: 150, message: "must be between 1 and 149")
+      |> validate_acceptance(:acceptTerms, message: "must be accepted to proceed")
+      |> validate_preferences()
       |> cast_embed(:profile)
       |> cast_embed(:items)
+    end
+
+    defp validate_preferences(changeset) do
+      case get_field(changeset, :preferences) do
+        nil ->
+          changeset
+
+        [] ->
+          changeset
+
+        preferences ->
+          valid_preferences = ["email", "sms", "push"]
+          invalid_preferences = Enum.filter(preferences, fn pref -> pref not in valid_preferences end)
+
+          if Enum.empty?(invalid_preferences) do
+            changeset
+          else
+            add_error(changeset, :preferences, "contains invalid options: #{Enum.join(invalid_preferences, ", ")}")
+          end
+      end
     end
   end
 
@@ -355,10 +380,12 @@ defmodule LiveVue.E2E.FormTestLive do
           IO.inspect(data, pretty: true, limit: :infinity)
           IO.puts("\n====================================")
 
-          {:noreply,
+          form = %TestForm{} |> TestForm.changeset(%{}) |> to_form(as: :test_form)
+
+          {:reply, %{reset: true},
            socket
            |> put_flash(:info, "Form submitted successfully!")
-           |> assign(:form, %TestForm{} |> TestForm.changeset(%{}) |> to_form(as: :test_form))}
+           |> assign(:form, form)}
 
         {:error, changeset} ->
           form = to_form(changeset, as: :test_form)
@@ -366,7 +393,6 @@ defmodule LiveVue.E2E.FormTestLive do
       end
     else
       form = to_form(%{changeset | action: :insert}, as: :test_form)
-
       {:noreply, assign(socket, :form, form)}
     end
   end
