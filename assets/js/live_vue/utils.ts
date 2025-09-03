@@ -33,9 +33,10 @@ export const flatMapKeys = <T>(
  * @returns The component if found, otherwise throws an error with a list of available components.
  */
 export const findComponent = (components: ComponentMap, name: string): ComponentOrComponentPromise => {
-  // we're looking for a component by name or path suffix.
+  // we're looking for a component by exact filename match
   for (const [key, value] of Object.entries(components)) {
-    if (key.endsWith(`${name}.vue`) || key.endsWith(`${name}/index.vue`)) {
+    const fileName = key.split('/').pop() // Get the actual filename
+    if (fileName === `${name}.vue` || (fileName === 'index.vue' && key.endsWith(`/${name}/index.vue`))) {
       return value
     }
   }
