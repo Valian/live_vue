@@ -306,20 +306,15 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
     count = opts[:count]
 
     cond do
-      backend == nil or not Code.ensure_loaded?(Gettext) ->
-        Enum.reduce(opts, msg, fn {key, value}, acc ->
-          String.replace(acc, "%{#{key}}", to_string(value))
-        end)
-
-      count != nil and Code.ensure_loaded?(Gettext) ->
+      backend != nil and count != nil and Code.ensure_loaded?(Gettext) ->
         apply(Gettext, :dngettext, [backend, "errors", msg, msg, count, opts])
 
-      Code.ensure_loaded?(Gettext) ->
+      backend != nil and Code.ensure_loaded?(Gettext) ->
         apply(Gettext, :dgettext, [backend, "errors", msg, opts])
 
       true ->
         Enum.reduce(opts, msg, fn {key, value}, acc ->
-          String.replace(acc, "%{#{key}}", to_string(value))
+          String.replace(acc, "%{#{key}}", value |> List.wrap() |> Enum.map_join(", ", &to_string/1))
         end)
     end
   end
