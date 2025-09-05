@@ -12,6 +12,13 @@ config :live_vue,
   # in dev most likely http://localhost:5173
   vite_host: nil,
 
+  # The public facing hostname of vite
+  # in most scenarios we don't need this and it will default to :vite_host
+  # If you run a docker setup for development you might it,
+  # because the containers will communicate over a docker network
+  # while the browser needs a public facing URL
+  vite_public_host: nil,
+
   # it's relative to LiveVue.SSR.NodeJS.server_path, so "priv" directory
   # that file is created by Vite "build-server" command
   ssr_filepath: "./static/server.mjs",

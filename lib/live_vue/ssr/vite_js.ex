@@ -47,16 +47,25 @@ defmodule LiveVue.SSR.ViteJS do
 
   @doc """
   A handy utility returning path relative to Vite JS host.
+  Dependent on the parameter flag `public`, the Vite JS host will be `:vite_host` or `:vite_public_host`
   """
-  def vite_path(path) do
-    case Application.get_env(:live_vue, :vite_host) do
+  def vite_path(path, public \\ false) do
+    vite_host = case public do
+      false -> Application.get_env(:live_vue, :vite_host)
+      true -> Application.get_env(:live_vue, :vite_public_host)
+      _ -> raise %LiveVue.SSR.NotConfigured{message: "Unknown Parameter for `public`: #{public}"}
+    end
+
+    case vite_host do
       nil ->
         message = """
-        Vite.js host is not configured. Please add the following to config/dev.ex
+        Vite.js host or public host is not configured. Please add the following to config/dev.ex
 
         config :live_vue, vite_host: "http://localhost:5173"
 
-        and ensure vite.js is running
+        The vite_public_host will default to vite_host if not explicitly configured otherwise.
+
+        Also ensure vite.js is running.
         """
 
         raise %LiveVue.SSR.NotConfigured{message: message}
