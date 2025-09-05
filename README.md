@@ -15,7 +15,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 -   🔋 **Server-Side Rendered** (SSR) Vue
 -   🐌 **Lazy-loading** Vue Components
 -   📦 **Efficient Props Diffing** - Only changed data is sent over WebSocket
--   🪄 **~VUE Sigil** as an alternative LiveView DSL
+-   🪄 **~VUE Sigil** as an alternative LiveView DSL with VS Code syntax highlighting
 -   🎯 **Phoenix Streams** Support with efficient patches
 -   🦄 **Tailwind** Support
 -   🦥 **Slot Interoperability**
@@ -107,6 +107,12 @@ mix igniter.install live_vue
 
 Igniter installer works only for Phoenix 1.8+ projects. For detailed installation instructions, see the [Installation Guide](guides/installation.md).
 
+## VS Code Extension
+
+For syntax highlighting of the `~VUE` sigil:
+- **VS Code Marketplace**: Install [LiveVue](https://marketplace.visualstudio.com/items?itemName=guilhermepsf23.livevue-sigil-highlighting) extension
+- **Manual Installation**: Download VSIX from [releases](https://github.com/GuilhermePSF/live-vue-sigil-highlighting/releases) and install via `Extensions > Install from VSIX...`
+
 ## Guides
 
 ### Getting Started
@@ -194,7 +200,7 @@ mix do assets.build, expublish.minor --allow-untracked --branch=main
 - [x] `useLiveEvent` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
 - [x] shared props automatically included in all components
-- [ ] VS code extension highlighting `~VUE` sigil
+- [x] VS code extension highlighting `~VUE` sigil ✅ **Done!**
 - [x] ~~try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project~~ ✅ **Done!**
 - [x] `useEventReply` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
 - [x] `useLiveForm` - an utility to effortlessly use Ecto changesets & server-side validation, similar to HEEX ✅ **Done!**
