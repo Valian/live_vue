@@ -23,6 +23,10 @@ config :live_vue,
   # Typically http://localhost:5173 in development
   vite_host: nil,
 
+  # Vite development public facing server URL
+  # Typically it will default to :vite_host while it might be needed in containerized environment
+  vite_public_host: nil
+
   # SSR server bundle path (relative to priv directory)
   # Created by Vite "build-server" command
   ssr_filepath: "./static/server.mjs",
@@ -383,6 +387,9 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 - Consider adjusting the NodeJS pool size based on your server capacity
 - Disable SSR for components that don't benefit from it
 
+**Do you run vite dev server behind a proxy?**
+- Use `:vite_public_host` in combination with `:vite_host` to distinguish between inter-container communication and browser-to-container communication
+
 ## Shared Props Configuration
 
 LiveVue offers a configuration option that enables developers to specify props that are automatically passed to all Vue components. This feature ensures consistent data availability across components without the need to manually pass props in every instance.
@@ -463,7 +470,7 @@ defineProps(['flash', 'user', 'locale'])
 ### Common Issues
 
 1. **Components not found**: Check `vue_root` paths in `LiveVue.Components`
-2. **SSR errors**: Verify `ssr_module` and `vite_host` configuration
+2. **SSR errors**: Verify `ssr_module`, `vite_host` and `vite_public_host` configuration
 3. **TypeScript errors**: Ensure proper `tsconfig.json` setup
 4. **Build failures**: Check Vite configuration and entry points
 
