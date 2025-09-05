@@ -15,8 +15,10 @@ defmodule Mix.Tasks.LiveVue.Install do
       mix live_vue.install --bun
 
   """
+
   import Mix.Tasks.PhoenixVite.Install.Helper
 
+  @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
   with_igniter do
     use Igniter.Mix.Task
 
@@ -51,6 +53,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> add_vue_demo_route()
       |> update_home_template()
       |> update_gitignore()
+      |> append_usage_rules_to_agents_md()
     end
 
     # Configure environments (config/dev.exs and config/prod.exs)
@@ -716,6 +719,29 @@ defmodule Mix.Tasks.LiveVue.Install do
           end
         end)
       end)
+    end
+
+    defp append_usage_rules_to_agents_md(igniter) do
+      if Igniter.exists?(igniter, "AGENTS.md") do
+        Igniter.update_file(igniter, "AGENTS.md", fn source ->
+          Rewrite.Source.update(source, :content, fn content ->
+            # Check if LiveVue usage rules are already added
+            if String.contains?(content, "<!-- live_vue-start -->") do
+              content
+            else
+              rules = "\n\n<!-- live_vue-start -->\n" <> @usage_rules_content <> "\n<!-- live_vue-end -->\n"
+              # Append just before the end of the file
+              if String.contains?(content, "<!-- usage-rules-end -->") do
+                String.replace(content, ~r/(<!-- usage-rules-end -->)/, rules <> "\\1")
+              else
+                content <> rules
+              end
+            end
+          end)
+        end)
+      else
+        igniter
+      end
     end
 
     defp update_gitignore(igniter) do

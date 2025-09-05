@@ -7,6 +7,10 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
     test "installs successfully with core Vue components" do
       project =
         phx_test_project()
+        |> Igniter.create_new_file(
+          "AGENTS.md",
+          "# My Project Agents\n\nExisting content here. <!-- usage-rules-end -->"
+        )
         |> Igniter.compose_task("live_vue.install", [])
         |> apply_igniter!()
 
@@ -83,6 +87,16 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert app_file.content =~ ~r/NodeJS\.Supervisor/
       assert app_file.content =~ ~r/path: LiveVue\.SSR\.NodeJS\.server_path\(\)/
       assert app_file.content =~ ~r/pool_size: 4/
+
+      # Check that AGENTS.md was updated with usage rules
+      agents_md = project.rewrite.sources["AGENTS.md"]
+      assert agents_md.content =~ "# My Project Agents"
+      assert agents_md.content =~ "Existing content here."
+      assert agents_md.content =~ "<!-- live_vue-start -->"
+      assert agents_md.content =~ "<!-- live_vue-end -->"
+      assert agents_md.content =~ "# LiveVue Usage Rules"
+      assert agents_md.content =~ "Component Organization"
+      assert String.ends_with?(agents_md.content, "<!-- live_vue-end -->\n<!-- usage-rules-end -->")
     end
 
     test "installs successfully with bun flag" do
