@@ -714,7 +714,7 @@ defmodule Mix.Tasks.LiveVue.Install do
             String.replace(
               content,
               ~s("phoenix_vite.npm vite build"),
-              ~s("phoenix_vite.npm vite build --manifest", "phoenix_vite.npm vite build --ssr js/server.js --outDir ../priv/static --ssrManifest")
+              ~s("phoenix_vite.npm vite build --manifest --emptyOutDir true", "phoenix_vite.npm vite build --ssrManifest --emptyOutDir false --ssr js/server.js --outDir ../priv/static")
             )
           end
         end)
