@@ -40,7 +40,7 @@ defmodule LiveVueExamples.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:live_vue, [github: "Valian/live_vue", ref: "igniter-installer-static", override: true]},
+      {:live_vue, path: ".."},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:phoenix, "~> 1.8.0"},
       {:phoenix_html, "~> 4.1"},
@@ -76,8 +76,8 @@ defmodule LiveVueExamples.MixProject do
       setup: ["deps.get", "assets.setup", "assets.build"],
       "assets.setup": ["phoenix_vite.npm assets install"],
       "assets.build": [
-        "phoenix_vite.npm vite build --manifest",
-        "phoenix_vite.npm vite build --ssr js/server.js --outDir ../priv/static --ssrManifest"
+        "phoenix_vite.npm vite build --manifest --emptyOutDir true",
+        "phoenix_vite.npm vite build --ssrManifest --emptyOutDir false --ssr js/server.js --outDir ../priv/static"
       ],
       "assets.deploy": [
         "assets.build"

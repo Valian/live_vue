@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import vue from "@vitejs/plugin-vue";
-import liveVuePlugin from "live_vue/vitePlugin";
-import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite"
+import vue from "@vitejs/plugin-vue"
+import liveVuePlugin from "live_vue/vitePlugin"
+import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
   server: {
@@ -15,7 +15,7 @@ export default defineConfig({
     include: ["live_vue", "phoenix", "phoenix_html", "phoenix_live_view"],
   },
   ssr: { noExternal: process.env.NODE_ENV === "production" ? true : undefined },
-    build: {
+  build: {
     manifest: false,
     ssrManifest: false,
     rollupOptions: {
@@ -32,9 +32,5 @@ export default defineConfig({
       "phoenix-colocated": `${process.env.MIX_BUILD_PATH}/phoenix-colocated`,
     },
   },
-  plugins: [
-    tailwindcss(),
-    vue(),
-    liveVuePlugin()
-  ]
-});
+  plugins: [tailwindcss(), vue(), liveVuePlugin()],
+})
