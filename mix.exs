@@ -142,13 +142,13 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.3"},
       {:igniter, "~> 0.6", optional: true},
-      {:phoenix_vite, "~> 0.3.3"},
+      {:phoenix_vite, "~> 0.4"},
       {:floki, ">= 0.30.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
 
       # dev dependencies
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false, warn_if_outdated: true},
+      {:ex_doc, "~> 0.38", only: :dev, runtime: false, warn_if_outdated: true},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
