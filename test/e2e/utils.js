@@ -7,6 +7,7 @@ export const syncLV = async page => {
     expect(page.locator(".phx-change-loading")).toHaveCount(0),
     expect(page.locator(".phx-click-loading")).toHaveCount(0),
     expect(page.locator(".phx-submit-loading")).toHaveCount(0),
+    new Promise(resolve => setTimeout(resolve, 20)),
   ]
   return Promise.all(promises)
 }

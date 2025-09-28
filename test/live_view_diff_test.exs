@@ -748,12 +748,12 @@ defmodule LiveViewDiffTest do
         %{
           "op" => "upsert",
           "path" => "/users/-",
-          "value" => %{"id" => 3, "name" => "Charlie", "age" => 28, "__dom_id" => "users-3"}
+          "value" => %{"id" => 2, "name" => "Bob", "age" => 25, "__dom_id" => "users-2"}
         },
         %{
           "op" => "upsert",
           "path" => "/users/-",
-          "value" => %{"id" => 2, "name" => "Bob", "age" => 25, "__dom_id" => "users-2"}
+          "value" => %{"id" => 3, "name" => "Charlie", "age" => 28, "__dom_id" => "users-3"}
         }
       ]
 

@@ -189,6 +189,16 @@ defmodule LiveVue.E2E.Endpoint do
   defp halt(conn, _opts), do: conn
 end
 
+# Load support files
+Code.require_file("test/e2e/support/test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/navigation_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/event_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/stream_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/form_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/prop_diff_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/upload_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/event_reply_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+
 # Start PubSub and Endpoint
 {:ok, _} =
   Supervisor.start_link(

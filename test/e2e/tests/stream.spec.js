@@ -240,6 +240,30 @@ test.describe("LiveVue Stream Integration", () => {
     await expect(page.locator('[data-testid="item-4"] [data-testid="item-name"]')).toHaveText("Item 4")
   })
 
+  test("maintains correct item order after stream reset", async ({ page }) => {
+    // Add some items and clear to modify the stream
+    await page.fill('[data-testid="name-input"]', "Extra Item")
+    await page.fill('[data-testid="description-input"]', "Extra description")
+    await page.click('[data-testid="add-button"]')
+    await syncLV(page)
+
+    // Reset the stream
+    await page.click('[data-testid="reset-button"]')
+    await syncLV(page)
+
+    // Verify items appear in correct order: Item 1, Item 2, Item 3
+    const allItems = await page.locator('[data-testid="item-name"]').allTextContents()
+    expect(allItems).toEqual(["Item 1", "Item 2", "Item 3"])
+
+    // Reset the stream
+    await page.click('[data-testid="reset-button-at-0"]')
+    await syncLV(page)
+
+    // Verify items appear in correct order: Item 1, Item 2, Item 3
+    const allReversedItems = await page.locator('[data-testid="item-name"]').allTextContents()
+    expect(allReversedItems).toEqual(["Item 3", "Item 2", "Item 1"])
+  })
+
   // Limit operation tests
   test.describe("Limit Operations", () => {
     test.beforeEach(async ({ page }) => {

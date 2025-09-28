@@ -1,42 +1,20 @@
 <template>
   <div id="stream-component">
     <h2>Stream Test</h2>
-    
+
     <!-- Add new item form -->
     <div class="add-form">
       <h3>Add New Item</h3>
-      <input 
-        v-model="newItem.name" 
-        placeholder="Item name" 
-        data-testid="name-input"
-      />
-      <input 
-        v-model="newItem.description" 
-        placeholder="Item description" 
-        data-testid="description-input"
-      />
-      <button 
-        @click="addItem" 
-        data-testid="add-button"
-      >
-        Add Item
-      </button>
+      <input v-model="newItem.name" placeholder="Item name" data-testid="name-input" />
+      <input v-model="newItem.description" placeholder="Item description" data-testid="description-input" />
+      <button @click="addItem" data-testid="add-button">Add Item</button>
     </div>
 
     <!-- Stream controls -->
     <div class="stream-controls">
-      <button 
-        @click="clearStream" 
-        data-testid="clear-button"
-      >
-        Clear All
-      </button>
-      <button 
-        @click="resetStream" 
-        data-testid="reset-button"
-      >
-        Reset to Default
-      </button>
+      <button @click="clearStream" data-testid="clear-button">Clear All</button>
+      <button @click="resetStream" data-testid="reset-button">Reset to Default</button>
+      <button @click="resetStreamAt0" data-testid="reset-button-at-0">Reset to Default (at: 0)</button>
     </div>
 
     <!-- Limit operation controls -->
@@ -44,61 +22,53 @@
       <h3>Limit Operations</h3>
       <div class="limit-section">
         <h4>Multiple Insert Operations</h4>
-        <button 
-          @click="addMultipleStart" 
-          data-testid="add-multiple-start-button"
-          class="limit-button"
-        >
+        <button @click="addMultipleStart" data-testid="add-multiple-start-button" class="limit-button">
           Add 3 Items at Start (Limit: Keep First 5)
         </button>
-        <button 
-          @click="addMultipleEnd" 
-          data-testid="add-multiple-end-button"
-          class="limit-button"
-        >
+        <button @click="addMultipleEnd" data-testid="add-multiple-end-button" class="limit-button">
           Add 3 Items at End (Limit: Keep Last 5)
         </button>
       </div>
-      
+
       <div class="limit-section">
         <h4>Single Insert with Custom Limits</h4>
         <div class="limit-input-group">
-          <input 
-            v-model.number="positiveLimit" 
-            type="number" 
+          <input
+            v-model.number="positiveLimit"
+            type="number"
             placeholder="Positive limit"
             min="1"
             max="10"
             data-testid="positive-limit-input"
             class="limit-input"
           />
-          <button 
-            @click="addWithPositiveLimit" 
+          <button
+            @click="addWithPositiveLimit"
             data-testid="add-positive-limit-button"
             class="limit-button"
             :disabled="!positiveLimit || positiveLimit < 1"
           >
-            Add Item (Keep First {{ positiveLimit || '?' }})
+            Add Item (Keep First {{ positiveLimit || "?" }})
           </button>
         </div>
-        
+
         <div class="limit-input-group">
-          <input 
-            v-model.number="negativeLimit" 
-            type="number" 
+          <input
+            v-model.number="negativeLimit"
+            type="number"
             placeholder="Negative limit"
             min="1"
             max="10"
             data-testid="negative-limit-input"
             class="limit-input"
           />
-          <button 
-            @click="addWithNegativeLimit" 
+          <button
+            @click="addWithNegativeLimit"
             data-testid="add-negative-limit-button"
             class="limit-button"
             :disabled="!negativeLimit || negativeLimit < 1"
           >
-            Add Item (Keep Last {{ negativeLimit || '?' }})
+            Add Item (Keep Last {{ negativeLimit || "?" }})
           </button>
         </div>
       </div>
@@ -107,31 +77,14 @@
     <!-- Items list -->
     <div class="items-list">
       <h3>Items ({{ itemCount }})</h3>
-      <div 
-        v-if="itemsArray.length === 0" 
-        data-testid="empty-message"
-        class="empty-state"
-      >
-        No items in the stream
-      </div>
-      <div 
-        v-for="item in itemsArray" 
-        :key="item.id"
-        class="item"
-        :data-testid="`item-${item.id}`"
-      >
+      <div v-if="itemsArray.length === 0" data-testid="empty-message" class="empty-state">No items in the stream</div>
+      <div v-for="item in itemsArray" :key="item.id" class="item" :data-testid="`item-${item.id}`">
         <div class="item-content">
           <h4 data-testid="item-name">{{ item.name }}</h4>
           <p data-testid="item-description">{{ item.description }}</p>
           <small data-testid="item-id">ID: {{ item.id }}</small>
         </div>
-        <button 
-          @click="removeItem(item.id)" 
-          :data-testid="`remove-${item.id}`"
-          class="remove-button"
-        >
-          Remove
-        </button>
+        <button @click="removeItem(item.id)" :data-testid="`remove-${item.id}`" class="remove-button">Remove</button>
       </div>
     </div>
 
@@ -146,8 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useLiveVue } from 'live_vue'
+import { ref, computed } from "vue"
+import { useLiveVue } from "live_vue"
 
 // Props
 const props = defineProps<{
@@ -159,8 +112,8 @@ const live = useLiveVue()
 
 // Reactive data
 const newItem = ref({
-  name: '',
-  description: ''
+  name: "",
+  description: "",
 })
 
 const positiveLimit = ref(3)
@@ -175,7 +128,7 @@ const itemsLength = computed(() => {
   if (Array.isArray(props.items)) {
     return props.items.length
   }
-  return 'Not an array'
+  return "Not an array"
 })
 
 const itemsArray = computed(() => {
@@ -183,21 +136,21 @@ const itemsArray = computed(() => {
   if (Array.isArray(props.items)) {
     return props.items
   }
-  
+
   // If items is an object with array-like properties, try to extract them
-  if (props.items && typeof props.items === 'object') {
+  if (props.items && typeof props.items === "object") {
     // Try common patterns for stream data
     if (props.items.items && Array.isArray(props.items.items)) {
       return props.items.items
     }
-    
+
     // Try to convert object to array if it has numeric keys
     const keys = Object.keys(props.items).filter(key => !isNaN(Number(key)))
     if (keys.length > 0) {
       return keys.map(key => props.items[key])
     }
   }
-  
+
   // Fallback to empty array
   return []
 })
@@ -207,56 +160,60 @@ const itemCount = computed(() => itemsArray.value.length)
 // Methods
 const addItem = () => {
   if (!newItem.value.name.trim()) {
-    alert('Please enter a name for the item')
+    alert("Please enter a name for the item")
     return
   }
-  
+
   // Send event to LiveView using the correct API
-  live.pushEvent('add_item', {
+  live.pushEvent("add_item", {
     name: newItem.value.name,
-    description: newItem.value.description
+    description: newItem.value.description,
   })
-  
+
   // Clear form
   newItem.value = {
-    name: '',
-    description: ''
+    name: "",
+    description: "",
   }
 }
 
 const removeItem = (id: number) => {
-  live.pushEvent('remove_item', { id })
+  live.pushEvent("remove_item", { id })
 }
 
 const clearStream = () => {
-  live.pushEvent('clear_stream', {})
+  live.pushEvent("clear_stream", {})
 }
 
 const resetStream = () => {
-  live.pushEvent('reset_stream', {})
+  live.pushEvent("reset_stream", {})
+}
+
+const resetStreamAt0 = () => {
+  live.pushEvent("reset_stream_at_0", {})
 }
 
 // Limit operation methods
 const addMultipleStart = () => {
-  live.pushEvent('add_multiple_start', {})
+  live.pushEvent("add_multiple_start", {})
 }
 
 const addMultipleEnd = () => {
-  live.pushEvent('add_multiple_end', {})
+  live.pushEvent("add_multiple_end", {})
 }
 
 const addWithPositiveLimit = () => {
   if (positiveLimit.value && positiveLimit.value > 0) {
-    live.pushEvent('add_with_positive_limit', { 
-      limit: positiveLimit.value.toString() 
+    live.pushEvent("add_with_positive_limit", {
+      limit: positiveLimit.value.toString(),
     })
   }
 }
 
 const addWithNegativeLimit = () => {
   if (negativeLimit.value && negativeLimit.value > 0) {
-    live.pushEvent('add_with_negative_limit', { 
-      limit: negativeLimit.value.toString() 
+    live.pushEvent("add_with_negative_limit", {
+      limit: negativeLimit.value.toString(),
     })
   }
 }

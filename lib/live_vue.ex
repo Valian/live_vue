@@ -282,8 +282,10 @@ defmodule LiveVue do
         [%{op: "remove", path: "/#{stream_name}/$$#{dom_id}"} | patches]
       end)
 
-    # Handle insertions third
+    # Handle insertions third, but reversed - inserts at -1 should be correctly ordered, inserts at 0 should be reversed
+    # see https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#stream/4 :at option
     stream.inserts
+    |> Enum.reverse()
     |> Enum.reduce(patches, fn {dom_id, at, item, limit, update_only}, patches ->
       item = Map.put(Encoder.encode(item), :__dom_id, dom_id)
 
