@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
+## 1.0.0-rc.2 - 2025-09-28
+
+### Improvements
+
+- Added usage rules to AGENTS.md file when running `mix live_vue.install` [#87](https://github.com/Valian/live_vue/pull/87)
+- Added installation instructions about LiveVue VS code extension to README.md [#86](https://github.com/Valian/live_vue/pull/86)
+
+
+### Bug Fixes
+
+- Exporting useField and useArrayField from useLiveForm.ts [#81](https://github.com/Valian/live_vue/pull/81)
+- When inserting items at index 0 of stream, the items were not inserted in the correct order
+- Fixed bug when building SSR bundle overriden files from client bundle in priv/static
+
 
 ## 1.0.0-rc - 2025-09-03
 
