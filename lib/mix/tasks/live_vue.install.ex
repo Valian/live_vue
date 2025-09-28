@@ -285,6 +285,12 @@ defmodule Mix.Tasks.LiveVue.Install do
     end
 
     defp update_tsconfig_for_vue(igniter) do
+      app_path_name = 
+        igniter 
+        |> Igniter.Project.Application.app_name() 
+        |> to_string() 
+        |> Macro.underscore()
+
       igniter
       |> Igniter.rm("assets/tsconfig.json")
       |> Igniter.create_new_file("tsconfig.json", """
@@ -306,7 +312,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         "include": [
           "./assets/js/**/*",
           "./assets/vue/**/*",
-          "./lib/my_app_web/**/*"
+          "./lib/#{app_path}_web/**/*"
         ],
         "exclude": [
           "node_modules"
