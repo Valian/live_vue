@@ -2,6 +2,14 @@ defmodule LiveVue.E2E.StreamLive do
   @moduledoc false
   use Phoenix.LiveView
 
+  def render(assigns) do
+    ~H"""
+    <div id="stream-test">
+      <LiveVue.vue items={@streams.items} v-component="stream_test" v-socket={@socket} />
+    </div>
+    """
+  end
+
   def mount(_params, _session, socket) do
     # Initialize with some sample items
     items = [
@@ -145,13 +153,5 @@ defmodule LiveVue.E2E.StreamLive do
       |> assign(:next_id, socket.assigns.next_id + 1)
 
     {:noreply, socket}
-  end
-
-  def render(assigns) do
-    ~H"""
-    <div id="stream-test">
-      <LiveVue.vue items={@streams.items} v-component="stream_test" v-socket={@socket} />
-    </div>
-    """
   end
 end

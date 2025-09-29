@@ -76,9 +76,9 @@
 
     <!-- Items list -->
     <div class="items-list">
-      <h3>Items ({{ itemCount }})</h3>
-      <div v-if="itemsArray.length === 0" data-testid="empty-message" class="empty-state">No items in the stream</div>
-      <div v-for="item in itemsArray" :key="item.id" class="item" :data-testid="`item-${item.id}`">
+      <h3>Items ({{ props.items.length }})</h3>
+      <div v-if="props.items.length === 0" data-testid="empty-message" class="empty-state">No items in the stream</div>
+      <div v-for="item in props.items" :key="item.id" class="item" :data-testid="`item-${item.id}`">
         <div class="item-content">
           <h4 data-testid="item-name">{{ item.name }}</h4>
           <p data-testid="item-description">{{ item.description }}</p>
@@ -91,7 +91,7 @@
     <!-- Debug info -->
     <div class="debug-info">
       <h4>Debug Info</h4>
-      <p>Items type: {{ itemsType }}</p>
+      <p>Items type: {{ typeof props.items }}</p>
       <p>Items length: {{ itemsLength }}</p>
       <pre data-testid="raw-items">{{ JSON.stringify(items, null, 2) }}</pre>
     </div>
@@ -104,7 +104,11 @@ import { useLiveVue } from "live_vue"
 
 // Props
 const props = defineProps<{
-  items: any
+  items: {
+    id: number
+    name: string
+    description: string
+  }[]
 }>()
 
 // LiveVue hook
@@ -120,42 +124,7 @@ const positiveLimit = ref(3)
 const negativeLimit = ref(3)
 
 // Computed properties for debugging and display
-const itemsType = computed(() => {
-  return typeof props.items
-})
-
-const itemsLength = computed(() => {
-  if (Array.isArray(props.items)) {
-    return props.items.length
-  }
-  return "Not an array"
-})
-
-const itemsArray = computed(() => {
-  // Handle case where items might be a LiveStream or other structure
-  if (Array.isArray(props.items)) {
-    return props.items
-  }
-
-  // If items is an object with array-like properties, try to extract them
-  if (props.items && typeof props.items === "object") {
-    // Try common patterns for stream data
-    if (props.items.items && Array.isArray(props.items.items)) {
-      return props.items.items
-    }
-
-    // Try to convert object to array if it has numeric keys
-    const keys = Object.keys(props.items).filter(key => !isNaN(Number(key)))
-    if (keys.length > 0) {
-      return keys.map(key => props.items[key])
-    }
-  }
-
-  // Fallback to empty array
-  return []
-})
-
-const itemCount = computed(() => itemsArray.value.length)
+const itemsLength = computed(() => props.items.length)
 
 // Methods
 const addItem = () => {
