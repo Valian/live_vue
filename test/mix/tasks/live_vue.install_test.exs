@@ -60,6 +60,9 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       assert tsconfig.content =~ ~s("types": [ "vite/client" ])
 
+      # Check that tsconfig uses correct web folder (not hardcoded my_app_web)
+      assert tsconfig.content =~ ~s("./lib/test_web/**/*")
+
       # Check if mix.exs was updated
       mix_exs = project.rewrite.sources["mix.exs"]
       assert mix_exs.content =~ ~r/build --manifest --emptyOutDir true/

@@ -285,6 +285,9 @@ defmodule Mix.Tasks.LiveVue.Install do
     end
 
     defp update_tsconfig_for_vue(igniter) do
+      web_module = Phoenix.web_module(igniter)
+      web_folder = Macro.underscore(web_module)
+
       igniter
       |> Igniter.rm("assets/tsconfig.json")
       |> Igniter.create_new_file("tsconfig.json", """
@@ -306,7 +309,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         "include": [
           "./assets/js/**/*",
           "./assets/vue/**/*",
-          "./lib/my_app_web/**/*"
+          "./lib/#{web_folder}/**/*"
         ],
         "exclude": [
           "node_modules"
