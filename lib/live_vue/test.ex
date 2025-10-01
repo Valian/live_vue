@@ -58,7 +58,7 @@ defmodule LiveVue.Test do
   full component state rather than just the incremental changes.
   """
 
-  @compile {:no_warn_undefined, Floki}
+  @compile {:no_warn_undefined, LazyHTML}
 
   @doc """
   Extracts Vue component information from a LiveView or HTML string.
@@ -76,7 +76,7 @@ defmodule LiveVue.Test do
     * `:class` - CSS classes applied to the component root element
     * `:props_diff` - List of prop diffs
     * `:streams_diff` - List of stream diffs
-    * `:doc` - Parsed HTML element of the component (as returned by Floki)
+    * `:doc` - Parsed HTML element of the component (as tree structure)
 
   ## Options
     * `:name` - Find component by name (from `v-component` attribute)
@@ -101,28 +101,29 @@ defmodule LiveVue.Test do
   end
 
   def get_vue(html, opts) when is_binary(html) do
-    if Code.ensure_loaded?(Floki) do
-      vue =
+    if Code.ensure_loaded?(LazyHTML) do
+      lazy_html =
         html
-        |> Floki.parse_document!()
-        |> Floki.find("[phx-hook='VueHook']")
-        |> find_component!(opts)
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("[phx-hook='VueHook']")
+
+      vue_tree = find_component!(lazy_html, opts)
 
       %{
-        props: Jason.decode!(attr(vue, "data-props")),
-        component: attr(vue, "data-name"),
-        id: attr(vue, "id"),
-        handlers: extract_handlers(attr(vue, "data-handlers")),
-        slots: extract_base64_slots(attr(vue, "data-slots")),
-        ssr: vue |> attr("data-ssr") |> String.to_existing_atom(),
-        use_diff: vue |> attr("data-use-diff") |> String.to_existing_atom(),
-        class: attr(vue, "class"),
-        props_diff: Jason.decode!(attr(vue, "data-props-diff")),
-        streams_diff: Jason.decode!(attr(vue, "data-streams-diff")),
-        doc: vue
+        props: Jason.decode!(attr_from_tree(vue_tree, "data-props")),
+        component: attr_from_tree(vue_tree, "data-name"),
+        id: attr_from_tree(vue_tree, "id"),
+        handlers: extract_handlers(attr_from_tree(vue_tree, "data-handlers")),
+        slots: extract_base64_slots(attr_from_tree(vue_tree, "data-slots")),
+        ssr: vue_tree |> attr_from_tree("data-ssr") |> String.to_existing_atom(),
+        use_diff: vue_tree |> attr_from_tree("data-use-diff") |> String.to_existing_atom(),
+        class: attr_from_tree(vue_tree, "class"),
+        props_diff: Jason.decode!(attr_from_tree(vue_tree, "data-props-diff")),
+        streams_diff: Jason.decode!(attr_from_tree(vue_tree, "data-streams-diff")),
+        doc: vue_tree
       }
     else
-      raise "Floki is not installed. Add {:floki, \">= 0.30.0\", only: :test} to your dependencies to use LiveVue.Test"
+      raise "LazyHTML is not installed. Add {:lazy_html, \">= 0.1.0\", only: :test} to your dependencies to use LiveVue.Test"
     end
   end
 
@@ -149,17 +150,19 @@ defmodule LiveVue.Test do
   end
 
   defp find_component!(components, opts) do
-    available = Enum.map_join(components, ", ", &"#{attr(&1, "data-name")}##{attr(&1, "id")}")
+    components_tree = LazyHTML.to_tree(components)
 
-    components =
-      Enum.reduce(opts, components, fn
+    available = Enum.map_join(components_tree, ", ", &"#{attr_from_tree(&1, "data-name")}##{attr_from_tree(&1, "id")}")
+
+    matched =
+      Enum.reduce(opts, components_tree, fn
         {:id, id}, result ->
-          with [] <- Enum.filter(result, &(attr(&1, "id") == id)) do
+          with [] <- Enum.filter(result, &(attr_from_tree(&1, "id") == id)) do
             raise "No Vue component found with id=\"#{id}\". Available components: #{available}"
           end
 
         {:name, name}, result ->
-          with [] <- Enum.filter(result, &(attr(&1, "data-name") == name)) do
+          with [] <- Enum.filter(result, &(attr_from_tree(&1, "data-name") == name)) do
             raise "No Vue component found with name=\"#{name}\". Available components: #{available}"
           end
 
@@ -167,7 +170,7 @@ defmodule LiveVue.Test do
           raise ArgumentError, "invalid keyword option for get_vue/2: #{key}"
       end)
 
-    case components do
+    case matched do
       [vue | _] ->
         vue
 
@@ -176,10 +179,10 @@ defmodule LiveVue.Test do
     end
   end
 
-  defp attr(element, name) do
-    case Floki.attribute(element, name) do
-      [value] -> value
-      [] -> nil
+  defp attr_from_tree({_tag, attrs, _children}, name) do
+    case Enum.find(attrs, fn {k, _v} -> k == name end) do
+      {^name, value} -> value
+      nil -> nil
     end
   end
 end

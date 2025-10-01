@@ -201,8 +201,8 @@ defmodule LiveVueTest do
       html = render_component(&component_with_slots/1)
 
       # Get raw data-slots attribute to verify base64 encoding
-      doc = Floki.parse_fragment!(html)
-      slots_attr = doc |> Floki.attribute("data-slots") |> hd()
+      doc = LazyHTML.from_fragment(html)
+      slots_attr = doc |> LazyHTML.attribute("data-slots") |> hd()
 
       # JSON encoded map
       assert slots_attr =~ ~r/^\{.*\}$/
