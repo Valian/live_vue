@@ -143,7 +143,7 @@ defmodule LiveVue.MixProject do
       {:jsonpatch, "~> 2.3"},
       {:igniter, "~> 0.6", optional: true},
       {:phoenix_vite, "~> 0.4"},
-      {:floki, ">= 0.30.0", optional: true},
+      {:lazy_html, ">= 0.1.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
 
