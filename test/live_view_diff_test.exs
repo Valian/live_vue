@@ -630,7 +630,7 @@ defmodule LiveViewDiffTest do
       defstruct [:id, :name, :age]
     end
 
-    test "initial render with LiveStream has empty props_diff" do
+    test "initial render with LiveStream has stream diff in streams_diff" do
       users = [
         %StreamUser{id: 1, name: "Alice", age: 30},
         %StreamUser{id: 2, name: "Bob", age: 25}
@@ -648,12 +648,22 @@ defmodule LiveViewDiffTest do
 
       assert vue.component == "TestComponent"
 
-      expected_users = [
-        %{"id" => 1, "name" => "Alice", "age" => 30, "__dom_id" => "users-1"},
-        %{"id" => 2, "name" => "Bob", "age" => 25, "__dom_id" => "users-2"}
+      expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []},
+        %{
+          "op" => "upsert",
+          "path" => "/users/-",
+          "value" => %{"__dom_id" => "users-1", "age" => 30, "id" => 1, "name" => "Alice"}
+        },
+        %{
+          "op" => "upsert",
+          "path" => "/users/-",
+          "value" => %{"__dom_id" => "users-2", "age" => 25, "id" => 2, "name" => "Bob"}
+        }
       ]
 
-      assert vue.props == %{"users" => expected_users}
+      assert vue.props == %{}
+      assert_patches_equal(vue.streams_diff, expected_patches)
       assert_patches_equal(vue.props_diff, [])
     end
 
@@ -672,6 +682,7 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []},
         %{
           "op" => "upsert",
           "path" => "/users/-",
@@ -679,7 +690,7 @@ defmodule LiveViewDiffTest do
         }
       ]
 
-      assert_patches_equal(vue.props_diff, expected_patches)
+      assert_patches_equal(vue.streams_diff, expected_patches)
     end
 
     test "deleting item from LiveStream creates remove operation" do
@@ -697,10 +708,11 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []},
         %{"op" => "remove", "path" => "/users/$$users-2", "value" => nil}
       ]
 
-      assert_patches_equal(vue.props_diff, expected_patches)
+      assert_patches_equal(vue.streams_diff, expected_patches)
     end
 
     test "resetting LiveStream creates replace operation" do
@@ -717,10 +729,11 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
+        %{"op" => "replace", "path" => "/users", "value" => []},
         %{"op" => "replace", "path" => "/users", "value" => []}
       ]
 
-      assert_patches_equal(vue.props_diff, expected_patches)
+      assert_patches_equal(vue.streams_diff, expected_patches)
     end
 
     test "complex LiveStream operations create multiple patch operations" do
@@ -743,6 +756,7 @@ defmodule LiveViewDiffTest do
 
       expected_patches = [
         %{"op" => "replace", "path" => "/users", "value" => []},
+        %{"op" => "replace", "path" => "/users", "value" => []},
         %{"op" => "remove", "path" => "/users/$$users-1", "value" => nil},
         %{"op" => "limit", "path" => "/users", "value" => 10},
         %{
@@ -757,7 +771,7 @@ defmodule LiveViewDiffTest do
         }
       ]
 
-      assert_patches_equal(vue.props_diff, expected_patches)
+      assert_patches_equal(vue.streams_diff, expected_patches)
     end
   end
 end

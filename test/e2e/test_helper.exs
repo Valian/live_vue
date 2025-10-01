@@ -20,6 +20,9 @@ Application.put_env(:live_vue, LiveVue.E2E.Endpoint,
   ]
 )
 
+Application.put_env(:live_vue, :enable_props_diff, true)
+Application.put_env(:live_vue, :ssr_default, false)
+
 Process.register(self(), :e2e_helper)
 
 defmodule LiveVue.E2E.ErrorHTML do
