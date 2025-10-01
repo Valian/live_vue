@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
+
+## 1.0.0-rc.3 - 2025-10-01
+
+### Improvements
+
+- Replaced Floki with LazyHTML for testing utilities [#92](https://github.com/Valian/live_vue/pull/92)
+
+### Bug Fixes
+
+- Streams work correctly when using diff is disabled [#91](https://github.com/Valian/live_vue/pull/91)
+
+
 ## 1.0.0-rc.2 - 2025-09-28
 
 ### Improvements
