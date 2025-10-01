@@ -74,6 +74,9 @@ defmodule LiveVue.Test do
     * `:slots` - Base64 encoded slot content
     * `:ssr` - Boolean indicating if server-side rendering was performed
     * `:class` - CSS classes applied to the component root element
+    * `:props_diff` - List of prop diffs
+    * `:streams_diff` - List of stream diffs
+    * `:doc` - Parsed HTML element of the component (as returned by Floki)
 
   ## Options
     * `:name` - Find component by name (from `v-component` attribute)
@@ -114,7 +117,9 @@ defmodule LiveVue.Test do
         ssr: vue |> attr("data-ssr") |> String.to_existing_atom(),
         use_diff: vue |> attr("data-use-diff") |> String.to_existing_atom(),
         class: attr(vue, "class"),
-        props_diff: Jason.decode!(attr(vue, "data-props-diff"))
+        props_diff: Jason.decode!(attr(vue, "data-props-diff")),
+        streams_diff: Jason.decode!(attr(vue, "data-streams-diff")),
+        doc: vue
       }
     else
       raise "Floki is not installed. Add {:floki, \">= 0.30.0\", only: :test} to your dependencies to use LiveVue.Test"

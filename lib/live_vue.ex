@@ -86,6 +86,7 @@ defmodule LiveVue do
     init = assigns.__changed__ == nil
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
     use_diff = Map.get(assigns, :"v-diff", @diff_default)
+    use_streams_diff = Enum.any?(assigns, fn {_k, v} -> match?(%LiveStream{}, v) end)
     render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
 
     # if we enable diffs, we use only changed props for all the remaining calculations
@@ -97,9 +98,11 @@ defmodule LiveVue do
       end
 
     props = extract(base_assigns, :props)
+    streams = extract(base_assigns, :streams)
     slots = extract(base_assigns, :slots)
     handlers = extract(base_assigns, :handlers)
     props_diff = if use_diff, do: calculate_props_diff(props, assigns), else: []
+    streams_diff = if use_streams_diff, do: calculate_streams_diff(streams, init or dead), else: []
 
     assigns =
       assigns
@@ -108,6 +111,7 @@ defmodule LiveVue do
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
       |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
+      |> Map.put(:streams_diff, Enum.map(streams_diff, &prepare_diff/1))
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
@@ -123,7 +127,9 @@ defmodule LiveVue do
         slots: slots != %{},
         handlers: handlers != %{},
         # we want to send props_diff always but not on initial render
-        props_diff: not init and not dead and use_diff
+        props_diff: not init and not dead and use_diff,
+        # we want to send stream_diffs always when there's at least one stream in assigns
+        streams_diff: use_streams_diff
       }
 
     assigns =
@@ -141,6 +147,7 @@ defmodule LiveVue do
       data-name={@__component_name}
       data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
+      data-streams-diff={"#{json(@streams_diff)}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
       data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
@@ -240,9 +247,6 @@ defmodule LiveVue do
         true ->
           [%{op: "replace", path: "/#{k}", value: new_value}]
 
-        %LiveStream{} ->
-          generate_stream_patches(k, new_value)
-
         # For complex types which didn't change type, use Jsonpatch to find minimal diff
         old_value ->
           Jsonpatch.diff(old_value, new_value,
@@ -256,6 +260,23 @@ defmodule LiveVue do
       end
     end)
     # let's add a harmless test operation to ensure we never have the same diff as before
+    |> then(fn diff -> [%{op: "test", path: "", value: :rand.uniform(10_000_000)} | diff] end)
+  end
+
+  # Generates JSON patch operations for LiveStream changes
+  # Handles insertions and deletions for Phoenix LiveView streams
+  defp calculate_streams_diff(streams, initial)
+
+  defp calculate_streams_diff(streams, true) do
+    # for initial render, we want to reset all streams, and then apply the diffs
+    init = Enum.map(streams, fn {k, _} -> %{op: "replace", path: "/#{k}", value: []} end)
+    diffs = Enum.flat_map(streams, fn {k, stream} -> generate_stream_patches(k, stream) end)
+    init ++ diffs
+  end
+
+  defp calculate_streams_diff(streams, false) do
+    streams
+    |> Enum.flat_map(fn {k, stream} -> generate_stream_patches(k, stream) end)
     |> then(fn diff -> [%{op: "test", path: "", value: :rand.uniform(10_000_000)} | diff] end)
   end
 
@@ -322,6 +343,7 @@ defmodule LiveVue do
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
   defp normalize_key("v-on:" <> key, _val), do: {:handlers, key}
+  defp normalize_key(_key, %LiveStream{}), do: :streams
   defp normalize_key(_key, _val), do: :props
 
   defp key_changed(%{__changed__: nil}, _key), do: true

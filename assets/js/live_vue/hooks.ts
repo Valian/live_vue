@@ -8,9 +8,9 @@ import { applyPatch, type Operation } from "./jsonPatch.js"
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
  */
-const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string, any> => {
+const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string, any> | null => {
   const data = el.getAttribute(attributeName)
-  return data ? JSON.parse(data) : {}
+  return data ? JSON.parse(data) : null
 }
 
 /**
@@ -19,12 +19,12 @@ const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string
  * The slots are converted to a function that returns a div with the innerHTML set to the base64 decoded slot.
  */
 const getSlots = (el: HTMLElement): Record<string, () => any> => {
-  const dataSlots = getAttributeJson(el, "data-slots")
+  const dataSlots = getAttributeJson(el, "data-slots") || {}
   return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
 }
 
-const getPropsDiff = (el: HTMLElement): Operation[] => {
-  const dataPropsDiff = getAttributeJson(el, "data-props-diff") || []
+const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {
+  const dataPropsDiff = getAttributeJson(el, attributeName) || []
   return dataPropsDiff.map(([op, path, value]: [string, string, any]) => ({
     op,
     path,
@@ -42,7 +42,7 @@ const getPropsDiff = (el: HTMLElement): Operation[] => {
  * @returns The handlers as an object.
  */
 const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: any) => void> => {
-  const handlers = getAttributeJson(el, "data-handlers")
+  const handlers = getAttributeJson(el, "data-handlers") || {}
   const result: Record<string, (event: any) => void> = {}
   for (const handlerName in handlers) {
     const ops = handlers[handlerName]
@@ -69,7 +69,7 @@ const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: a
  * @returns The props as an object.
  */
 const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
-  ...getAttributeJson(el, "data-props"),
+  ...(getAttributeJson(el, "data-props") || {}),
   ...getHandlers(el, liveSocket),
 })
 
@@ -82,7 +82,10 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
 
     const props = reactive(getProps(this.el, this.liveSocket))
     const slots = reactive(getSlots(this.el))
-    this.vue = { props, slots, app: null}
+    // let's apply initial stream diff here, since all stream changes are sent in that attribute
+    applyPatch(props, getDiff(this.el, "data-streams-diff"))
+
+    this.vue = { props, slots, app: null }
     const app = setup({
       createApp: makeApp,
       component,
@@ -104,10 +107,12 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   },
   updated() {
     if (this.el.getAttribute("data-use-diff") === "true") {
-      applyPatch(this.vue.props, getPropsDiff(this.el))
+      applyPatch(this.vue.props, getDiff(this.el, "data-props-diff"))
     } else {
       Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     }
+    // we're always applying streams diff, since all stream changes are sent in that attribute
+    applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
   destroyed() {

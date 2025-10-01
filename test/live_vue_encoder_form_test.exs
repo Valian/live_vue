@@ -711,7 +711,7 @@ defmodule LiveVue.EncoderFormTest do
       assert item2.active == nil
 
       # Nested data should show submitted values
-      assert encoded.values.nested != nil
+      assert encoded.values.nested
       assert encoded.values.nested.title == "Nested Title"
       assert length(encoded.values.nested.items) == 1
       nested_item = hd(encoded.values.nested.items)
@@ -753,7 +753,7 @@ defmodule LiveVue.EncoderFormTest do
 
       # The key bug: nested should NOT be nil - it should show the submitted data
       # even if validation failed
-      assert encoded.values.nested != nil
+      assert encoded.values.nested
       # Empty string becomes nil after casting
       assert encoded.values.nested.title == ""
       assert length(encoded.values.nested.items) == 1
