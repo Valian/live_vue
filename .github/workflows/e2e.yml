@@ -15,16 +15,16 @@ jobs:
       MIX_ENV: e2e
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v5
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.15'
-          otp-version: '26'
+          elixir-version: "1.15"
+          otp-version: "26"
 
       - name: Restore Elixir dependency cache
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4
         id: deps-cache
         with:
           path: deps
@@ -38,8 +38,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
+          node-version: "24"
+          cache: "npm"
 
       - name: Install npm dependencies (root)
         run: npm install

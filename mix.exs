@@ -9,7 +9,7 @@ defmodule LiveVue.MixProject do
       app: :live_vue,
       version: @version,
       consolidate_protocols: Mix.env() != :test,
-      elixir: "~> 1.13",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       listeners: listeners(Mix.env()),
