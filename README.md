@@ -97,7 +97,7 @@ LiveVue allows to create hybrid apps, where part of the session state is on the 
 **New project:**
 ```bash
 mix archive.install hex igniter_new
-mix igniter.new my_app --with phx.new --install live_vue
+mix igniter.new my_app --with phx.new --install live_vue@1.0.0-rc.3
 ```
 
 **Existing project (Phoenix 1.8+ only):**
