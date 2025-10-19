@@ -58,7 +58,7 @@ defmodule LiveVue.EncoderFormTest do
       # Self-referential embed for deep nesting
       embeds_one(:nested, __MODULE__)
       # List of simple structs
-      embeds_many(:items, Simple)
+      embeds_many(:items, Simple, on_replace: :delete)
       # Hidden embedded field
       embeds_one(:private_data, Simple)
     end
@@ -461,6 +461,40 @@ defmodule LiveVue.EncoderFormTest do
       # Private_data field not in values
       refute Map.has_key?(complex_encoded.values, :private_data)
       assert complex_encoded.values.title == "Test"
+    end
+
+    test "deletes items from existing Complex struct via form submission" do
+      # Start with a Complex struct that ALREADY HAS items in it with IDs (like from database)
+      complex = %Complex{
+        title: "Existing Title",
+        items: [
+          %Simple{id: 1, name: "Item 1", age: 25, active: true},
+          %Simple{id: 2, name: "Item 2", age: 30, active: false},
+          %Simple{id: 3, name: "Item 3", age: 35, active: true}
+        ]
+      }
+
+      # Now submit form params that only include 2 items (removing Item 2)
+      # This simulates what would happen when user deletes an item in the UI
+      # Note: we include IDs for the items we're keeping
+      attrs = %{
+        title: "Existing Title",
+        items: [
+          %{id: 1, name: "Item 1", age: 25, active: true},
+          %{id: 3, name: "Item 3", age: 35, active: true}
+        ]
+      }
+
+      encoded = encode_form(complex, attrs)
+
+      # The encoded form should only show 2 items, not 3
+      assert length(encoded.values.items) == 2
+
+      # Verify the correct items remain
+      item_names = Enum.map(encoded.values.items, & &1.name)
+      assert "Item 1" in item_names
+      assert "Item 3" in item_names
+      refute "Item 2" in item_names
     end
   end
 

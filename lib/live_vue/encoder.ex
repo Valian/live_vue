@@ -205,7 +205,10 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
     defp get_field_value(source, field, {tag, %{cardinality: :many}}, opts) when tag in @relations do
       case Map.fetch(source.changes, field) do
         {:ok, changesets} ->
-          Enum.map(changesets, &collect_changeset_values(&1, opts))
+          changesets
+          # we need to filter out changesets that have no params - they are removed from the form
+          |> Enum.filter(&(&1.params != nil))
+          |> Enum.map(&collect_changeset_values(&1, opts))
 
         :error ->
           case Map.fetch!(source.data, field) do
