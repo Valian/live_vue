@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 1.0.0-rc.4 - 2025-10-19
+
+### Improvements
+
+- Added support for Elixir 1.19 and OTP 28
+
+### Bug Fixes
+
+- Fixed a bug when [diff values were not always correctly encoded](https://github.com/Valian/live_vue/commit/56fe9956d9144950ed3460f0412250a112f25f80)
+- Fixed a bug with [removal of embedded items in the form](https://github.com/Valian/live_vue/commit/140e060ddf80bef4c20a12ce6ebe332c9ad321b8)
+
+
 ## 1.0.0-rc.3 - 2025-10-01
 
 ### Improvements
@@ -31,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exporting useField and useArrayField from useLiveForm.ts [#81](https://github.com/Valian/live_vue/pull/81)
 - When inserting items at index 0 of stream, the items were not inserted in the correct order
 - Fixed bug when building SSR bundle overriden files from client bundle in priv/static
+
 
 
 ## 1.0.0-rc - 2025-09-03
