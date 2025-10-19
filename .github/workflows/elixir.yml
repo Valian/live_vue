@@ -25,6 +25,8 @@ jobs:
             otp: "27"
           - elixir: "1.18"
             otp: "28"
+          - elixir: "1.19"
+            otp: "28"
 
     steps:
       - uses: actions/checkout@v5

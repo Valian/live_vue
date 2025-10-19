@@ -15,14 +15,6 @@ defmodule LiveVue.MixProject do
       listeners: listeners(Mix.env()),
       aliases: aliases(),
       deps: deps(),
-      preferred_cli_env: [
-        precommit: :test,
-        "test.watch": :test,
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ],
 
       # Hex
       description: "E2E reactivity for Vue and LiveView",
@@ -97,6 +89,19 @@ defmodule LiveVue.MixProject do
         }
       ],
       test_coverage: [tool: ExCoveralls]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        precommit: :test,
+        "test.watch": :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
