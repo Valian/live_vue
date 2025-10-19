@@ -245,7 +245,7 @@ defmodule LiveVue do
 
         # For simple types, generate replace operation
         true ->
-          [%{op: "replace", path: "/#{k}", value: new_value}]
+          [%{op: "replace", path: "/#{k}", value: Encoder.encode(new_value)}]
 
         # For complex types which didn't change type, use Jsonpatch to find minimal diff
         old_value ->
