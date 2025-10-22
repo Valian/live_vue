@@ -275,8 +275,12 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
 
           {tag, %{cardinality: :many}} when tag in @relations ->
             # List of embedded changesets
+            # Must filter out changesets with nil params (deleted items) to ensure the errors
+            # array has the same length and ordering as the values array (see line 210)
             list_errors =
-              Enum.map(value, fn embed_changeset ->
+              value
+              |> Enum.filter(&(&1.params != nil))
+              |> Enum.map(fn embed_changeset ->
                 embed_errors = collect_changeset_errors(embed_changeset)
                 if embed_errors == %{}, do: nil, else: embed_errors
               end)
