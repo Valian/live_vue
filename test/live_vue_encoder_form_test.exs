@@ -1578,6 +1578,81 @@ defmodule LiveVue.EncoderFormTest do
     end
   end
 
+  describe "embed_many with item additions and removals" do
+    test "error array length matches values array when items are removed" do
+      # When items are removed from embed_many, the error array should have the same
+      # length as the values array (filtering out deleted items with params == nil)
+      complex = %Complex{
+        title: "Parent",
+        items: [
+          %Simple{id: 1, name: "Item 1", age: 25},
+          %Simple{id: 2, name: "Item 2", age: 30},
+          %Simple{id: 3, name: "Item 3", age: 35}
+        ]
+      }
+
+      # Remove item 2, add validation errors to items 1 and new item
+      attrs = %{
+        title: "Parent",
+        items: [
+          %{id: 1, name: "Item 1", age: -5},
+          %{id: 3, name: "Item 3", age: 35},
+          %{name: nil, age: 40}
+        ]
+      }
+
+      encoded = encode_form(complex, attrs)
+
+      # Values and errors arrays should have matching lengths
+      assert length(encoded.values.items) == 3
+      assert length(encoded.errors.items) == 3
+
+      # Errors should be in same order as values
+      assert encoded.errors.items == [
+               %{age: ["must be greater than 0"]},
+               nil,
+               %{name: ["can't be blank"]}
+             ]
+    end
+
+    test "deeply nested embed_many with additions and removals" do
+      complex = %Complex{
+        title: "Root",
+        nested: %Complex{
+          title: "Level 1",
+          items: [
+            %Simple{id: 1, name: "L1-Item1", age: 20},
+            %Simple{id: 2, name: "L1-Item2", age: 25}
+          ]
+        }
+      }
+
+      # Add new item between existing ones
+      attrs = %{
+        title: "Root",
+        nested: %{
+          title: "Level 1",
+          items: [
+            %{id: 1, name: nil, age: -5},
+            %{name: "New Item", age: 30},
+            %{id: 2, name: "L1-Item2", age: 25}
+          ]
+        }
+      }
+
+      encoded = encode_form(complex, attrs)
+
+      # Nested errors should also have matching length
+      nested_errors = encoded.errors.nested.items
+      assert length(nested_errors) == 3
+      assert nested_errors == [
+               %{name: ["can't be blank"], age: ["must be greater than 0"]},
+               nil,
+               nil
+             ]
+    end
+  end
+
   describe "multiple checkbox field handling" do
     # Schema for testing multiple checkboxes
     defmodule MultipleChoiceForm do
