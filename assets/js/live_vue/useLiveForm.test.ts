@@ -23,7 +23,7 @@ const mockUseLiveVue = useLiveVue as any
 let mockLiveVue: any
 
 // Helper to create forms within effect scope to avoid onScopeDispose warnings
-function createFormInScope<T extends object>(formRef: any, options?: any) {
+function createFormInScope(formRef: any, options?: any) {
   let form: any
   const scope = effectScope()
   scope.run(() => {

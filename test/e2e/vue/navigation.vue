@@ -6,7 +6,7 @@ interface Props {
   query_params: Record<string, any>
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const { patch, navigate } = useLiveNavigation()
 
 function patchQuery() {

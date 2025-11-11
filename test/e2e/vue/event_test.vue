@@ -17,7 +17,8 @@ interface CustomEvent {
   count: number
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
+
 const live = useLiveVue()
 
 const messageInput = ref('')

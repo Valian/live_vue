@@ -7,7 +7,12 @@ export default antfu(
       files: ['.gitignore', 'example_project/.gitignore'],
     },
     typescript: true,
-    vue: true,
+    vue: {
+      overrides: {
+        'vue/no-unused-properties': 'warn',
+        'vue/prop-name-casing': 'off',
+      },
+    },
   },
   {
     files: ['**/test/**/*.{js,ts,vue}', '**/*.test.{js,ts}'],

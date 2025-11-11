@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useEventReply } from 'live_vue'
 
-const props = defineProps<{
+defineProps<{
   counter: number
 }>()
 

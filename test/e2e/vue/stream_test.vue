@@ -29,6 +29,7 @@ const itemsLength = computed(() => props.items.length)
 // Methods
 function addItem() {
   if (!newItem.value.name.trim()) {
+    // eslint-disable-next-line no-alert
     alert('Please enter a name for the item')
     return
   }

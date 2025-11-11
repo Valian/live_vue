@@ -34,7 +34,7 @@ function createMockLiveViewHook(elementAttributes: Record<string, string> = {}) 
 function createMockLiveVueApp(component = MockComponent): LiveVueApp {
   return {
     resolve: vi.fn().mockResolvedValue(component),
-    setup: vi.fn(({ createApp, component, props, slots, plugin, el }) => {
+    setup: vi.fn(({ createApp, plugin }) => {
       const app = createApp({
         render: () => null, // simplified for testing
       })
@@ -379,7 +379,6 @@ describe('getVueHook', () => {
     })
 
     it('should set up unmount listener for Vue app', () => {
-      const mockApp = mockHookContext.vue.app
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
       vueHook.destroyed!.call(mockHookContext)
@@ -392,7 +391,8 @@ describe('getVueHook', () => {
       mockApp.unmount = vi.fn()
 
       let eventHandler: () => void
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener').mockImplementation((event, handler) => {
+
+      vi.spyOn(window, 'addEventListener').mockImplementation((event, handler) => {
         if (event === 'phx:page-loading-stop') {
           eventHandler = handler as () => void
         }

@@ -1,12 +1,8 @@
+import { Buffer } from 'node:buffer'
 import { expect, test } from '@playwright/test'
 import { syncLV } from '../utils.js'
 
 test.describe('useLiveUpload', () => {
-  // Helper function to create test files
-  const createTestFile = (name, content = 'test content') => {
-    return new File([content], name, { type: 'text/plain' })
-  }
-
   test('should handle manual upload (auto_upload: false)', async ({ page }) => {
     await page.goto('/upload/manual')
     await syncLV(page)
@@ -251,7 +247,6 @@ test.describe('useLiveUpload', () => {
     await syncLV(page)
 
     // Either only 3 files are accepted, or there's an error about too many files
-    const selectedCount = await page.locator('#selected-count').textContent()
     expect(await page.locator('.file-entry').count()).toEqual(4)
 
     // Should either limit to max_entries or show error

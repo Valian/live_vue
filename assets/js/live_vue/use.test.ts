@@ -446,7 +446,7 @@ describe('useEventReply', () => {
     // Mock pushEvent to never call callback (simulating slow response)
     mockPushEvent.mockImplementation(() => {})
 
-    const firstExecution = execute({ id: 1 })
+    execute({ id: 1 })
 
     // Second execution should be rejected immediately
     await expect(execute({ id: 2 })).rejects.toThrow('Event "test-event" is already executing')
