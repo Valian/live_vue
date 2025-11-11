@@ -40,6 +40,7 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
     "e2e:install": "npx playwright install --with-deps chromium",
     "e2e:server": "MIX_ENV=e2e mix run test/e2e/test_helper.exs",
     "e2e:build": "npx vite build --config test/e2e/vite.config.js",

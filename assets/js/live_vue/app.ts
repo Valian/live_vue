@@ -21,9 +21,14 @@ export function defaultSetup({ createApp, component, props, slots, plugin, el }:
   return app
 }
 
-export function migrateToLiveVueApp(components: ComponentMap, options: { initializeApp?: (context: SetupContext) => App } = {}): LiveVueApp {
-  if ('resolve' in components && 'setup' in components) {
-    return components as LiveVueApp
+function isLiveVueApp(components: ComponentMap | LiveVueApp): components is LiveVueApp {
+  return ('resolve' in components && typeof components.resolve === 'function')
+    && ('setup' in components && typeof components.setup === 'function')
+}
+
+export function migrateToLiveVueApp(components: ComponentMap | LiveVueApp, options: { initializeApp?: (context: SetupContext) => App } = {}): LiveVueApp {
+  if (isLiveVueApp(components)) {
+    return components
   }
   else {
     console.warn('deprecation warning:\n\nInstead of passing components, use createLiveVue({resolve, setup})')

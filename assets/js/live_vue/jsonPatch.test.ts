@@ -225,7 +225,7 @@ describe("applyOperation", () => {
       doc.source.nested.value = "modified"
 
       // Copy should remain unchanged
-      expect(doc.target.copy.nested.value).toBe("test")
+      expect((doc.target as any).copy.nested.value).toBe("test")
     })
 
     it("should deep clone arrays when copying", () => {
@@ -237,7 +237,7 @@ describe("applyOperation", () => {
       doc.source[0].value = "modified"
 
       // Copy should remain unchanged
-      expect(doc.target[0].value).toBe("test")
+      expect((doc.target[0] as any).value).toBe("test")
     })
   })
 })

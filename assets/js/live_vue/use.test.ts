@@ -387,7 +387,7 @@ describe("useEventReply", () => {
     mockLive = {
       ...createMockLiveHook(),
       pushEvent: mockPushEvent,
-    }
+    } as LiveHook
     mockInject.mockReturnValue(mockLive)
   })
 
