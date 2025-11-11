@@ -33,15 +33,43 @@ export const flatMapKeys = <T>(
  * @returns The component if found, otherwise throws an error with a list of available components.
  */
 export const findComponent = (components: ComponentMap, name: string): ComponentOrComponentPromise => {
-  // we're looking for a component by exact filename match
+  const nameParts = name.replace(/\.vue$/, '').split('/').filter(part => part !== 'index')
+  const matches: [string, ComponentOrComponentPromise][] = []
+
   for (const [key, value] of Object.entries(components)) {
-    const fileName = key.split('/').pop() // Get the actual filename
-    if (fileName === `${name}.vue` || (fileName === 'index.vue' && key.endsWith(`/${name}/index.vue`))) {
-      return value
+    let keyParts = key.split('/')
+    
+    if (keyParts[keyParts.length - 1] === 'index.vue') {
+      keyParts = keyParts.slice(0, -1)
+    } else {
+      keyParts[keyParts.length - 1] = keyParts[keyParts.length - 1].replace(/\.vue$/, '')
+    }
+    
+    if (nameParts.length <= keyParts.length) {
+      let isMatch = true
+      for (let i = 0; i < nameParts.length; i++) {
+        const keyPart = keyParts[keyParts.length - nameParts.length + i]
+        if (nameParts[i] !== keyPart) {
+          isMatch = false
+          break
+        }
+      }
+      
+      if (isMatch) {
+        matches.push([key, value])
+      }
     }
   }
 
+  if (matches.length === 1) return matches[0][1]
+
+  if (matches.length > 1) {
+    const matchList = matches.map(([key]) => key).join('\n')
+    throw new Error(`Component '${name}' is ambiguous. Found multiple matches:\n\n${matchList}\n\n`)
+  }
+
   // a helpful message for the user
+
   const availableComponents = Object.keys(components)
     .map(key => key.replace("../../lib/", "").replace("/index.vue", "").replace(".vue", "").replace("./", ""))
     .filter(key => !key.startsWith("_build"))
