@@ -5,64 +5,67 @@
  */
 
 // Type definitions
-export type Operation =
-  | AddOperation
-  | RemoveOperation
-  | ReplaceOperation
-  | MoveOperation
-  | CopyOperation
-  | TestOperation
-  | UpsertOperation
-  | LimitOperation
+export type Operation
+  = | AddOperation
+    | RemoveOperation
+    | ReplaceOperation
+    | MoveOperation
+    | CopyOperation
+    | TestOperation
+    | UpsertOperation
+    | LimitOperation
 
 export interface BaseOperation {
   path: string
 }
 
 export interface AddOperation extends BaseOperation {
-  op: "add"
+  op: 'add'
   value: any
 }
 
 export interface RemoveOperation extends BaseOperation {
-  op: "remove"
+  op: 'remove'
 }
 
 export interface ReplaceOperation extends BaseOperation {
-  op: "replace"
+  op: 'replace'
   value: any
 }
 
 export interface MoveOperation extends BaseOperation {
-  op: "move"
+  op: 'move'
   from: string
 }
 
 export interface CopyOperation extends BaseOperation {
-  op: "copy"
+  op: 'copy'
   from: string
 }
 
 export interface TestOperation extends BaseOperation {
-  op: "test"
+  op: 'test'
   value: any
 }
 
 export interface UpsertOperation extends BaseOperation {
-  op: "upsert"
+  op: 'upsert'
   value: any
 }
 
 export interface LimitOperation extends BaseOperation {
-  op: "limit"
+  op: 'limit'
   value: number
 }
 
 // Helper functions
 function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== "object") return obj
-  if (obj instanceof Date) return new Date(obj.getTime()) as any
-  if (Array.isArray(obj)) return obj.map(item => deepClone(item)) as any
+  if (obj === null || typeof obj !== 'object')
+    return obj
+  if (obj instanceof Date)
+    return new Date(obj.getTime()) as any
+  if (Array.isArray(obj))
+    return obj.map(item => deepClone(item)) as any
 
   const cloned = {} as T
   for (const key in obj) {
@@ -74,36 +77,43 @@ function deepClone<T>(obj: T): T {
 }
 
 function unescapePathComponent(path: string): string {
-  return path.replace(/~1/g, "/").replace(/~0/g, "~")
+  return path.replace(/~1/g, '/').replace(/~0/g, '~')
 }
 
 function areEquals(a: any, b: any): boolean {
-  if (a === b) return true
-  if (a && b && typeof a == "object" && typeof b == "object") {
+  if (a === b)
+    return true
+  if (a && b && typeof a == 'object' && typeof b == 'object') {
     const arrA = Array.isArray(a)
     const arrB = Array.isArray(b)
 
     if (arrA && arrB) {
       const length = a.length
-      if (length != b.length) return false
-      for (let i = length; i-- !== 0; ) {
-        if (!areEquals(a[i], b[i])) return false
+      if (length != b.length)
+        return false
+      for (let i = length; i-- !== 0;) {
+        if (!areEquals(a[i], b[i]))
+          return false
       }
       return true
     }
-    if (arrA != arrB) return false
+    if (arrA != arrB)
+      return false
 
     const keys = Object.keys(a)
     const length = keys.length
-    if (length !== Object.keys(b).length) return false
+    if (length !== Object.keys(b).length)
+      return false
 
-    for (let i = length; i-- !== 0; ) {
-      if (!b.hasOwnProperty(keys[i])) return false
+    for (let i = length; i-- !== 0;) {
+      if (!b.hasOwnProperty(keys[i]))
+        return false
     }
 
-    for (let i = length; i-- !== 0; ) {
+    for (let i = length; i-- !== 0;) {
       const key = keys[i]
-      if (!areEquals(a[key], b[key])) return false
+      if (!areEquals(a[key], b[key]))
+        return false
     }
     return true
   }
@@ -116,7 +126,7 @@ function areEquals(a: any, b: any): boolean {
  * Returns the resolved index or the original component if not using special syntax.
  */
 function resolvePathComponent(component: string, arrayObj: any[]): string | null {
-  if (!component.startsWith("$$")) {
+  if (!component.startsWith('$$')) {
     return component
   }
 
@@ -124,7 +134,7 @@ function resolvePathComponent(component: string, arrayObj: any[]): string | null
   const targetId = component.substring(2)
 
   // Find the index of the element with matching __dom_id
-  const index = arrayObj.findIndex(item => item && typeof item === "object" && item.__dom_id == targetId)
+  const index = arrayObj.findIndex(item => item && typeof item === 'object' && item.__dom_id == targetId)
 
   if (index === -1) {
     console.warn(`JSON Patch: Item with __dom_id "${targetId}" not found in array, skipping operation`)
@@ -138,25 +148,27 @@ function resolvePathComponent(component: string, arrayObj: any[]): string | null
  * Retrieves a value from a JSON document by a JSON pointer.
  */
 export function getValueByPointer(document: any, pointer: string): any {
-  if (pointer === "") return document
+  if (pointer === '')
+    return document
 
-  const keys = pointer.split("/").slice(1) // remove empty first element
+  const keys = pointer.split('/').slice(1) // remove empty first element
   let obj = document
 
   for (const key of keys) {
-    let resolvedKey = key.indexOf("~") !== -1 ? unescapePathComponent(key) : key
+    let resolvedKey = key.includes('~') ? unescapePathComponent(key) : key
 
     if (Array.isArray(obj)) {
       // Handle special $$id syntax for arrays
-      if (resolvedKey.startsWith("$$")) {
+      if (resolvedKey.startsWith('$$')) {
         const resolved = resolvePathComponent(resolvedKey, obj)
         if (resolved === null) {
           return undefined // Item not found
         }
         resolvedKey = resolved
       }
-      obj = obj[resolvedKey === "-" ? obj.length - 1 : parseInt(resolvedKey, 10)]
-    } else {
+      obj = obj[resolvedKey === '-' ? obj.length - 1 : Number.parseInt(resolvedKey, 10)]
+    }
+    else {
       obj = obj[resolvedKey]
     }
   }
@@ -170,114 +182,119 @@ export function getValueByPointer(document: any, pointer: string): any {
  */
 export function applyOperation<T>(document: T, operation: Operation): T {
   // Handle root operations
-  if (operation.path === "") {
+  if (operation.path === '') {
     switch (operation.op) {
-      case "add":
-      case "replace":
+      case 'add':
+      case 'replace':
         return (operation as AddOperation | ReplaceOperation).value
-      case "move":
-      case "copy":
+      case 'move':
+      case 'copy':
         return getValueByPointer(document, (operation as MoveOperation | CopyOperation).from)
-      case "test":
+      case 'test':
         return document // Test always returns original document
-      case "remove":
+      case 'remove':
         return null as any
     }
   }
 
-  const keys = operation.path.split("/").slice(1) // remove empty first element
+  const keys = operation.path.split('/').slice(1) // remove empty first element
   let obj = document as any
 
   // Navigate to parent object
   for (let i = 0; i < keys.length - 1; i++) {
-    let key = keys[i].indexOf("~") !== -1 ? unescapePathComponent(keys[i]) : keys[i]
+    let key = keys[i].includes('~') ? unescapePathComponent(keys[i]) : keys[i]
 
     if (Array.isArray(obj)) {
       // Handle special $$id syntax for arrays
-      if (key.startsWith("$$")) {
+      if (key.startsWith('$$')) {
         const resolved = resolvePathComponent(key, obj)
         if (resolved === null) {
           return document // Skip operation if id not found
         }
         key = resolved
       }
-      obj = obj[key === "-" ? obj.length - 1 : parseInt(key, 10)]
-    } else {
+      obj = obj[key === '-' ? obj.length - 1 : Number.parseInt(key, 10)]
+    }
+    else {
       obj = obj[key]
     }
   }
 
   // Apply operation on final key
   const finalKey = keys[keys.length - 1]
-  let unescapedKey = finalKey.indexOf("~") !== -1 ? unescapePathComponent(finalKey) : finalKey
+  const unescapedKey = finalKey.includes('~') ? unescapePathComponent(finalKey) : finalKey
 
   if (Array.isArray(obj)) {
     let index: number
 
     // Handle special $$id syntax for arrays
-    if (unescapedKey.startsWith("$$")) {
+    if (unescapedKey.startsWith('$$')) {
       const resolved = resolvePathComponent(unescapedKey, obj)
       if (resolved === null) {
         return document // Skip operation if id not found
       }
-      index = parseInt(resolved, 10)
-    } else {
-      index = unescapedKey === "-" ? obj.length : parseInt(unescapedKey, 10)
+      index = Number.parseInt(resolved, 10)
+    }
+    else {
+      index = unescapedKey === '-' ? obj.length : Number.parseInt(unescapedKey, 10)
     }
 
     switch (operation.op) {
-      case "add":
+      case 'add':
         obj.splice(index, 0, (operation as AddOperation).value)
         break
-      case "remove":
+      case 'remove':
         obj.splice(index, 1)
         break
-      case "replace":
+      case 'replace':
         obj[index] = (operation as ReplaceOperation).value
         break
-      case "upsert":
+      case 'upsert':
         const upsertValue = (operation as UpsertOperation).value
         // Check if item with same ID already exists in the array
-        if (upsertValue && typeof upsertValue === "object" && "__dom_id" in upsertValue) {
+        if (upsertValue && typeof upsertValue === 'object' && '__dom_id' in upsertValue) {
           const existingIndex = obj.findIndex(
-            item => item && typeof item === "object" && item.__dom_id === upsertValue.__dom_id
+            item => item && typeof item === 'object' && item.__dom_id === upsertValue.__dom_id,
           )
 
           if (existingIndex !== -1) {
             // Update existing item
             obj[existingIndex] = upsertValue
-          } else {
+          }
+          else {
             // Insert new item at specified index
             obj.splice(index, 0, upsertValue)
           }
-        } else {
+        }
+        else {
           // No ID to match against, just insert at specified index
           obj.splice(index, 0, upsertValue)
         }
         break
-      case "move":
+      case 'move':
         const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
         if (moveValue === undefined) {
           return document // Skip operation if source not found
         }
-        applyOperation(document, { op: "remove", path: (operation as MoveOperation).from })
+        applyOperation(document, { op: 'remove', path: (operation as MoveOperation).from })
         obj.splice(index, 0, moveValue)
         break
-      case "copy":
+      case 'copy':
         const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
         obj.splice(index, 0, deepClone(copyValue))
         break
-      case "test":
+      case 'test':
         // Test operation - just return document unchanged
         break
-      case "limit":
+      case 'limit':
         const limitValue = (operation as LimitOperation).value
         if (limitValue >= 0) {
           // Positive limit: keep first N elements, remove the rest
           if (limitValue < obj.length) {
             obj.splice(limitValue)
           }
-        } else {
+        }
+        else {
           // Negative limit: keep last N elements, remove from the beginning
           const keepCount = Math.abs(limitValue)
           if (keepCount < obj.length) {
@@ -286,28 +303,29 @@ export function applyOperation<T>(document: T, operation: Operation): T {
         }
         break
     }
-  } else {
+  }
+  else {
     switch (operation.op) {
-      case "add":
-      case "replace":
+      case 'add':
+      case 'replace':
         obj[unescapedKey] = (operation as AddOperation | ReplaceOperation).value
         break
-      case "remove":
+      case 'remove':
         delete obj[unescapedKey]
         break
-      case "move":
+      case 'move':
         const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
-        applyOperation(document, { op: "remove", path: (operation as MoveOperation).from })
+        applyOperation(document, { op: 'remove', path: (operation as MoveOperation).from })
         obj[unescapedKey] = moveValue
         break
-      case "copy":
+      case 'copy':
         const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
         obj[unescapedKey] = deepClone(copyValue)
         break
-      case "test":
+      case 'test':
         // Test operation - just return document unchanged
         break
-      case "limit":
+      case 'limit':
         // Check if target is an array
         const targetArray = obj[unescapedKey]
         if (Array.isArray(targetArray)) {
@@ -317,7 +335,8 @@ export function applyOperation<T>(document: T, operation: Operation): T {
             if (limitValue < targetArray.length) {
               targetArray.splice(limitValue)
             }
-          } else {
+          }
+          else {
             // Negative limit: keep last N elements, remove from the beginning
             const keepCount = Math.abs(limitValue)
             if (keepCount < targetArray.length) {

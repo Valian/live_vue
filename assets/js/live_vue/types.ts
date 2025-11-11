@@ -1,19 +1,19 @@
-// Conditional imports with fallback types for phoenix_live_view < 1.1
-import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
-
 // Try to import from phoenix_live_view first, fallback to our definitions if not available
 import type {
+  Hook as PhoenixHook,
   LiveSocketInstanceInterface as PhoenixLiveSocketInstanceInterface,
   ViewHook as PhoenixViewHook,
-  Hook as PhoenixHook,
-} from "phoenix_live_view"
+} from 'phoenix_live_view'
+
+// Conditional imports with fallback types for phoenix_live_view < 1.1
+import type { App, Component, createApp, createSSRApp, h, Plugin } from 'vue'
 
 // If using phoenix_live_view < 1.1, use our fallback types
 import type {
+  Hook as FallbackHook,
   LiveSocketInstanceInterface as FallbackLiveSocketInstanceInterface,
   ViewHook as FallbackViewHook,
-  Hook as FallbackHook,
-} from "./phoenixFallbackTypes"
+} from './phoenixFallbackTypes'
 
 // Re-export with our preferred names, using phoenix_live_view types if available
 export type LiveSocketInstanceInterface = PhoenixLiveSocketInstanceInterface extends undefined
@@ -33,14 +33,14 @@ type VueComponentInternal = Parameters<typeof h>[0]
 type VuePropsInternal = Parameters<typeof h>[1]
 type VueSlotsInternal = Parameters<typeof h>[2]
 
-export type VueArgs = {
+export interface VueArgs {
   props: VuePropsInternal
   slots: VueSlotsInternal
   app: App<Element>
 }
 
 // all the functions and additional properties that are available on the LiveHook
-export type LiveHook = ViewHook & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
+export type LiveHook = ViewHook & { vue: VueArgs, liveSocket: LiveSocketInstanceInterface }
 
 // Phoenix LiveView Upload types for client-side use
 export interface UploadEntry {
@@ -62,10 +62,10 @@ export interface UploadConfig {
   max_entries: number
   auto_upload: boolean
   entries: UploadEntry[]
-  errors: { ref: string; error: string }[]
+  errors: { ref: string, error: string }[]
 }
 
-export type UploadOptions = {
+export interface UploadOptions {
   changeEvent?: string
   submitEvent: string
 }
@@ -88,12 +88,12 @@ export interface SetupContext {
   ssr: boolean
 }
 
-export type LiveVueOptions = {
+export interface LiveVueOptions {
   resolve: (path: string) => ComponentOrComponentPromise | undefined | null
   setup?: (context: SetupContext) => App
 }
 
-export type LiveVueApp = {
+export interface LiveVueApp {
   setup: (context: SetupContext) => App
   resolve: (path: string) => ComponentOrComponentPromise
 }

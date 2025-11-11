@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { computed } from "vue"
-import { useLiveUpload, UploadConfig } from "live_vue"
-import { UploadEntry } from "../../../priv/static/types"
+import type { UploadConfig } from 'live_vue'
+import type { UploadEntry } from '../../../priv/static/types'
+import { useLiveUpload } from 'live_vue'
+import { computed } from 'vue'
 
 // Props from LiveView - simplified typing
 const props = defineProps<{
   upload: UploadConfig
-  uploadedFiles: { name: string; size: number; type: string }[]
+  uploadedFiles: { name: string, size: number, type: string }[]
 }>()
 
 // Use the upload composable
 const { entries, showFilePicker, addFiles, submit, cancel, clear, progress } = useLiveUpload(() => props.upload, {
-  changeEvent: "validate",
-  submitEvent: "save",
+  changeEvent: 'validate',
+  submitEvent: 'save',
 })
 
 // Handle drag and drop
-const handleDrop = (event: DragEvent) => {
+function handleDrop(event: DragEvent) {
   event.preventDefault()
   if (event.dataTransfer?.files) {
     const files = Array.from(event.dataTransfer.files)
@@ -24,29 +25,32 @@ const handleDrop = (event: DragEvent) => {
   }
 }
 
-const handleDragOver = (event: DragEvent) => {
+function handleDragOver(event: DragEvent) {
   event.preventDefault()
 }
 
 // Format file size helper
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024)
+    return `${bytes} B`
+  if (bytes < 1024 * 1024)
+    return `${Math.round(bytes / 1024)} KB`
+  if (bytes < 1024 * 1024 * 1024)
+    return `${Math.round(bytes / (1024 * 1024))} MB`
   return `${Math.round(bytes / (1024 * 1024 * 1024))} GB`
 }
 
 // Error message helper
-const getErrorMessage = (error: string): string => {
+function getErrorMessage(error: string): string {
   switch (error) {
-    case "too_large":
-      return "File is too large"
-    case "too_many_files":
-      return "Too many files"
-    case "not_accepted":
-      return "File type not accepted"
+    case 'too_large':
+      return 'File is too large'
+    case 'too_many_files':
+      return 'Too many files'
+    case 'not_accepted':
+      return 'File type not accepted'
     default:
-      return "Invalid file"
+      return 'Invalid file'
   }
 }
 
@@ -73,12 +77,14 @@ const progressValue = computed(() => progress.value)
           <div class="space-y-4 text-center">
             <div class="flex flex-col items-center space-y-2">
               <button
-                @click="showFilePicker"
                 class="relative cursor-pointer bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 px-6 py-3 shadow-sm transition-colors"
+                @click="showFilePicker"
               >
                 Choose Files
               </button>
-              <p class="text-sm text-gray-600 dark:text-gray-400">or drag and drop files here</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                or drag and drop files here
+              </p>
             </div>
 
             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -98,31 +104,33 @@ const progressValue = computed(() => progress.value)
           <div
             class="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-300"
             :style="{ width: `${progressValue}%` }"
-          ></div>
+          />
         </div>
       </div>
 
       <!-- File List -->
       <div v-if="hasEntries" class="space-y-4">
         <div class="flex justify-between items-center">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Selected Files ({{ entriesCount }})</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Selected Files ({{ entriesCount }})
+          </h3>
           <div class="space-x-2">
             <button
               v-if="!upload.auto_upload"
-              @click="submit"
               class="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+              @click="submit"
             >
               Upload All
             </button>
             <button
-              @click="cancel()"
               class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              @click="cancel()"
             >
               Cancel All
             </button>
             <button
-              @click="clear"
               class="px-4 py-2 bg-gray-600 dark:bg-gray-500 text-white rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+              @click="clear"
             >
               Clear
             </button>
@@ -190,7 +198,7 @@ const progressValue = computed(() => progress.value)
                     <div
                       class="bg-indigo-600 dark:bg-indigo-500 h-1 rounded-full transition-all duration-300"
                       :style="{ width: `${entry.progress}%` }"
-                    ></div>
+                    />
                   </div>
                 </div>
 
@@ -226,9 +234,9 @@ const progressValue = computed(() => progress.value)
 
             <div class="flex items-center space-x-2">
               <button
-                @click="cancel(entry.ref)"
                 class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1"
                 title="Cancel upload"
+                @click="cancel(entry.ref)"
               >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -315,7 +323,9 @@ const progressValue = computed(() => progress.value)
 
       <!-- Upload Errors -->
       <div v-if="upload.errors && upload.errors.length > 0" class="space-y-2">
-        <h4 class="text-sm font-medium text-red-800 dark:text-red-200">Upload Errors:</h4>
+        <h4 class="text-sm font-medium text-red-800 dark:text-red-200">
+          Upload Errors:
+        </h4>
         <div
           v-for="{ ref, error } in upload.errors"
           :key="ref"
@@ -326,7 +336,9 @@ const progressValue = computed(() => progress.value)
       </div>
 
       <!-- Debug Info (can be removed in production) -->
-      <p class="cursor-pointer text-sm text-gray-500 dark:text-gray-400 mt-8">Debug Info</p>
+      <p class="cursor-pointer text-sm text-gray-500 dark:text-gray-400 mt-8">
+        Debug Info
+      </p>
       <pre class="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto">{{
         JSON.stringify({ upload }, null, 2)
       }}</pre>

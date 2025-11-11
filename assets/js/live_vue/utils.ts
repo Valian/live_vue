@@ -1,38 +1,36 @@
-import { isProxy, isReactive, isRef, toRaw } from "vue"
-import { ComponentMap, ComponentOrComponentPromise } from "./types.js"
+import type { ComputedRef } from 'vue'
+import type { ComponentMap, ComponentOrComponentPromise } from './types.js'
+
+import { computed, isProxy, isReactive, isRef, ref, toRaw } from 'vue'
 
 /**
  * Maps the values of an object using a callback function and returns a new object with the mapped values.
  * @returns A new object with the mapped values.
  */
-export const mapValues = <T, U>(
-  object: Record<string, T>,
-  cb: (value: T, key: string, object: Record<string, T>) => U
-): Record<string, U> =>
-  Object.entries(object).reduce((acc, [key, value]) => {
+export function mapValues<T, U>(object: Record<string, T>, cb: (value: T, key: string, object: Record<string, T>) => U): Record<string, U> {
+  return Object.entries(object).reduce((acc, [key, value]) => {
     acc[key] = cb(value, key, object)
     return acc
   }, {} as Record<string, U>)
+}
 
 /**
  * Flattens the keys of an object using a callback function and returns a new object with the flattened keys.
  * @returns A new object with the flattened keys.
  */
-export const flatMapKeys = <T>(
-  object: Record<string, T>,
-  cb: (key: string, value: any, object: Record<string, T>) => string[]
-): Record<string, T> =>
-  Object.entries(object).reduce((acc, [key, value]) => {
+export function flatMapKeys<T>(object: Record<string, T>, cb: (key: string, value: any, object: Record<string, T>) => string[]): Record<string, T> {
+  return Object.entries(object).reduce((acc, [key, value]) => {
     const newKeys = cb(key, value, object)
     for (const newKey of newKeys) acc[newKey] = value
     return acc
   }, {} as Record<string, T>)
+}
 
 /**
  * Finds a component by name or path suffix.
  * @returns The component if found, otherwise throws an error with a list of available components.
  */
-export const findComponent = (components: ComponentMap, name: string): ComponentOrComponentPromise => {
+export function findComponent(components: ComponentMap, name: string): ComponentOrComponentPromise {
   // we're looking for a component by name or path suffix.
   for (const [key, value] of Object.entries(components)) {
     if (key.endsWith(`${name}.vue`) || key.endsWith(`${name}/index.vue`)) {
@@ -42,9 +40,9 @@ export const findComponent = (components: ComponentMap, name: string): Component
 
   // a helpful message for the user
   const availableComponents = Object.keys(components)
-    .map(key => key.replace("../../lib/", "").replace("/index.vue", "").replace(".vue", "").replace("./", ""))
-    .filter(key => !key.startsWith("_build"))
-    .join("\n")
+    .map(key => key.replace('../../lib/', '').replace('/index.vue', '').replace('.vue', '').replace('./', ''))
+    .filter(key => !key.startsWith('_build'))
+    .join('\n')
 
   throw new Error(`Component '${name}' not found! Available components:\n\n${availableComponents}\n\n`)
 }
@@ -57,7 +55,7 @@ export function deepToRaw<T>(sourceObj: T): T {
     if (isRef(input) || isReactive(input) || isProxy(input)) {
       return objectIterator(toRaw(input))
     }
-    if (input && typeof input === "object") {
+    if (input && typeof input === 'object') {
       return Object.keys(input).reduce((acc, key) => {
         acc[key as keyof typeof acc] = objectIterator(input[key])
         return acc
@@ -74,15 +72,17 @@ function assignArray(targetArray: any[], sourceArray: any[]) {
   targetArray.length = sourceArray.length
 
   sourceArray.forEach((item, index) => {
-    if (typeof item === "object" && item !== null) {
+    if (typeof item === 'object' && item !== null) {
       if (index in targetArray && targetArray[index] !== null && targetArray[index] !== undefined) {
         // Deep assign existing items
         deepAssign(targetArray[index], item)
-      } else {
+      }
+      else {
         // Create a new item if it doesn't exist in the target
         targetArray[index] = deepAssign(Array.isArray(item) ? [] : {}, item)
       }
-    } else {
+    }
+    else {
       // For primitive values, simply assign
       targetArray[index] = item
     }
@@ -92,24 +92,25 @@ function assignArray(targetArray: any[], sourceArray: any[]) {
 function clearObject(targetObject: any) {
   if (Array.isArray(targetObject)) {
     targetObject.length = 0
-  } else {
-    Object.values(targetObject).forEach(value => {
+  }
+  else {
+    Object.values(targetObject).forEach((value) => {
       clearObject(value)
     })
   }
 }
 
 function assignObject(targetObject: any, sourceObject: any) {
-  Object.keys(sourceObject).forEach(key => {
+  Object.keys(sourceObject).forEach((key) => {
     const sourceValue = toRaw(sourceObject[key])
-    targetObject[key] =
-      typeof sourceValue === "object" && sourceValue !== null && targetObject !== null
+    targetObject[key]
+      = typeof sourceValue === 'object' && sourceValue !== null && targetObject !== null
         ? deepAssign(targetObject[key] ?? (Array.isArray(sourceValue) ? [] : {}), sourceValue)
         : sourceValue
   })
 
   // Remove properties from target that are not in source
-  Object.keys(targetObject).forEach(key => {
+  Object.keys(targetObject).forEach((key) => {
     if (!(key in sourceObject)) {
       clearObject(targetObject[key])
     }
@@ -119,9 +120,11 @@ function assignObject(targetObject: any, sourceObject: any) {
 export function deepAssign(target: any, source: any) {
   if (Array.isArray(source)) {
     assignArray(target, source)
-  } else if (typeof source === "object" && source !== null) {
+  }
+  else if (typeof source === 'object' && source !== null) {
     assignObject(target, source)
-  } else {
+  }
+  else {
     target = source
   }
 
@@ -131,20 +134,16 @@ export function deepAssign(target: any, source: any) {
 export function deepCopy<T>(obj: T): T {
   if (structuredClone) {
     return structuredClone(deepToRaw(obj))
-  } else {
+  }
+  else {
     return JSON.parse(JSON.stringify(obj))
   }
 }
 
-import { ref, computed, type ComputedRef } from "vue"
-
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait?: number
-): {
+export function debounce<T extends (...args: any[]) => any>(func: T, wait?: number): {
   debouncedFn: (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
   isPending: ComputedRef<boolean>
-} => {
+} {
   if (!wait || wait <= 0) {
     return {
       debouncedFn: func,
@@ -166,7 +165,8 @@ export const debounce = <T extends (...args: any[]) => any>(
     return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
       pendingResolvers.push({ resolve, reject })
 
-      if (timeout !== null) clearTimeout(timeout)
+      if (timeout !== null)
+        clearTimeout(timeout)
 
       timeout = setTimeout(async () => {
         const currentResolvers = pendingResolvers
@@ -179,9 +179,11 @@ export const debounce = <T extends (...args: any[]) => any>(
         try {
           const result = await func(...args)
           currentResolvers.forEach(({ resolve }) => resolve(result))
-        } catch (error) {
+        }
+        catch (error) {
           currentResolvers.forEach(({ reject }) => reject(error))
-        } finally {
+        }
+        finally {
           executingCount--
           executingCountRef.value--
         }
@@ -196,13 +198,13 @@ export const debounce = <T extends (...args: any[]) => any>(
   return { debouncedFn, isPending }
 }
 
-export const cacheOnAccessProxy = <T extends object>(createFunc: (key: keyof T) => any) =>
-  new Proxy(
+export function cacheOnAccessProxy<T extends object>(createFunc: (key: keyof T) => any) {
+  return new Proxy(
     {},
     {
       // @ts-expect-error proxy get always expect string key
       get: (fields, key: keyof T) => {
-        if (typeof key === "string" && key.startsWith("__")) {
+        if (typeof key === 'string' && key.startsWith('__')) {
           return Reflect.get(fields, key)
         }
         if (!Reflect.has(fields, key)) {
@@ -210,50 +212,55 @@ export const cacheOnAccessProxy = <T extends object>(createFunc: (key: keyof T) 
         }
         return Reflect.get(fields, key)
       },
-    }
+    },
   )
+}
 
 /**
  * Parses a path string like "user.items[0].name" into an array of keys
  */
 export function parsePath(path: string): (string | number)[] {
-  if (!path) return []
+  if (!path)
+    return []
 
   const keys: (string | number)[] = []
-  let current = ""
+  let current = ''
   let i = 0
 
   while (i < path.length) {
     const char = path[i]
 
-    if (char === ".") {
+    if (char === '.') {
       if (current) {
         keys.push(current)
-        current = ""
+        current = ''
       }
-    } else if (char === "[") {
+    }
+    else if (char === '[') {
       if (current) {
         keys.push(current)
-        current = ""
+        current = ''
       }
 
       // Find the closing bracket
       i++
-      let bracketContent = ""
-      while (i < path.length && path[i] !== "]") {
+      let bracketContent = ''
+      while (i < path.length && path[i] !== ']') {
         bracketContent += path[i]
         i++
       }
 
-      if (path[i] === "]") {
-        const index = parseInt(bracketContent, 10)
+      if (path[i] === ']') {
+        const index = Number.parseInt(bracketContent, 10)
         if (!isNaN(index)) {
           keys.push(index)
-        } else {
+        }
+        else {
           keys.push(bracketContent) // String key in brackets
         }
       }
-    } else {
+    }
+    else {
       current += char
     }
 
@@ -274,7 +281,8 @@ export function getValueByPath(obj: any, keys: (string | number)[]): any {
   let current = obj
 
   for (const key of keys) {
-    if (current == null) return undefined
+    if (current == null)
+      return undefined
     current = current[key]
   }
 
@@ -285,7 +293,8 @@ export function getValueByPath(obj: any, keys: (string | number)[]): any {
  * Sets a value in an object using a parsed path
  */
 export function setValueByPath(obj: any, keys: (string | number)[], value: any): void {
-  if (keys.length === 0) return
+  if (keys.length === 0)
+    return
 
   let current = obj
 
@@ -294,7 +303,7 @@ export function setValueByPath(obj: any, keys: (string | number)[], value: any):
     if (current[key] == null) {
       // Create object or array based on next key type
       const nextKey = keys[i + 1]
-      current[key] = typeof nextKey === "number" ? [] : {}
+      current[key] = typeof nextKey === 'number' ? [] : {}
     }
     current = current[key]
   }
@@ -321,13 +330,14 @@ export function replaceReactiveObject(target: any, source: any) {
 
   // Recursively update/add properties from source
   for (const key in source) {
-    if (typeof source[key] === "object" && source[key] !== null && !Array.isArray(source[key])) {
+    if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
       // Handle nested objects
-      if (!target[key] || typeof target[key] !== "object" || Array.isArray(target[key])) {
+      if (!target[key] || typeof target[key] !== 'object' || Array.isArray(target[key])) {
         target[key] = {}
       }
       replaceReactiveObject(target[key], source[key])
-    } else {
+    }
+    else {
       // Handle primitive values and arrays
       target[key] = source[key]
     }
@@ -338,20 +348,26 @@ export function replaceReactiveObject(target: any, source: any) {
  * Deep equality comparison for objects
  */
 export function deepEqual(a: any, b: any): boolean {
-  if (a === b) return true
-  if (a == null || b == null) return false
-  if (typeof a !== 'object' || typeof b !== 'object') return false
-  
+  if (a === b)
+    return true
+  if (a == null || b == null)
+    return false
+  if (typeof a !== 'object' || typeof b !== 'object')
+    return false
+
   const keysA = Object.keys(a).sort()
   const keysB = Object.keys(b).sort()
-  
-  if (keysA.length !== keysB.length) return false
-  
+
+  if (keysA.length !== keysB.length)
+    return false
+
   for (let i = 0; i < keysA.length; i++) {
-    if (keysA[i] !== keysB[i]) return false
-    if (!deepEqual(a[keysA[i]], b[keysB[i]])) return false
+    if (keysA[i] !== keysB[i])
+      return false
+    if (!deepEqual(a[keysA[i]], b[keysB[i]]))
+      return false
   }
-  
+
   return true
 }
 
@@ -359,5 +375,5 @@ export function deepEqual(a: any, b: any): boolean {
  * Sanitizes a string for use as an HTML ID attribute
  */
 export function sanitizeId(input: string): string {
-  return input.replace(/\./g, "_").replace(/\[|\]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")
+  return input.replace(/\./g, '_').replace(/\[|\]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
 }

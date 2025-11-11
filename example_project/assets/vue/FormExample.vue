@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Form, useLiveForm } from "live_vue"
+import type { Form } from 'live_vue'
+import { useLiveForm } from 'live_vue'
 
 // Complex form structure with nested arrays
-type ProjectForm = {
+interface ProjectForm {
   name: string
   description: string
   status: string
@@ -35,85 +36,85 @@ const props = defineProps<{
 }>()
 
 const form = useLiveForm<ProjectForm>(() => props.form, {
-  changeEvent: "validate",
-  submitEvent: "submit",
+  changeEvent: 'validate',
+  submitEvent: 'submit',
   debounceInMiliseconds: 200,
 })
 
 // Basic fields
-const nameField = form.field("name")
-const descriptionField = form.field("description")
-const statusField = form.field("status")
+const nameField = form.field('name')
+const descriptionField = form.field('description')
+const statusField = form.field('status')
 
 // Checkbox fields with different approaches
-const emailNotifyField = form.field("notifications", { type: "checkbox", value: "email" })
-const smsNotifyField = form.field("notifications", { type: "checkbox", value: "sms" })
-const pushNotifyField = form.field("notifications", { type: "checkbox", value: "push" })
-const isPublicField = form.field("is_public", { type: "checkbox" })
+const emailNotifyField = form.field('notifications', { type: 'checkbox', value: 'email' })
+const smsNotifyField = form.field('notifications', { type: 'checkbox', value: 'sms' })
+const pushNotifyField = form.field('notifications', { type: 'checkbox', value: 'push' })
+const isPublicField = form.field('is_public', { type: 'checkbox' })
 
 // Nested object fields
-const ownerField = form.field("owner")
-const ownerNameField = ownerField.field("name")
-const ownerEmailField = ownerField.field("email", { type: "email" })
-const ownerRoleField = ownerField.field("role")
+const ownerField = form.field('owner')
+const ownerNameField = ownerField.field('name')
+const ownerEmailField = ownerField.field('email', { type: 'email' })
+const ownerRoleField = ownerField.field('role')
 
 // Array fields
-const teamMembersArray = form.fieldArray("team_members")
-const tasksArray = form.fieldArray("tasks")
+const teamMembersArray = form.fieldArray('team_members')
+const tasksArray = form.fieldArray('tasks')
 
 // Array operations
-const addTeamMember = () => {
+function addTeamMember() {
   teamMembersArray.add({
-    name: "",
-    email: "",
+    name: '',
+    email: '',
     skills: [],
   })
 }
 
-const removeTeamMember = (index: number) => {
+function removeTeamMember(index: number) {
   teamMembersArray.remove(index)
 }
 
-const addTask = () => {
+function addTask() {
   tasksArray.add({
-    title: "",
-    description: "",
-    priority: "medium",
+    title: '',
+    description: '',
+    priority: 'medium',
     assignees: [],
   })
 }
 
-const removeTask = (index: number) => {
+function removeTask(index: number) {
   tasksArray.remove(index)
 }
 
-const addSkillToMember = (memberIndex: number) => {
+function addSkillToMember(memberIndex: number) {
   const member = teamMembersArray.field(memberIndex)
-  const skillsArray = member.fieldArray("skills")
-  skillsArray.add("")
+  const skillsArray = member.fieldArray('skills')
+  skillsArray.add('')
 }
 
-const removeSkillFromMember = (memberIndex: number, skillIndex: number) => {
+function removeSkillFromMember(memberIndex: number, skillIndex: number) {
   const member = teamMembersArray.field(memberIndex)
-  const skillsArray = member.fieldArray("skills")
+  const skillsArray = member.fieldArray('skills')
   skillsArray.remove(skillIndex)
 }
 
-const addAssigneeToTask = (taskIndex: number) => {
+function addAssigneeToTask(taskIndex: number) {
   const task = tasksArray.fieldArray(`[${taskIndex}].assignees`)
   task.add({
-    member_id: "",
-    role: "contributor",
+    member_id: '',
+    role: 'contributor',
   })
 }
 
-const removeAssigneeFromTask = (taskIndex: number, assigneeIndex: number) => {
+function removeAssigneeFromTask(taskIndex: number, assigneeIndex: number) {
   tasksArray.fieldArray(`[${taskIndex}].assignees`).remove(assigneeIndex)
 }
 
-const submitForm = async () => {
+async function submitForm() {
   const result = await form.submit()
-  console.log("Form submission result:", result)
+  console.log('Form submission result:', result)
 }
 </script>
 
@@ -124,21 +125,21 @@ const submitForm = async () => {
       <div class="space-y-8">
         <!-- Basic Project Info -->
         <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 class="text-xl font-semibold mb-4 text-gray-900">Project Information</h2>
+          <h2 class="text-xl font-semibold mb-4 text-gray-900">
+            Project Information
+          </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label :for="nameField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-                >Project Name</label
-              >
+              <label :for="nameField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
               <input
                 v-bind="nameField.inputAttrs.value"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 :class="{ 'border-red-500': nameField.isTouched.value && nameField.errorMessage.value }"
                 placeholder="Enter project name"
-              />
+              >
               <div
                 v-if="nameField.isTouched.value && nameField.errorMessage.value"
-                :id="nameField.inputAttrs.value.id + '-error'"
+                :id="`${nameField.inputAttrs.value.id}-error`"
                 class="text-red-500 text-sm mt-1"
               >
                 {{ nameField.errorMessage.value }}
@@ -146,34 +147,38 @@ const submitForm = async () => {
             </div>
 
             <div>
-              <label :for="statusField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-                >Status</label
-              >
+              <label :for="statusField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
                 v-bind="statusField.inputAttrs.value"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="on_hold">On Hold</option>
-                <option value="completed">Completed</option>
+                <option value="planning">
+                  Planning
+                </option>
+                <option value="active">
+                  Active
+                </option>
+                <option value="on_hold">
+                  On Hold
+                </option>
+                <option value="completed">
+                  Completed
+                </option>
               </select>
             </div>
           </div>
 
           <div class="mt-4">
-            <label :for="descriptionField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-              >Description</label
-            >
+            <label :for="descriptionField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
               v-bind="descriptionField.inputAttrs.value"
               rows="3"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="Describe your project"
-            ></textarea>
+            />
             <div
               v-if="descriptionField.isTouched.value && descriptionField.errorMessage.value"
-              :id="descriptionField.inputAttrs.value.id + '-error'"
+              :id="`${descriptionField.inputAttrs.value.id}-error`"
               class="text-red-500 text-sm mt-1"
             >
               {{ descriptionField.errorMessage.value }}
@@ -185,7 +190,7 @@ const submitForm = async () => {
               <input
                 v-bind="isPublicField.inputAttrs.value"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label :for="isPublicField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 Make this project public
               </label>
@@ -195,13 +200,15 @@ const submitForm = async () => {
 
         <!-- Notification Preferences (Multi-Checkbox Demo) -->
         <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 class="text-xl font-semibold mb-4 text-gray-900">Notification Preferences</h2>
+          <h2 class="text-xl font-semibold mb-4 text-gray-900">
+            Notification Preferences
+          </h2>
           <div class="space-y-3">
             <div class="flex items-center">
               <input
                 v-bind="emailNotifyField.inputAttrs.value"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label :for="emailNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 Email Notifications
               </label>
@@ -210,7 +217,7 @@ const submitForm = async () => {
               <input
                 v-bind="smsNotifyField.inputAttrs.value"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label :for="smsNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 SMS Notifications
               </label>
@@ -219,7 +226,7 @@ const submitForm = async () => {
               <input
                 v-bind="pushNotifyField.inputAttrs.value"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label :for="pushNotifyField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 Push Notifications
               </label>
@@ -232,7 +239,7 @@ const submitForm = async () => {
                 v-bind="isPublicField.inputAttrs.value"
                 type="checkbox"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label :for="isPublicField.inputAttrs.value.id" class="ml-2 block text-sm text-gray-700">
                 Make this project public
               </label>
@@ -242,21 +249,21 @@ const submitForm = async () => {
 
         <!-- Project Owner -->
         <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 class="text-xl font-semibold mb-4 text-gray-900">Project Owner</h2>
+          <h2 class="text-xl font-semibold mb-4 text-gray-900">
+            Project Owner
+          </h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label :for="ownerNameField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-                >Name</label
-              >
+              <label :for="ownerNameField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input
                 v-bind="ownerNameField.inputAttrs.value"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 :class="{ 'border-red-500': ownerNameField.isTouched.value && ownerNameField.errorMessage.value }"
                 placeholder="Owner name"
-              />
+              >
               <div
                 v-if="ownerNameField.isTouched.value && ownerNameField.errorMessage.value"
-                :id="ownerNameField.inputAttrs.value.id + '-error'"
+                :id="`${ownerNameField.inputAttrs.value.id}-error`"
                 class="text-red-500 text-sm mt-1"
               >
                 {{ ownerNameField.errorMessage.value }}
@@ -264,18 +271,16 @@ const submitForm = async () => {
             </div>
 
             <div>
-              <label :for="ownerEmailField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-                >Email</label
-              >
+              <label :for="ownerEmailField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 v-bind="ownerEmailField.inputAttrs.value"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 :class="{ 'border-red-500': ownerEmailField.isTouched.value && ownerEmailField.errorMessage.value }"
                 placeholder="owner@example.com"
-              />
+              >
               <div
                 v-if="ownerEmailField.isTouched.value && ownerEmailField.errorMessage.value"
-                :id="ownerEmailField.inputAttrs.value.id + '-error'"
+                :id="`${ownerEmailField.inputAttrs.value.id}-error`"
                 class="text-red-500 text-sm mt-1"
               >
                 {{ ownerEmailField.errorMessage.value }}
@@ -283,17 +288,23 @@ const submitForm = async () => {
             </div>
 
             <div>
-              <label :for="ownerRoleField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1"
-                >Role</label
-              >
+              <label :for="ownerRoleField.inputAttrs.value.id" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
               <select
                 v-bind="ownerRoleField.inputAttrs.value"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                <option value="project_manager">Project Manager</option>
-                <option value="tech_lead">Tech Lead</option>
-                <option value="product_owner">Product Owner</option>
-                <option value="team_lead">Team Lead</option>
+                <option value="project_manager">
+                  Project Manager
+                </option>
+                <option value="tech_lead">
+                  Tech Lead
+                </option>
+                <option value="product_owner">
+                  Product Owner
+                </option>
+                <option value="team_lead">
+                  Team Lead
+                </option>
               </select>
             </div>
           </div>
@@ -302,10 +313,12 @@ const submitForm = async () => {
         <!-- Team Members -->
         <div class="bg-white p-6 rounded-lg shadow-sm border">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900">Team Members</h2>
+            <h2 class="text-xl font-semibold text-gray-900">
+              Team Members
+            </h2>
             <button
-              @click="addTeamMember"
               class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+              @click="addTeamMember"
             >
               Add Member
             </button>
@@ -321,8 +334,10 @@ const submitForm = async () => {
             class="border border-gray-200 rounded-lg p-4 mb-4"
           >
             <div class="flex justify-between items-start mb-4">
-              <h3 class="text-lg font-medium">Member {{ memberIndex + 1 }}</h3>
-              <button @click="removeTeamMember(memberIndex)" class="text-red-600 hover:text-red-800 transition-colors">
+              <h3 class="text-lg font-medium">
+                Member {{ memberIndex + 1 }}
+              </h3>
+              <button class="text-red-600 hover:text-red-800 transition-colors" @click="removeTeamMember(memberIndex)">
                 Remove
               </button>
             </div>
@@ -332,8 +347,7 @@ const submitForm = async () => {
                 <label
                   :for="memberField.field('name').inputAttrs.value.id"
                   class="block text-sm font-medium text-gray-700 mb-1"
-                  >Name</label
-                >
+                >Name</label>
                 <input
                   v-bind="memberField.field('name').inputAttrs.value"
                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -342,10 +356,10 @@ const submitForm = async () => {
                       memberField.field('name').isTouched.value && memberField.field('name').errorMessage.value,
                   }"
                   placeholder="Member name"
-                />
+                >
                 <div
                   v-if="memberField.field('name').errorMessage.value"
-                  :id="memberField.field('name').inputAttrs.value.id + '-error'"
+                  :id="`${memberField.field('name').inputAttrs.value.id}-error`"
                   class="text-red-500 text-sm mt-1"
                 >
                   {{ memberField.field("name").errorMessage.value }}
@@ -356,8 +370,7 @@ const submitForm = async () => {
                 <label
                   :for="memberField.field('email').inputAttrs.value.id"
                   class="block text-sm font-medium text-gray-700 mb-1"
-                  >Email</label
-                >
+                >Email</label>
                 <input
                   v-bind="memberField.field('email', { type: 'email' }).inputAttrs.value"
                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -366,10 +379,10 @@ const submitForm = async () => {
                       memberField.field('email').isTouched.value && memberField.field('email').errorMessage.value,
                   }"
                   placeholder="member@example.com"
-                />
+                >
                 <div
                   v-if="memberField.field('email').isTouched.value && memberField.field('email').errorMessage.value"
-                  :id="memberField.field('email').inputAttrs.value.id + '-error'"
+                  :id="`${memberField.field('email').inputAttrs.value.id}-error`"
                   class="text-red-500 text-sm mt-1"
                 >
                   {{ memberField.field("email").errorMessage.value }}
@@ -382,8 +395,8 @@ const submitForm = async () => {
               <div class="flex justify-between items-center mb-2">
                 <label class="block text-sm font-medium text-gray-700">Skills</label>
                 <button
-                  @click="addSkillToMember(memberIndex)"
                   class="text-blue-600 hover:text-blue-800 text-sm transition-colors"
+                  @click="addSkillToMember(memberIndex)"
                 >
                   Add Skill
                 </button>
@@ -399,10 +412,10 @@ const submitForm = async () => {
                     v-bind="skillField.inputAttrs.value"
                     class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     placeholder="Enter skill"
-                  />
+                  >
                   <button
-                    @click="removeSkillFromMember(memberIndex, skillIndex)"
                     class="text-red-600 hover:text-red-800 px-2 transition-colors"
+                    @click="removeSkillFromMember(memberIndex, skillIndex)"
                   >
                     ×
                   </button>
@@ -415,10 +428,12 @@ const submitForm = async () => {
         <!-- Tasks with Nested Assignees -->
         <div class="bg-white p-6 rounded-lg shadow-sm border">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold">Tasks</h2>
+            <h2 class="text-xl font-semibold">
+              Tasks
+            </h2>
             <button
-              @click="addTask"
               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              @click="addTask"
             >
               Add Task
             </button>
@@ -434,8 +449,10 @@ const submitForm = async () => {
             class="border border-gray-200 rounded-lg p-4 mb-4"
           >
             <div class="flex justify-between items-start mb-4">
-              <h3 class="text-lg font-medium">Task {{ taskIndex + 1 }}</h3>
-              <button @click="removeTask(taskIndex)" class="text-red-600 hover:text-red-800 transition-colors">
+              <h3 class="text-lg font-medium">
+                Task {{ taskIndex + 1 }}
+              </h3>
+              <button class="text-red-600 hover:text-red-800 transition-colors" @click="removeTask(taskIndex)">
                 Remove
               </button>
             </div>
@@ -445,8 +462,7 @@ const submitForm = async () => {
                 <label
                   :for="taskField.field('title').inputAttrs.value.id"
                   class="block text-sm font-medium text-gray-700 mb-1"
-                  >Title</label
-                >
+                >Title</label>
                 <input
                   v-bind="taskField.field('title').inputAttrs.value"
                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -455,10 +471,10 @@ const submitForm = async () => {
                       taskField.field('title').isTouched.value && taskField.field('title').errorMessage.value,
                   }"
                   placeholder="Task title"
-                />
+                >
                 <div
                   v-if="taskField.field('title').isTouched.value && taskField.field('title').errorMessage.value"
-                  :id="taskField.field('title').inputAttrs.value.id + '-error'"
+                  :id="`${taskField.field('title').inputAttrs.value.id}-error`"
                   class="text-red-500 text-sm mt-1"
                 >
                   {{ taskField.field("title").errorMessage.value }}
@@ -469,16 +485,23 @@ const submitForm = async () => {
                 <label
                   :for="taskField.field('priority').inputAttrs.value.id"
                   class="block text-sm font-medium text-gray-700 mb-1"
-                  >Priority</label
-                >
+                >Priority</label>
                 <select
                   v-bind="taskField.field('priority').inputAttrs.value"
                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
+                  <option value="low">
+                    Low
+                  </option>
+                  <option value="medium">
+                    Medium
+                  </option>
+                  <option value="high">
+                    High
+                  </option>
+                  <option value="urgent">
+                    Urgent
+                  </option>
                 </select>
               </div>
             </div>
@@ -487,14 +510,13 @@ const submitForm = async () => {
               <label
                 :for="taskField.field('description').inputAttrs.value.id"
                 class="block text-sm font-medium text-gray-700 mb-1"
-                >Description</label
-              >
+              >Description</label>
               <textarea
                 v-bind="taskField.field('description').inputAttrs.value"
                 rows="2"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 placeholder="Task description"
-              ></textarea>
+              />
             </div>
 
             <!-- Assignees nested array -->
@@ -502,8 +524,8 @@ const submitForm = async () => {
               <div class="flex justify-between items-center mb-2">
                 <label class="block text-sm font-medium text-gray-700">Assignees</label>
                 <button
-                  @click="addAssigneeToTask(taskIndex)"
                   class="text-purple-600 hover:text-purple-800 text-sm transition-colors"
+                  @click="addAssigneeToTask(taskIndex)"
                 >
                   Add Assignee
                 </button>
@@ -520,21 +542,27 @@ const submitForm = async () => {
                       v-bind="assigneeField.field('member_id').inputAttrs.value"
                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                       placeholder="Member ID"
-                    />
+                    >
                   </div>
                   <div class="flex-1">
                     <select
                       v-bind="assigneeField.field('role').inputAttrs.value"
                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-                      <option value="contributor">Contributor</option>
-                      <option value="reviewer">Reviewer</option>
-                      <option value="lead">Lead</option>
+                      <option value="contributor">
+                        Contributor
+                      </option>
+                      <option value="reviewer">
+                        Reviewer
+                      </option>
+                      <option value="lead">
+                        Lead
+                      </option>
                     </select>
                   </div>
                   <button
-                    @click="removeAssigneeFromTask(taskIndex, assigneeIndex)"
                     class="text-red-600 hover:text-red-800 px-2 pb-2 transition-colors"
+                    @click="removeAssigneeFromTask(taskIndex, assigneeIndex)"
                   >
                     ×
                   </button>
@@ -551,7 +579,9 @@ const submitForm = async () => {
       <div class="bg-white p-6 rounded-lg shadow-sm border space-y-6">
         <!-- Form Status -->
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Status</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Form Status
+          </h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-sm font-medium text-gray-700">Valid:</span>
@@ -575,21 +605,23 @@ const submitForm = async () => {
         </div>
 
         <!-- Divider -->
-        <div class="border-t border-gray-200"></div>
+        <div class="border-t border-gray-200" />
 
         <!-- Form Actions -->
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Actions
+          </h3>
           <div class="space-y-3">
             <button
-              @click="form.reset()"
               class="w-full bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
+              @click="form.reset()"
             >
               Reset Form
             </button>
             <button
-              @click="submitForm"
               class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              @click="submitForm"
             >
               Submit Project
             </button>
@@ -597,21 +629,33 @@ const submitForm = async () => {
         </div>
 
         <!-- Divider -->
-        <div class="border-t border-gray-200"></div>
+        <div class="border-t border-gray-200" />
 
         <!-- Server State -->
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Data</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Form Data
+          </h3>
           <div class="space-y-3">
             <div class="bg-gray-50 rounded-md p-3">
-              <h4 class="text-sm font-medium text-gray-700 mb-2">Form Name</h4>
-              <p class="text-sm text-gray-600">{{ props.form.name }}</p>
+              <h4 class="text-sm font-medium text-gray-700 mb-2">
+                Form Name
+              </h4>
+              <p class="text-sm text-gray-600">
+                {{ props.form.name }}
+              </p>
             </div>
             <div class="bg-gray-50 rounded-md p-3">
-              <h4 class="text-sm font-medium text-gray-700 mb-2">Validation</h4>
-              <p class="text-xs text-gray-500">Valid: {{ props.form.valid }}</p>
+              <h4 class="text-sm font-medium text-gray-700 mb-2">
+                Validation
+              </h4>
+              <p class="text-xs text-gray-500">
+                Valid: {{ props.form.valid }}
+              </p>
               <div v-if="Object.keys(props.form.errors || {}).length > 0" class="mt-2">
-                <p class="text-xs font-medium text-red-600 mb-1">Current Errors:</p>
+                <p class="text-xs font-medium text-red-600 mb-1">
+                  Current Errors:
+                </p>
                 <ul class="text-xs text-red-500 space-y-1">
                   <li v-for="(errors, field) in props.form.errors" :key="field" class="flex justify-between">
                     <span class="font-mono">{{ field }}:</span>

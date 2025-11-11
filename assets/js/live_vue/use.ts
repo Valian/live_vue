@@ -1,17 +1,18 @@
-import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef, Ref } from "vue"
-import { MaybeRefOrGetter } from "vue"
-import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types.js"
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue'
+import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from './types.js'
+import { computed, inject, onMounted, onUnmounted, ref, toValue, watchEffect } from 'vue'
 
-export const liveInjectKey = "_live_vue"
+export const liveInjectKey = '_live_vue'
 
 /**
  * Returns the LiveVue instance.
  * Can be used to access the LiveVue instance from within a LiveVue component.
  * It allows to e.g. push events to the LiveView.
  */
-export const useLiveVue = (): LiveHook => {
+export function useLiveVue(): LiveHook {
   const live = inject<LiveHook>(liveInjectKey)
-  if (!live) throw new Error("LiveVue not provided. Are you using this inside a LiveVue component?")
+  if (!live)
+    throw new Error('LiveVue not provided. Are you using this inside a LiveVue component?')
   return live
 }
 
@@ -22,14 +23,15 @@ export const useLiveVue = (): LiveHook => {
  * @param callback - The callback to call when the event is received.
  */
 export function useLiveEvent<T>(event: string, callback: (data: T) => void) {
-  let callbackRef: ReturnType<LiveHook["handleEvent"]> | null = null
+  let callbackRef: ReturnType<LiveHook['handleEvent']> | null = null
   onMounted(() => {
     const live = useLiveVue()
     callbackRef = live.handleEvent(event, callback)
   })
   onUnmounted(() => {
     const live = useLiveVue()
-    if (callbackRef) live.removeHandleEvent(callbackRef)
+    if (callbackRef)
+      live.removeHandleEvent(callbackRef)
     callbackRef = null
   })
 }
@@ -40,10 +42,11 @@ export function useLiveEvent<T>(event: string, callback: (data: T) => void) {
  * Works in the same way as the `live_patch` and `live_redirect` functions in LiveView.
  * @returns An object with `patch` and `navigate` functions.
  */
-export const useLiveNavigation = () => {
+export function useLiveNavigation() {
   const live = useLiveVue()
   const liveSocket = live.liveSocket
-  if (!liveSocket) throw new Error("LiveSocket not initialized")
+  if (!liveSocket)
+    throw new Error('LiveSocket not initialized')
 
   /**
    * Patches the current LiveView.
@@ -51,12 +54,12 @@ export const useLiveNavigation = () => {
    * @param opts - The options for the navigation.
    */
   const patch = (hrefOrQueryParams: string | Record<string, string>, opts: { replace?: boolean } = {}) => {
-    let href = typeof hrefOrQueryParams === "string" ? hrefOrQueryParams : window.location.pathname
-    if (typeof hrefOrQueryParams === "object") {
+    let href = typeof hrefOrQueryParams === 'string' ? hrefOrQueryParams : window.location.pathname
+    if (typeof hrefOrQueryParams === 'object') {
       const queryParams = new URLSearchParams(hrefOrQueryParams)
       href = `${href}?${queryParams.toString()}`
     }
-    liveSocket.pushHistoryPatch(new Event("click"), href, opts.replace ? "replace" : "push", null)
+    liveSocket.pushHistoryPatch(new Event('click'), href, opts.replace ? 'replace' : 'push', null)
   }
 
   /**
@@ -65,7 +68,7 @@ export const useLiveNavigation = () => {
    * @param opts - The options for the navigation.
    */
   const navigate = (href: string, opts: { replace?: boolean } = {}) => {
-    liveSocket.historyRedirect(new Event("click"), href, opts.replace ? "replace" : "push", null, null)
+    liveSocket.historyRedirect(new Event('click'), href, opts.replace ? 'replace' : 'push', null, null)
   }
 
   return {
@@ -102,10 +105,7 @@ export interface UseLiveUploadReturn {
  * @param options - The options for the upload. Mostly names of events to use for phx-change and phx-submit.
  * @returns An object with upload methods and reactive state
  */
-export const useLiveUpload = (
-  uploadConfig: MaybeRefOrGetter<UploadConfig>,
-  options: UploadOptions
-): UseLiveUploadReturn => {
+export function useLiveUpload(uploadConfig: MaybeRefOrGetter<UploadConfig>, options: UploadOptions): UseLiveUploadReturn {
   const live = useLiveVue()
   const inputEl = ref<HTMLInputElement | null>(null)
 
@@ -114,30 +114,31 @@ export const useLiveUpload = (
     if (!inputEl.value) {
       // Create a form to wrap the input, with phx-change="validate"
       const uploadConfigValue = toValue(uploadConfig)
-      const form = document.createElement("form")
-      if (options.changeEvent) form.setAttribute("phx-change", options.changeEvent)
-      form.setAttribute("phx-submit", options.submitEvent)
-      form.style.display = "none"
+      const form = document.createElement('form')
+      if (options.changeEvent)
+        form.setAttribute('phx-change', options.changeEvent)
+      form.setAttribute('phx-submit', options.submitEvent)
+      form.style.display = 'none'
 
-      const input = document.createElement("input")
-      input.type = "file"
+      const input = document.createElement('input')
+      input.type = 'file'
       input.id = uploadConfigValue.ref
       input.name = uploadConfigValue.name
 
       // Phoenix LiveView upload attributes - these are critical for Phoenix to find and manage the input
-      input.setAttribute("data-phx-hook", "Phoenix.LiveFileUpload")
-      input.setAttribute("data-phx-update", "ignore")
-      input.setAttribute("data-phx-upload-ref", uploadConfigValue.ref)
+      input.setAttribute('data-phx-hook', 'Phoenix.LiveFileUpload')
+      input.setAttribute('data-phx-update', 'ignore')
+      input.setAttribute('data-phx-upload-ref', uploadConfigValue.ref)
       form.appendChild(input)
 
       // Set accept attribute if specified
-      if (uploadConfigValue.accept && typeof uploadConfigValue.accept === "string") {
+      if (uploadConfigValue.accept && typeof uploadConfigValue.accept === 'string') {
         input.accept = uploadConfigValue.accept
       }
 
       // Set auto_upload attribute if specified
       if (uploadConfigValue.auto_upload) {
-        input.setAttribute("data-phx-auto-upload", "true")
+        input.setAttribute('data-phx-auto-upload', 'true')
       }
 
       // Set multiple attribute based on max_entries
@@ -148,11 +149,11 @@ export const useLiveUpload = (
       // Update entry refs attributes based on current entries
       const updateEntryRefs = () => {
         const config = toValue(uploadConfig)
-        const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(",")
+        const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(',')
 
-        input.setAttribute("data-phx-active-refs", joinEntries(config.entries))
-        input.setAttribute("data-phx-done-refs", joinEntries(config.entries.filter(e => e.done)))
-        input.setAttribute("data-phx-preflighted-refs", joinEntries(config.entries.filter(e => e.preflighted)))
+        input.setAttribute('data-phx-active-refs', joinEntries(config.entries))
+        input.setAttribute('data-phx-done-refs', joinEntries(config.entries.filter(e => e.done)))
+        input.setAttribute('data-phx-preflighted-refs', joinEntries(config.entries.filter(e => e.preflighted)))
       }
 
       const unwatchConfig = watchEffect(() => updateEntryRefs())
@@ -187,7 +188,8 @@ export const useLiveUpload = (
   // Calculate overall progress
   const progress = computed(() => {
     const allEntries = entries.value
-    if (allEntries.length === 0) return 0
+    if (allEntries.length === 0)
+      return 0
 
     const totalProgress = allEntries.reduce((sum: number, entry) => sum + (entry.progress || 0), 0)
     return Math.round(totalProgress / allEntries.length)
@@ -202,11 +204,13 @@ export const useLiveUpload = (
 
   // Manually add files (e.g., from drag-and-drop or DataTransfer)
   const addFiles = (input: (File | Blob)[] | DataTransfer) => {
-    if (!inputEl.value) return
+    if (!inputEl.value)
+      return
 
     if (input instanceof DataTransfer) {
       inputEl.value.files = input.files
-    } else if (Array.isArray(input)) {
+    }
+    else if (Array.isArray(input)) {
       const dataTransfer = new DataTransfer()
       input.forEach(f => dataTransfer.items.add(f as File))
       inputEl.value.files = dataTransfer.files
@@ -217,7 +221,7 @@ export const useLiveUpload = (
     // Use setTimeout to ensure Phoenix has had a chance to initialize the upload system
     setTimeout(() => {
       if (inputEl.value) {
-        inputEl.value.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }))
+        inputEl.value.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
       }
     }, 0)
   }
@@ -230,7 +234,7 @@ export const useLiveUpload = (
     if (inputEl.value) {
       // Phoenix will handle the upload automatically based on the auto_upload setting
       // We could push a manual upload event here if needed
-      inputEl.value.form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+      inputEl.value.form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     }
   }
 
@@ -238,11 +242,12 @@ export const useLiveUpload = (
   const cancel = (ref?: string) => {
     if (ref) {
       // Cancel specific entry
-      live.pushEvent("cancel-upload", { ref })
-    } else {
+      live.pushEvent('cancel-upload', { ref })
+    }
+    else {
       // Cancel all entries
-      entries.value.forEach(entry => {
-        live.pushEvent("cancel-upload", { ref: entry.ref })
+      entries.value.forEach((entry) => {
+        live.pushEvent('cancel-upload', { ref: entry.ref })
       })
     }
   }
@@ -250,7 +255,7 @@ export const useLiveUpload = (
   // Clear the input and reset state
   const clear = () => {
     if (inputEl.value) {
-      inputEl.value.value = ""
+      inputEl.value.value = ''
     }
   }
 
@@ -297,15 +302,12 @@ export interface UseEventReplyReturn<T, P> {
  * @param options - Configuration options including defaultValue and updateData function
  * @returns An object with reactive state and control functions
  */
-export const useEventReply = <T = any, P extends Record<string, any> | void = Record<string, any>>(
-  eventName: string,
-  options?: UseEventReplyOptions<T>
-): UseEventReplyReturn<T, P> => {
+export function useEventReply<T = any, P extends Record<string, any> | void = Record<string, any>>(eventName: string, options?: UseEventReplyOptions<T>): UseEventReplyReturn<T, P> {
   const live = useLiveVue()
-  
+
   const data = ref<T | null>(options?.defaultValue ?? null) as Ref<T | null>
   const isLoading = ref(false)
-  
+
   let executionToken = 0
   let pendingReject: ((reason?: any) => void) | null = null
 
@@ -317,10 +319,10 @@ export const useEventReply = <T = any, P extends Record<string, any> | void = Re
 
     // Set loading state
     isLoading.value = true
-    
+
     // Create a unique token for this execution
     const currentToken = ++executionToken
-    
+
     return new Promise<T>((resolve, reject) => {
       // Store reject function so we can call it on cancel
       pendingReject = reject
@@ -371,19 +373,21 @@ export interface UseLiveConnectionReturn {
  * Provides reactive connection state and convenience methods.
  * @returns An object with reactive connection state and computed connection status
  */
-export const useLiveConnection = (): UseLiveConnectionReturn => {
+export function useLiveConnection(): UseLiveConnectionReturn {
   const live = useLiveVue()
   const liveSocket = live.liveSocket
-  if (!liveSocket) throw new Error("LiveSocket not initialized")
-  
+  if (!liveSocket)
+    throw new Error('LiveSocket not initialized')
+
   const socket = liveSocket.socket
-  if (!socket) throw new Error("Socket not available")
+  if (!socket)
+    throw new Error('Socket not available')
 
   // Initialize with current connection state
   const connectionState = ref(socket.connectionState())
-  
+
   // Computed convenience property
-  const isConnected = computed(() => connectionState.value === "open")
+  const isConnected = computed(() => connectionState.value === 'open')
 
   let openRef: string | null = null
   let closeRef: string | null = null
@@ -392,13 +396,13 @@ export const useLiveConnection = (): UseLiveConnectionReturn => {
   onMounted(() => {
     // Register connection event listeners
     openRef = socket.onOpen(() => {
-      connectionState.value = "open"
+      connectionState.value = 'open'
     })
-    
+
     closeRef = socket.onClose(() => {
-      connectionState.value = "closed"
+      connectionState.value = 'closed'
     })
-    
+
     errorRef = socket.onError(() => {
       // Update state to reflect current socket state after error
       connectionState.value = socket.connectionState()

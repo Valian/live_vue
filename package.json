@@ -1,10 +1,37 @@
 {
   "name": "live_vue",
+  "type": "module",
   "version": "1.0.0-rc.4",
   "description": "E2E reactivity for Vue and LiveView",
-  "license": "MIT",
   "author": "Jakub Skałecki <jakub@skalecki.dev>",
-  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Valian/live_vue.git"
+  },
+  "exports": {
+    "./vitePlugin": {
+      "types": "./priv/static/vitePlugin.d.ts",
+      "import": "./priv/static/vitePlugin.js"
+    },
+    "./server": {
+      "types": "./priv/static/server.d.ts",
+      "import": "./priv/static/server.js"
+    },
+    ".": {
+      "types": "./priv/static/index.d.ts",
+      "import": "./priv/static/index.js"
+    }
+  },
+  "main": "priv/static/index.js",
+  "types": "priv/static/index.d.ts",
+  "files": [
+    "LICENSE.md",
+    "README.md",
+    "package.json",
+    "priv/static/*",
+    "priv/static/*.d.ts"
+  ],
   "scripts": {
     "format": "npx prettier --write assets",
     "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
@@ -20,9 +47,6 @@
     "e2e:test:debug": "npx vite build --config test/e2e/vite.config.js && npx playwright test --config test/e2e/playwright.config.js --debug"
   },
   "devDependencies": {
-    "phoenix": "file:deps/phoenix",
-    "phoenix_html": "file:deps/phoenix_html",
-    "phoenix_live_view": "file:deps/phoenix_live_view",
     "@antfu/eslint-config": "^6.2.0",
     "@playwright/test": "^1.53.0",
     "@types/node": "^22.9.1",
@@ -31,39 +55,15 @@
     "concurrently": "^9.0.1",
     "eslint": "^9.38.0",
     "jsdom": "^26.1.0",
+    "phoenix": "file:deps/phoenix",
+    "phoenix_html": "file:deps/phoenix_html",
+    "phoenix_live_view": "file:deps/phoenix_live_view",
     "prettier": "2.8.7",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vitest": "^3.2.4",
     "vue": "^3.5.10"
   },
-  "main": "priv/static/index.js",
-  "types": "priv/static/index.d.ts",
-  "exports": {
-    "./vitePlugin": {
-      "import": "./priv/static/vitePlugin.js",
-      "types": "./priv/static/vitePlugin.d.ts"
-    },
-    "./server": {
-      "import": "./priv/static/server.js",
-      "types": "./priv/static/server.d.ts"
-    },
-    ".": {
-      "import": "./priv/static/index.js",
-      "types": "./priv/static/index.d.ts"
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/Valian/live_vue.git"
-  },
-  "files": [
-    "README.md",
-    "LICENSE.md",
-    "package.json",
-    "priv/static/*",
-    "priv/static/*.d.ts"
-  ],
   "overrides": {
     "nanoid": "^3.3.8",
     "rollup": "^4.22.4"

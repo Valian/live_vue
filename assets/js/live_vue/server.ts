@@ -1,30 +1,32 @@
 // @ts-config ./tsconfig.server.json
 
-import fs from "fs"
-import { basename, resolve } from "path"
-import { ViewHook } from "phoenix_live_view"
-import { App, Component, createSSRApp, h } from "vue"
-import { renderToString, type SSRContext } from "vue/server-renderer"
-import { migrateToLiveVueApp } from "./app.js"
-import { LiveVueOptions, VueArgs } from "./types.js"
-import { mapValues } from "./utils.js"
+import type { ViewHook } from 'phoenix_live_view'
+import type { App, Component } from 'vue'
+import type { SSRContext } from 'vue/server-renderer'
+import type { LiveVueOptions, VueArgs } from './types.js'
+import fs from 'node:fs'
+import { basename, resolve } from 'node:path'
+import { createSSRApp, h } from 'vue'
+import { renderToString } from 'vue/server-renderer'
+import { migrateToLiveVueApp } from './app.js'
+import { mapValues } from './utils.js'
 
 type Components = Record<string, Component>
 type Manifest = Record<string, string[]>
 
-const mockLive: Partial<Omit<ViewHook, "el">> & {
+const mockLive: Partial<Omit<ViewHook, 'el'>> & {
   el: {}
   liveSocket: {}
   removeHandleEvent: () => void
   upload: () => void
   uploadTo: () => void
-  vue: Omit<VueArgs, "app"> & { app: object }
+  vue: Omit<VueArgs, 'app'> & { app: object }
 } = {
   el: {},
-  liveSocket: { socket: { connectionState: () => "closed" } } as any,
+  liveSocket: { socket: { connectionState: () => 'closed' } } as any,
   pushEvent: () => Promise.resolve(0),
   pushEventTo: () => Promise.resolve([]),
-  handleEvent: () => ({ event: "", callback: () => {} }),
+  handleEvent: () => ({ event: '', callback: () => {} }),
   removeHandleEvent: () => {},
   upload: () => {},
   uploadTo: () => {},
@@ -34,12 +36,12 @@ const mockLive: Partial<Omit<ViewHook, "el">> & {
     app: {},
   },
 }
-export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest: Manifest = {}) => {
+export function getRender(componentsOrApp: Components | LiveVueOptions, manifest: Manifest = {}) {
   const { resolve, setup } = migrateToLiveVueApp(componentsOrApp)
 
   return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
     const component = await resolve(name)
-    const slotComponents = mapValues(slots, html => () => h("div", { innerHTML: html }))
+    const slotComponents = mapValues(slots, html => () => h('div', { innerHTML: html }))
     const app = setup({
       createApp: createSSRApp,
       component,
@@ -50,7 +52,7 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
           // we don't want to mount the app in SSR
           app.mount = (...args: unknown[]): any => undefined
           // we don't have hook instance in SSR, so we need to mock it
-          app.provide("_live_vue", Object.assign({}, mockLive))
+          app.provide('_live_vue', Object.assign({}, mockLive))
         },
       },
       // @ts-ignore - this is just an IDE issue. the compiler is correctly processing this with the server tsconfig
@@ -58,7 +60,8 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
       ssr: true,
     })
 
-    if (!app) throw new Error("Setup function did not return a Vue app!")
+    if (!app)
+      throw new Error('Setup function did not return a Vue app!')
 
     const ctx: SSRContext = {}
     const html = await renderToString(app, ctx)
@@ -68,7 +71,7 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
     // request.
     const preloadLinks = renderPreloadLinks(ctx.modules, manifest)
     // easy to split structure
-    return preloadLinks + "<!-- preload -->" + html
+    return `${preloadLinks}<!-- preload -->${html}`
   }
 }
 /**
@@ -78,24 +81,25 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
  * @param path - The path to the manifest file.
  * @returns A record of the assets.
  */
-export const loadManifest = (path: string): Record<string, string[]> => {
+export function loadManifest(path: string): Record<string, string[]> {
   try {
     // it's generated only in prod build
-    const content = fs.readFileSync(resolve(path), "utf-8")
+    const content = fs.readFileSync(resolve(path), 'utf-8')
     return JSON.parse(content)
-  } catch (e) {
+  }
+  catch (e) {
     // manifest is not available in dev, so let's just ignore it
     return {}
   }
 }
 
-function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) {
-  let links = ""
+function renderPreloadLinks(modules: SSRContext['modules'], manifest: Manifest) {
+  let links = ''
   const seen = new Set()
   modules.forEach((id: string) => {
     const files = manifest[id]
     if (files) {
-      files.forEach(file => {
+      files.forEach((file) => {
         if (!seen.has(file)) {
           seen.add(file)
           const filename = basename(file)
@@ -114,22 +118,29 @@ function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) 
 }
 
 function renderPreloadLink(file: string) {
-  if (file.endsWith(".js")) {
+  if (file.endsWith('.js')) {
     return `<link rel="modulepreload" crossorigin href="${file}">`
-  } else if (file.endsWith(".css")) {
+  }
+  else if (file.endsWith('.css')) {
     return `<link rel="stylesheet" href="${file}">`
-  } else if (file.endsWith(".woff")) {
+  }
+  else if (file.endsWith('.woff')) {
     return ` <link rel="preload" href="${file}" as="font" type="font/woff" crossorigin>`
-  } else if (file.endsWith(".woff2")) {
+  }
+  else if (file.endsWith('.woff2')) {
     return ` <link rel="preload" href="${file}" as="font" type="font/woff2" crossorigin>`
-  } else if (file.endsWith(".gif")) {
+  }
+  else if (file.endsWith('.gif')) {
     return ` <link rel="preload" href="${file}" as="image" type="image/gif">`
-  } else if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
+  }
+  else if (file.endsWith('.jpg') || file.endsWith('.jpeg')) {
     return ` <link rel="preload" href="${file}" as="image" type="image/jpeg">`
-  } else if (file.endsWith(".png")) {
+  }
+  else if (file.endsWith('.png')) {
     return ` <link rel="preload" href="${file}" as="image" type="image/png">`
-  } else {
+  }
+  else {
     // TODO
-    return ""
+    return ''
   }
 }

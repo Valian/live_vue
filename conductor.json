@@ -1,6 +1,6 @@
 {
-    "scripts": {
-        "setup": "./conductor-setup.sh",
-        "run": "mix assets.watch"
-    }
+  "scripts": {
+    "setup": "./conductor-setup.sh",
+    "run": "mix assets.watch"
+  }
 }

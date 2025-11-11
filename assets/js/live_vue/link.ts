@@ -1,9 +1,9 @@
-import { computed, defineComponent, h } from "vue"
+import { computed, defineComponent, h } from 'vue'
 
-type PhxLinkAttrs = {
-  href: string
-  "data-phx-link"?: "redirect" | "patch"
-  "data-phx-link-state"?: "replace" | "push"
+interface PhxLinkAttrs {
+  'href': string
+  'data-phx-link'?: 'redirect' | 'patch'
+  'data-phx-link-state'?: 'replace' | 'push'
 }
 
 export default defineComponent({
@@ -51,25 +51,25 @@ export default defineComponent({
     const linkAttrs = computed<PhxLinkAttrs>(() => {
       if (!props.patch && !props.navigate) {
         return {
-          href: props.href || "#",
+          href: props.href || '#',
         }
       }
 
       return {
-        href: (props.navigate ? props.navigate : props.patch) || "#",
-        "data-phx-link": props.navigate ? "redirect" : "patch",
-        "data-phx-link-state": props.replace ? "replace" : "push",
+        'href': (props.navigate ? props.navigate : props.patch) || '#',
+        'data-phx-link': props.navigate ? 'redirect' : 'patch',
+        'data-phx-link-state': props.replace ? 'replace' : 'push',
       }
     })
 
     return () => {
       return h(
-        "a",
+        'a',
         {
           ...attrs,
           ...linkAttrs.value,
         },
-        slots
+        slots,
       )
     }
   },

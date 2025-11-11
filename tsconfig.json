@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2020",
+    "baseUrl": ".",
     "module": "ES2020",
     "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declarationDir": "./priv/static",
-    "declaration": true,
-    "emitDeclarationOnly": false,
-    "outDir": "./priv/static",
-    "allowJs": true,
-    "baseUrl": ".",
     "paths": {
       "live_vue": ["./priv/static/index"]
-    }
+    },
+    "allowJs": true,
+    "strict": true,
+    "declaration": true,
+    "declarationDir": "./priv/static",
+    "emitDeclarationOnly": false,
+    "outDir": "./priv/static",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules"]
 }

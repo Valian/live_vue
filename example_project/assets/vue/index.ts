@@ -1,10 +1,12 @@
+import type { ComponentMap, LiveHook } from 'live_vue'
+import type { Component } from 'vue'
+import { createLiveVue, findComponent } from 'live_vue'
+import { h } from 'vue'
 // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
-import "vite/modulepreload-polyfill"
-import { Component, h } from "vue"
-import { createLiveVue, findComponent, type LiveHook, type ComponentMap } from "live_vue"
+import 'vite/modulepreload-polyfill'
 
 // needed to make $live available in the Vue component
-declare module "vue" {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $live: LiveHook
   }
@@ -12,13 +14,13 @@ declare module "vue" {
 
 export default createLiveVue({
   // name will be passed as-is in v-component of the .vue HEEX component
-  resolve: name => {
+  resolve: (name) => {
     // we're importing from ../../lib to allow collocating Vue files with LiveView files
     // eager: true disables lazy loading - all these components will be part of the app.js bundle
     // more: https://vite.dev/guide/features.html#glob-import
     const components = {
-      ...import.meta.glob("./**/*.vue", { eager: true }),
-      ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
+      ...import.meta.glob('./**/*.vue', { eager: true }),
+      ...import.meta.glob('../../lib/**/*.vue', { eager: true }),
     } as ComponentMap
 
     // finds component by name or path suffix and gives a nice error message.

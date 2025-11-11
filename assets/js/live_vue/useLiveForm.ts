@@ -1,34 +1,31 @@
+import type { InjectionKey, MaybeRefOrGetter, Ref } from 'vue'
 import {
-  ref,
-  reactive,
   computed,
+  inject,
+  onScopeDispose,
+  provide,
+  reactive,
+  readonly,
+  ref,
+
   toValue,
   watch,
-  onScopeDispose,
-  nextTick,
-  provide,
-  inject,
-  type Ref,
-  type MaybeRefOrGetter,
-  type InjectionKey,
-  readonly,
-  ComputedRef,
-} from "vue"
-import { useLiveVue } from "./use"
+} from 'vue'
+import { useLiveVue } from './use'
 import {
-  parsePath,
-  getValueByPath,
-  setValueByPath,
-  deepClone,
   debounce,
-  replaceReactiveObject,
-  deepToRaw,
+  deepClone,
   deepEqual,
+  deepToRaw,
+  getValueByPath,
+  parsePath,
+  replaceReactiveObject,
   sanitizeId,
-} from "./utils"
+  setValueByPath,
+} from './utils'
 
 // Injection key for providing form instances to child components
-export const LIVE_FORM_INJECTION_KEY = Symbol("LiveForm") as InjectionKey<{
+export const LIVE_FORM_INJECTION_KEY = Symbol('LiveForm') as InjectionKey<{
   field: (path: string, options?: FieldOptions) => FormField<any>
   fieldArray: (path: string) => FormFieldArray<any>
 }>
@@ -60,22 +57,22 @@ export interface Form<T extends object> {
 type PathsToStringProps<T> = T extends string | number | boolean | Date
   ? never
   : T extends readonly (infer U)[]
-  ? U extends object
-    ? `[${number}]` | `[${number}].${PathsToStringProps<U>}`
-    : `[${number}]`
-  : T extends object
-  ? {
-      [K in keyof T]: K extends string | number
-        ? T[K] extends readonly (infer U)[]
-          ? U extends object
-            ? `${K}` | `${K}[${number}]` | `${K}[${number}].${PathsToStringProps<U>}`
-            : `${K}` | `${K}[${number}]`
-          : T[K] extends object
-          ? `${K}` | `${K}.${PathsToStringProps<T[K]>}`
-          : `${K}`
-        : never
-    }[keyof T]
-  : never
+    ? U extends object
+      ? `[${number}]` | `[${number}].${PathsToStringProps<U>}`
+      : `[${number}]`
+    : T extends object
+      ? {
+          [K in keyof T]: K extends string | number
+            ? T[K] extends readonly (infer U)[]
+              ? U extends object
+                ? `${K}` | `${K}[${number}]` | `${K}[${number}].${PathsToStringProps<U>}`
+                : `${K}` | `${K}[${number}]`
+              : T[K] extends object
+                ? `${K}` | `${K}.${PathsToStringProps<T[K]>}`
+                : `${K}`
+            : never
+        }[keyof T]
+      : never
 
 // Get type at path
 type PathValue<T, P extends string> = P extends `${infer Key}[${infer Index}].${infer Rest}`
@@ -85,52 +82,52 @@ type PathValue<T, P extends string> = P extends `${infer Key}[${infer Index}].${
       : never
     : never
   : P extends `${infer Key}[${infer Index}]`
-  ? Key extends keyof T
-    ? T[Key] extends readonly (infer U)[]
-      ? U
+    ? Key extends keyof T
+      ? T[Key] extends readonly (infer U)[]
+        ? U
+        : never
       : never
-    : never
-  : P extends `${infer Key}.${infer Rest}`
-  ? Key extends keyof T
-    ? PathValue<T[Key], Rest>
-    : never
-  : P extends `[${infer Index}]`
-  ? T extends readonly (infer U)[]
-    ? U
-    : never
-  : P extends keyof T
-  ? T[P]
-  : never
+    : P extends `${infer Key}.${infer Rest}`
+      ? Key extends keyof T
+        ? PathValue<T[Key], Rest>
+        : never
+      : P extends `[${infer Index}]`
+        ? T extends readonly (infer U)[]
+          ? U
+          : never
+        : P extends keyof T
+          ? T[P]
+          : never
 
 // Helper type to resolve array field types from relative paths
 type ArrayFieldPath<T, P extends string | number> = P extends number
   ? FormField<T>
   : P extends `[${number}]`
-  ? FormField<T>
-  : P extends `[${number}].${infer Rest}`
-  ? PathValue<T, Rest> extends readonly (infer U)[]
-    ? FormFieldArray<U>
-    : FormField<PathValue<T, Rest>>
-  : P extends keyof T
-  ? T[P] extends readonly (infer U)[]
-    ? FormFieldArray<U>
-    : FormField<T[P]>
-  : FormField<any>
+    ? FormField<T>
+    : P extends `[${number}].${infer Rest}`
+      ? PathValue<T, Rest> extends readonly (infer U)[]
+        ? FormFieldArray<U>
+        : FormField<PathValue<T, Rest>>
+      : P extends keyof T
+        ? T[P] extends readonly (infer U)[]
+          ? FormFieldArray<U>
+          : FormField<T[P]>
+        : FormField<any>
 
 // Helper type for array field array paths
 type ArrayFieldArrayPath<T, P extends string | number> = P extends number
   ? never
   : P extends `[${number}]`
-  ? never
-  : P extends `[${number}].${infer Rest}`
-  ? PathValue<T, Rest> extends readonly (infer U)[]
-    ? FormFieldArray<U>
-    : never
-  : P extends keyof T
-  ? T[P] extends readonly (infer U)[]
-    ? FormFieldArray<U>
-    : never
-  : never
+    ? never
+    : P extends `[${number}].${infer Rest}`
+      ? PathValue<T, Rest> extends readonly (infer U)[]
+        ? FormFieldArray<U>
+        : never
+      : P extends keyof T
+        ? T[P] extends readonly (infer U)[]
+          ? FormFieldArray<U>
+          : never
+        : never
 
 export interface FieldOptions {
   /** HTML input type - supports any valid input type */
@@ -162,15 +159,15 @@ export interface FormField<T> {
   // Input binding helper
   inputAttrs: Readonly<
     Ref<{
-      value: T
-      onInput: (event: Event) => void
-      onBlur: () => void
-      name: string
-      id: string
-      type?: string
-      checked?: boolean
-      "aria-invalid": boolean
-      "aria-describedby"?: string
+      'value': T
+      'onInput': (event: Event) => void
+      'onBlur': () => void
+      'name': string
+      'id': string
+      'type'?: string
+      'checked'?: boolean
+      'aria-invalid': boolean
+      'aria-describedby'?: string
     }>
   >
 
@@ -178,17 +175,17 @@ export interface FormField<T> {
   _options: FieldOptions
 
   // Type-safe sub-field creation (enables fluent interface)
-  field<K extends keyof T>(
+  field: <K extends keyof T>(
     key: K,
-    options?: FieldOptions
-  ): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<T[K]>
-  fieldArray<K extends keyof T>(key: K): T[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
+    options?: FieldOptions,
+  ) => T[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<T[K]>
+  fieldArray: <K extends keyof T>(key: K) => T[K] extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Field actions
   blur: () => void // Unsets as currently editing
 }
 
-export interface FormFieldArray<T> extends Omit<FormField<T[]>, "field" | "fieldArray"> {
+export interface FormFieldArray<T> extends Omit<FormField<T[]>, 'field' | 'fieldArray'> {
   // Array-specific methods
   add: (item?: Partial<T>) => Promise<any>
   remove: (index: number) => Promise<any>
@@ -212,10 +209,10 @@ export interface UseLiveFormReturn<T extends object> {
   initialValues: Readonly<T>
 
   // Type-safe field factory functions
-  field<P extends PathsToStringProps<T>>(path: P, options?: FieldOptions): FormField<PathValue<T, P>>
-  fieldArray<P extends PathsToStringProps<T>>(
-    path: P
-  ): PathValue<T, P> extends readonly (infer U)[] ? FormFieldArray<U> : never
+  field: <P extends PathsToStringProps<T>>(path: P, options?: FieldOptions) => FormField<PathValue<T, P>>
+  fieldArray: <P extends PathsToStringProps<T>>(
+    path: P,
+  ) => PathValue<T, P> extends readonly (infer U)[] ? FormFieldArray<U> : never
 
   // Form actions
   submit: () => Promise<Form<T>>
@@ -224,11 +221,11 @@ export interface UseLiveFormReturn<T extends object> {
 
 export function useLiveForm<T extends object>(
   form: MaybeRefOrGetter<Form<T>>,
-  options: FormOptions = {}
+  options: FormOptions = {},
 ): UseLiveFormReturn<T> {
   const {
     changeEvent = null,
-    submitEvent = "submit",
+    submitEvent = 'submit',
     debounceInMiliseconds = 300,
     prepareData = (data: any) => data,
   } = options
@@ -251,17 +248,18 @@ export function useLiveForm<T extends object>(
   function hasAnyErrors(errors: any): boolean {
     if (Array.isArray(errors)) {
       // Check if it's an array of strings (field errors) or array of objects (nested form errors)
-      if (errors.length === 0) return false
+      if (errors.length === 0)
+        return false
 
       // If first item is string, it's a field error array
-      if (typeof errors[0] === "string") {
+      if (typeof errors[0] === 'string') {
         return errors.length > 0
       }
 
       // If first item is object, it's an array of nested error objects
       return errors.some(item => hasAnyErrors(item))
     }
-    if (typeof errors === "object" && errors !== null) {
+    if (typeof errors === 'object' && errors !== null) {
       return Object.values(errors).some(value => hasAnyErrors(value))
     }
     return false
@@ -289,9 +287,10 @@ export function useLiveForm<T extends object>(
       return new Promise(resolve =>
         live.pushEvent(changeEvent, { [initialForm.name]: data }, (result: any) => {
           resolve(result)
-        })
+        }),
       )
-    } else {
+    }
+    else {
       return Promise.resolve(null)
     }
   }
@@ -317,7 +316,7 @@ export function useLiveForm<T extends object>(
     // For checkboxes with values, determine multi-checkbox behavior based on current value type
 
     const keys = parsePath(path)
-    const fieldId = sanitizeId(path) + (options.value !== undefined ? `_${sanitizeId(String(options.value))}` : "")
+    const fieldId = sanitizeId(path) + (options.value !== undefined ? `_${sanitizeId(String(options.value))}` : '')
 
     const fieldValue = computed({
       get(): V {
@@ -347,16 +346,16 @@ export function useLiveForm<T extends object>(
     })
 
     const setTouched = () => touchedFields.add(path)
-    const isMultiCheckboxValue = options.type === "checkbox" && Array.isArray(fieldValue.value)
+    const isMultiCheckboxValue = options.type === 'checkbox' && Array.isArray(fieldValue.value)
 
     const fieldInputAttrs = computed(() => {
       const baseAttrs = {
-        name: path,
-        id: fieldId,
-        type: options.type,
-        onBlur: setTouched,
-        "aria-invalid": !fieldIsValid.value,
-        ...(fieldErrors.value.length > 0 ? { "aria-describedby": `${fieldId}-error` } : {}),
+        'name': path,
+        'id': fieldId,
+        'type': options.type,
+        'onBlur': setTouched,
+        'aria-invalid': !fieldIsValid.value,
+        ...(fieldErrors.value.length > 0 ? { 'aria-describedby': `${fieldId}-error` } : {}),
       }
 
       // if it's a multi-checkbox, we need to set or unset the value in the array
@@ -371,12 +370,14 @@ export function useLiveForm<T extends object>(
             const idx = currentArray.indexOf(options.value)
             if (target.checked && idx === -1) {
               currentArray.push(options.value)
-            } else if (!target.checked && idx !== -1) {
+            }
+            else if (!target.checked && idx !== -1) {
               currentArray.splice(idx, 1)
             }
           },
         }
-      } else if (options.type === "checkbox") {
+      }
+      else if (options.type === 'checkbox') {
         const optionsValue = options.value !== undefined ? options.value : true
         return {
           ...baseAttrs,
@@ -387,7 +388,8 @@ export function useLiveForm<T extends object>(
             fieldValue.value = target.checked ? optionsValue : null
           },
         }
-      } else {
+      }
+      else {
         // Regular input
         return {
           ...baseAttrs,
@@ -412,7 +414,7 @@ export function useLiveForm<T extends object>(
 
       field<K extends keyof V>(
         key: K,
-        options?: FieldOptions
+        options?: FieldOptions,
       ): V[K] extends readonly (infer U)[] ? FormFieldArray<U> : FormField<V[K]> {
         const subPath = path ? `${path}.${String(key)}` : String(key)
         return createFormField(subPath, options) as V[K] extends readonly (infer U)[]
@@ -470,7 +472,8 @@ export function useLiveForm<T extends object>(
           const item = currentArray.splice(from, 1)[0]
           currentArray.splice(to, 0, item)
           return updateArray(currentArray)
-        } else {
+        }
+        else {
           return Promise.resolve()
         }
       },
@@ -482,7 +485,7 @@ export function useLiveForm<T extends object>(
 
       field<P extends string | number>(pathOrIndex: P, options?: FieldOptions): ArrayFieldPath<V, P> {
         // Handle number shortcut: convert 0 to "[0]"
-        if (typeof pathOrIndex === "number") {
+        if (typeof pathOrIndex === 'number') {
           return createFormField(`${path}[${pathOrIndex}]`, options) as ArrayFieldPath<V, P>
         }
         // Handle string path: use as-is, could be "[0]", "[0].name", etc.
@@ -491,7 +494,7 @@ export function useLiveForm<T extends object>(
 
       fieldArray<P extends string | number>(pathOrIndex: P): ArrayFieldArrayPath<V, P> {
         // Handle number shortcut: convert 0 to "[0]"
-        if (typeof pathOrIndex === "number") {
+        if (typeof pathOrIndex === 'number') {
           return createFormFieldArray(`${path}[${pathOrIndex}]`) as ArrayFieldArrayPath<V, P>
         }
         // Handle string path: use as-is, could be "[0]", "[0].tags", etc.
@@ -521,7 +524,7 @@ export function useLiveForm<T extends object>(
   const stopWatchingForm = watch(
     () => toValue(form),
     () => setTimeout(() => updateFromServer(toValue(form)), 0),
-    { deep: true }
+    { deep: true },
   )
 
   const reset = () => {
@@ -537,7 +540,7 @@ export function useLiveForm<T extends object>(
     if (live) {
       const data = prepareData(deepToRaw(currentValues))
 
-      return await new Promise<Form<T>>(resolve => {
+      return await new Promise<Form<T>>((resolve) => {
         // Send submit event to LiveView
         live.pushEvent(submitEvent, { [initialForm.name]: data }, (result: any) => {
           // if it was successful, we want to reset the form, but it's hard to determine if it was successfull or not in an automated way
@@ -555,9 +558,10 @@ export function useLiveForm<T extends object>(
           resolve(result)
         })
       })
-    } else {
+    }
+    else {
       // Fallback when not in LiveView context
-      console.warn("LiveView hook not available, form submission skipped")
+      console.warn('LiveView hook not available, form submission skipped')
       return Promise.resolve(undefined as any)
     }
   }
@@ -574,8 +578,8 @@ export function useLiveForm<T extends object>(
     isValidating: readonly(isValidatingChanges) as Readonly<Ref<boolean>>,
     submitCount: readonly(submitCount),
     initialValues: readonly(initialValues) as Readonly<T>,
-    submit: submit,
-    reset: reset,
+    submit,
+    reset,
     field<P extends PathsToStringProps<T>>(path: P, options?: FieldOptions): FormField<PathValue<T, P>> {
       return createFormField<PathValue<T, P>>(path as string, options)
     },
@@ -602,8 +606,8 @@ export function useField<T = any>(path: string, options?: FieldOptions): FormFie
 
   if (!form) {
     throw new Error(
-      "useField() can only be used inside components where a form has been provided. " +
-        "Make sure to use useLiveForm() in a parent component."
+      'useField() can only be used inside components where a form has been provided. '
+      + 'Make sure to use useLiveForm() in a parent component.',
     )
   }
 
@@ -621,8 +625,8 @@ export function useArrayField<T = any>(path: string): FormFieldArray<T> {
 
   if (!form) {
     throw new Error(
-      "useArrayField() can only be used inside components where a form has been provided. " +
-        "Make sure to use useLiveForm() in a parent component."
+      'useArrayField() can only be used inside components where a form has been provided. '
+      + 'Make sure to use useLiveForm() in a parent component.',
     )
   }
 

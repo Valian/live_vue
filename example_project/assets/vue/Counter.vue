@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import ShowState from "./ShowState.vue"
+import { ref } from 'vue'
+import ShowState from './ShowState.vue'
+
 const props = defineProps<{ count: number }>()
 const emit = defineEmits<{ inc: [{ value: number }] }>()
-const diff = ref<string>("1")
+const diff = ref<string>('1')
 </script>
 
 <template>
@@ -17,9 +18,9 @@ const diff = ref<string>("1")
     </Transition>
 
     <label class="block mt-8">Diff: </label>
-    <input v-model="diff" class="mt-4 w-full" type="range" min="1" max="10" />
+    <input v-model="diff" class="mt-4 w-full" type="range" min="1" max="10">
 
-    <button @click="emit('inc', { value: parseInt(diff) })" class="mt-4 bg-black text-white rounded p-2 block">
+    <button class="mt-4 bg-black text-white rounded p-2 block" @click="emit('inc', { value: parseInt(diff) })">
       Increase counter by {{ parseInt(diff) }}
     </button>
   </ShowState>
