@@ -5,9 +5,12 @@ export default antfu(
     ignores: [
       '.github/',
       '**/*.md',
-      '**/test/**',
+      '**/test/**/*.*',
       '**/*.test.{js,ts}',
     ],
+    gitignore: {
+      files: ['.gitignore', 'example_project/.gitignore'],
+    },
     typescript: true,
     vue: true,
   },

@@ -9,7 +9,6 @@ interface ProjectForm {
   status: string
   is_public: boolean
   notifications: string[]
-  is_public: boolean
   owner: {
     name: string
     email: string
@@ -114,6 +113,7 @@ function removeAssigneeFromTask(taskIndex: number, assigneeIndex: number) {
 
 async function submitForm() {
   const result = await form.submit()
+  // eslint-disable-next-line no-console
   console.log('Form submission result:', result)
 }
 </script>

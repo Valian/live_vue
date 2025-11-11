@@ -2,6 +2,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Connect, ModuleNode, Plugin } from 'vite'
+import process from 'node:process'
 
 interface PluginOptions {
   path?: string
@@ -42,7 +43,7 @@ function jsonMiddleware(req: ExtendedIncomingMessage, res: ServerResponse<Incomi
       req.body = JSON.parse(data)
       next() // Proceed to the next middleware
     }
-    catch (error) {
+    catch {
       // Handle JSON parse error
       jsonResponse(res, 400, { error: 'Invalid JSON' })
     }
@@ -105,7 +106,7 @@ function liveVuePlugin(opts: PluginOptions = {}): Plugin {
       const path = opts.path || '/ssr_render'
       const entrypoint = opts.entrypoint || './js/server.js'
       server.middlewares.use((req: ExtendedIncomingMessage, res, next) => {
-        if (req.method == 'POST' && req.url?.split('?', 1)[0] === path) {
+        if (req.method === 'POST' && req.url?.split('?', 1)[0] === path) {
           jsonMiddleware(req, res, async () => {
             try {
               const render = (await server.ssrLoadModule(entrypoint)).render

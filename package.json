@@ -33,9 +33,10 @@
     "priv/static/*.d.ts"
   ],
   "scripts": {
-    "format": "npx prettier --write assets",
     "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
     "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
@@ -58,7 +59,6 @@
     "phoenix": "file:deps/phoenix",
     "phoenix_html": "file:deps/phoenix_html",
     "phoenix_live_view": "file:deps/phoenix_live_view",
-    "prettier": "2.8.7",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vitest": "^3.2.4",

@@ -152,7 +152,7 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait?: numb
   }
 
   let timeout: ReturnType<typeof setTimeout> | null = null
-  let executingCount = 0
+  let _executingCount = 0
   let pendingResolvers: Array<{
     resolve: (value: Awaited<ReturnType<T>>) => void
     reject: (error: any) => void
@@ -173,7 +173,7 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait?: numb
         pendingResolvers = []
         timeout = null
         timeoutRef.value = null
-        executingCount++
+        _executingCount++
         executingCountRef.value++
 
         try {
@@ -184,7 +184,7 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait?: numb
           currentResolvers.forEach(({ reject }) => reject(error))
         }
         finally {
-          executingCount--
+          _executingCount--
           executingCountRef.value--
         }
       }, wait)
@@ -252,7 +252,7 @@ export function parsePath(path: string): (string | number)[] {
 
       if (path[i] === ']') {
         const index = Number.parseInt(bracketContent, 10)
-        if (!isNaN(index)) {
+        if (!Number.isNaN(index)) {
           keys.push(index)
         }
         else {

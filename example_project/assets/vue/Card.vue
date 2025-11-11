@@ -16,7 +16,7 @@ const props = defineProps<{ title: string, tags: string[] }>()
         <div class="text-sm text-center text-gray-500 mb-2">
           There are {{ props.tags.length }} tag
         </div>
-        <span v-for="tag in props.tags" class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{{ tag }}</span>
+        <span v-for="(tag, i) in props.tags" :key="i" class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{{ tag }}</span>
         <button class="inline-block bg-blue-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2" phx-click="add-tag">
           Add more
         </button>

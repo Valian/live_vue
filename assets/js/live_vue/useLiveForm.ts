@@ -75,13 +75,13 @@ type PathsToStringProps<T> = T extends string | number | boolean | Date
       : never
 
 // Get type at path
-type PathValue<T, P extends string> = P extends `${infer Key}[${infer Index}].${infer Rest}`
+type PathValue<T, P extends string> = P extends `${infer Key}[${number}].${infer Rest}`
   ? Key extends keyof T
     ? T[Key] extends readonly (infer U)[]
       ? PathValue<U, Rest>
       : never
     : never
-  : P extends `${infer Key}[${infer Index}]`
+  : P extends `${infer Key}[${number}]`
     ? Key extends keyof T
       ? T[Key] extends readonly (infer U)[]
         ? U
@@ -91,7 +91,7 @@ type PathValue<T, P extends string> = P extends `${infer Key}[${infer Index}].${
       ? Key extends keyof T
         ? PathValue<T[Key], Rest>
         : never
-      : P extends `[${infer Index}]`
+      : P extends `[${number}]`
         ? T extends readonly (infer U)[]
           ? U
           : never

@@ -69,7 +69,7 @@ function deepClone<T>(obj: T): T {
 
   const cloned = {} as T
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       cloned[key] = deepClone(obj[key])
     }
   }
@@ -78,46 +78,6 @@ function deepClone<T>(obj: T): T {
 
 function unescapePathComponent(path: string): string {
   return path.replace(/~1/g, '/').replace(/~0/g, '~')
-}
-
-function areEquals(a: any, b: any): boolean {
-  if (a === b)
-    return true
-  if (a && b && typeof a == 'object' && typeof b == 'object') {
-    const arrA = Array.isArray(a)
-    const arrB = Array.isArray(b)
-
-    if (arrA && arrB) {
-      const length = a.length
-      if (length != b.length)
-        return false
-      for (let i = length; i-- !== 0;) {
-        if (!areEquals(a[i], b[i]))
-          return false
-      }
-      return true
-    }
-    if (arrA != arrB)
-      return false
-
-    const keys = Object.keys(a)
-    const length = keys.length
-    if (length !== Object.keys(b).length)
-      return false
-
-    for (let i = length; i-- !== 0;) {
-      if (!b.hasOwnProperty(keys[i]))
-        return false
-    }
-
-    for (let i = length; i-- !== 0;) {
-      const key = keys[i]
-      if (!areEquals(a[key], b[key]))
-        return false
-    }
-    return true
-  }
-  return a !== a && b !== b
 }
 
 /**
@@ -134,7 +94,7 @@ function resolvePathComponent(component: string, arrayObj: any[]): string | null
   const targetId = component.substring(2)
 
   // Find the index of the element with matching __dom_id
-  const index = arrayObj.findIndex(item => item && typeof item === 'object' && item.__dom_id == targetId)
+  const index = arrayObj.findIndex(item => item && typeof item === 'object' && String(item.__dom_id) === targetId)
 
   if (index === -1) {
     console.warn(`JSON Patch: Item with __dom_id "${targetId}" not found in array, skipping operation`)
@@ -249,7 +209,7 @@ export function applyOperation<T>(document: T, operation: Operation): T {
       case 'replace':
         obj[index] = (operation as ReplaceOperation).value
         break
-      case 'upsert':
+      case 'upsert': {
         const upsertValue = (operation as UpsertOperation).value
         // Check if item with same ID already exists in the array
         if (upsertValue && typeof upsertValue === 'object' && '__dom_id' in upsertValue) {
@@ -271,7 +231,8 @@ export function applyOperation<T>(document: T, operation: Operation): T {
           obj.splice(index, 0, upsertValue)
         }
         break
-      case 'move':
+      }
+      case 'move': {
         const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
         if (moveValue === undefined) {
           return document // Skip operation if source not found
@@ -279,14 +240,16 @@ export function applyOperation<T>(document: T, operation: Operation): T {
         applyOperation(document, { op: 'remove', path: (operation as MoveOperation).from })
         obj.splice(index, 0, moveValue)
         break
-      case 'copy':
+      }
+      case 'copy': {
         const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
         obj.splice(index, 0, deepClone(copyValue))
         break
+      }
       case 'test':
         // Test operation - just return document unchanged
         break
-      case 'limit':
+      case 'limit': {
         const limitValue = (operation as LimitOperation).value
         if (limitValue >= 0) {
           // Positive limit: keep first N elements, remove the rest
@@ -302,6 +265,7 @@ export function applyOperation<T>(document: T, operation: Operation): T {
           }
         }
         break
+      }
     }
   }
   else {
@@ -313,19 +277,21 @@ export function applyOperation<T>(document: T, operation: Operation): T {
       case 'remove':
         delete obj[unescapedKey]
         break
-      case 'move':
+      case 'move': {
         const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
         applyOperation(document, { op: 'remove', path: (operation as MoveOperation).from })
         obj[unescapedKey] = moveValue
         break
-      case 'copy':
+      }
+      case 'copy': {
         const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
         obj[unescapedKey] = deepClone(copyValue)
         break
+      }
       case 'test':
         // Test operation - just return document unchanged
         break
-      case 'limit':
+      case 'limit': {
         // Check if target is an array
         const targetArray = obj[unescapedKey]
         if (Array.isArray(targetArray)) {
@@ -345,6 +311,7 @@ export function applyOperation<T>(document: T, operation: Operation): T {
           }
         }
         break
+      }
     }
   }
 

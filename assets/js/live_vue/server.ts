@@ -15,8 +15,8 @@ type Components = Record<string, Component>
 type Manifest = Record<string, string[]>
 
 const mockLive: Partial<Omit<ViewHook, 'el'>> & {
-  el: {}
-  liveSocket: {}
+  el: object
+  liveSocket: object
   removeHandleEvent: () => void
   upload: () => void
   uploadTo: () => void
@@ -50,12 +50,12 @@ export function getRender(componentsOrApp: Components | LiveVueOptions, manifest
       plugin: {
         install: (app: App) => {
           // we don't want to mount the app in SSR
-          app.mount = (...args: unknown[]): any => undefined
+          app.mount = (): any => undefined
           // we don't have hook instance in SSR, so we need to mock it
           app.provide('_live_vue', Object.assign({}, mockLive))
         },
       },
-      // @ts-ignore - this is just an IDE issue. the compiler is correctly processing this with the server tsconfig
+      // @ts-expect-error - this is just an IDE issue. the compiler is correctly processing this with the server tsconfig
       el: {},
       ssr: true,
     })
@@ -87,7 +87,7 @@ export function loadManifest(path: string): Record<string, string[]> {
     const content = fs.readFileSync(resolve(path), 'utf-8')
     return JSON.parse(content)
   }
-  catch (e) {
+  catch {
     // manifest is not available in dev, so let's just ignore it
     return {}
   }
