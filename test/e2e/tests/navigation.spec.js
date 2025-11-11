@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { syncLV } from '../utils.js'
 
 test.describe('useLiveNavigation', () => {

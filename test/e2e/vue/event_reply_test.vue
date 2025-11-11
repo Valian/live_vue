@@ -1,108 +1,117 @@
 <script setup lang="ts">
-import { useEventReply } from "live_vue"
+import { useEventReply } from 'live_vue'
 
 const props = defineProps<{
   counter: number
 }>()
 
 // Different event reply composables for testing
-const incrementReply = useEventReply<{counter: number, timestamp: string}>("increment")
-const userReply = useEventReply<{id: number, name: string, email: string}>("get-user")
-const errorReply = useEventReply("error-event")
-const slowReply = useEventReply<{message: string, completed_at: string}>("slow-event")
-const pingReply = useEventReply<{response: string, timestamp: string}>("ping")
-const dataTypeReply = useEventReply("get-data-type")
-const validateReply = useEventReply<{valid: boolean, error?: string, message?: string}>("validate-input")
+const incrementReply = useEventReply<{ counter: number, timestamp: string }>('increment')
+const userReply = useEventReply<{ id: number, name: string, email: string }>('get-user')
+const errorReply = useEventReply('error-event')
+const slowReply = useEventReply<{ message: string, completed_at: string }>('slow-event')
+const pingReply = useEventReply<{ response: string, timestamp: string }>('ping')
+const dataTypeReply = useEventReply('get-data-type')
+const validateReply = useEventReply<{ valid: boolean, error?: string, message?: string }>('validate-input')
 
 // Test increment functionality
-const handleIncrement = async (by: number) => {
+async function handleIncrement(by: number) {
   try {
     const result = await incrementReply.execute({ by })
-    console.log("Increment result:", result)
-  } catch (error) {
-    console.error("Increment error:", error)
+    console.log('Increment result:', result)
+  }
+  catch (error) {
+    console.error('Increment error:', error)
   }
 }
 
 // Test user data fetching
-const fetchUser = async (id: number) => {
+async function fetchUser(id: number) {
   try {
     const result = await userReply.execute({ id })
-    console.log("User data:", result)
-  } catch (error) {
-    console.error("User fetch error:", error)
+    console.log('User data:', result)
+  }
+  catch (error) {
+    console.error('User fetch error:', error)
   }
 }
 
 // Test error handling
-const triggerError = async () => {
+async function triggerError() {
   try {
     const result = await errorReply.execute()
-    console.log("Error result:", result)
-  } catch (error) {
-    console.error("Expected error:", error)
+    console.log('Error result:', result)
+  }
+  catch (error) {
+    console.error('Expected error:', error)
   }
 }
 
 // Test slow event with cancellation
-const startSlowEvent = async (delay: number) => {
+async function startSlowEvent(delay: number) {
   try {
     const result = await slowReply.execute({ delay })
-    console.log("Slow event result:", result)
-  } catch (error) {
-    console.error("Slow event error:", error)
+    console.log('Slow event result:', result)
+  }
+  catch (error) {
+    console.error('Slow event error:', error)
   }
 }
 
-const cancelSlowEvent = () => {
+function cancelSlowEvent() {
   slowReply.cancel()
 }
 
 // Test ping without parameters
-const ping = async () => {
+async function ping() {
   try {
     const result = await pingReply.execute()
-    console.log("Ping result:", result)
-  } catch (error) {
-    console.error("Ping error:", error)
+    console.log('Ping result:', result)
+  }
+  catch (error) {
+    console.error('Ping error:', error)
   }
 }
 
 // Test different data types
-const testDataType = async (type: string) => {
+async function testDataType(type: string) {
   try {
     const result = await dataTypeReply.execute({ type })
     console.log(`Data type ${type} result:`, result)
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Data type ${type} error:`, error)
   }
 }
 
 // Test input validation
-const validateShortInput = async () => {
+async function validateShortInput() {
   try {
-    const result = await validateReply.execute({ input: "Hi" })
-    console.log("Validation result:", result)
-  } catch (error) {
-    console.error("Validation error:", error)
+    const result = await validateReply.execute({ input: 'Hi' })
+    console.log('Validation result:', result)
+  }
+  catch (error) {
+    console.error('Validation error:', error)
   }
 }
 
-const validateValidInput = async () => {
+async function validateValidInput() {
   try {
-    const result = await validateReply.execute({ input: "Valid Input" })
-    console.log("Validation result:", result)
-  } catch (error) {
-    console.error("Validation error:", error)
+    const result = await validateReply.execute({ input: 'Valid Input' })
+    console.log('Validation result:', result)
+  }
+  catch (error) {
+    console.error('Validation error:', error)
   }
 }
 
-const validateLongInput = async () => {
+async function validateLongInput() {
   try {
-    const result = await validateReply.execute({ input: "This is a very long input that exceeds the maximum allowed length" })
-    console.log("Validation result:", result)
-  } catch (error) {
-    console.error("Validation error:", error)
+    const result = await validateReply.execute({ input: 'This is a very long input that exceeds the maximum allowed length' })
+    console.log('Validation result:', result)
+  }
+  catch (error) {
+    console.error('Validation error:', error)
   }
 }
 </script>
@@ -113,19 +122,29 @@ const validateLongInput = async () => {
 
     <!-- Server State Display -->
     <div class="server-state" data-pw-server-state>
-      <p data-pw-server-counter>Server Counter: {{ counter }}</p>
+      <p data-pw-server-counter>
+        Server Counter: {{ counter }}
+      </p>
     </div>
 
     <!-- Basic Increment Test -->
     <div class="section">
       <h3>Increment Test</h3>
       <div class="controls">
-        <button @click="handleIncrement(1)" data-pw-increment-1>+1</button>
-        <button @click="handleIncrement(5)" data-pw-increment-5>+5</button>
+        <button data-pw-increment-1 @click="handleIncrement(1)">
+          +1
+        </button>
+        <button data-pw-increment-5 @click="handleIncrement(5)">
+          +5
+        </button>
       </div>
       <div class="state">
-        <div data-pw-increment-loading>Loading: {{ incrementReply.isLoading.value }}</div>
-        <div data-pw-increment-data>Data: {{ JSON.stringify(incrementReply.data.value) }}</div>
+        <div data-pw-increment-loading>
+          Loading: {{ incrementReply.isLoading.value }}
+        </div>
+        <div data-pw-increment-data>
+          Data: {{ JSON.stringify(incrementReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -133,13 +152,23 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>User Data Test</h3>
       <div class="controls">
-        <button @click="fetchUser(1)" data-pw-fetch-user-1>Fetch User 1</button>
-        <button @click="fetchUser(2)" data-pw-fetch-user-2>Fetch User 2</button>
-        <button @click="fetchUser(999)" data-pw-fetch-user-999>Fetch User 999</button>
+        <button data-pw-fetch-user-1 @click="fetchUser(1)">
+          Fetch User 1
+        </button>
+        <button data-pw-fetch-user-2 @click="fetchUser(2)">
+          Fetch User 2
+        </button>
+        <button data-pw-fetch-user-999 @click="fetchUser(999)">
+          Fetch User 999
+        </button>
       </div>
       <div class="state">
-        <div data-pw-user-loading>Loading: {{ userReply.isLoading.value }}</div>
-        <div data-pw-user-data>Data: {{ JSON.stringify(userReply.data.value) }}</div>
+        <div data-pw-user-loading>
+          Loading: {{ userReply.isLoading.value }}
+        </div>
+        <div data-pw-user-data>
+          Data: {{ JSON.stringify(userReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -147,11 +176,17 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>Server Error Response Test</h3>
       <div class="controls">
-        <button @click="triggerError" data-pw-trigger-error>Trigger Server Error Response</button>
+        <button data-pw-trigger-error @click="triggerError">
+          Trigger Server Error Response
+        </button>
       </div>
       <div class="state">
-        <div data-pw-error-loading>Loading: {{ errorReply.isLoading.value }}</div>
-        <div data-pw-error-data>Data: {{ JSON.stringify(errorReply.data.value) }}</div>
+        <div data-pw-error-loading>
+          Loading: {{ errorReply.isLoading.value }}
+        </div>
+        <div data-pw-error-data>
+          Data: {{ JSON.stringify(errorReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -159,12 +194,20 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>Cancellation Test</h3>
       <div class="controls">
-        <button @click="startSlowEvent(2000)" data-pw-start-slow>Start Slow (2s)</button>
-        <button @click="cancelSlowEvent" data-pw-cancel-slow>Cancel</button>
+        <button data-pw-start-slow @click="startSlowEvent(2000)">
+          Start Slow (2s)
+        </button>
+        <button data-pw-cancel-slow @click="cancelSlowEvent">
+          Cancel
+        </button>
       </div>
       <div class="state">
-        <div data-pw-slow-loading>Loading: {{ slowReply.isLoading.value }}</div>
-        <div data-pw-slow-data>Data: {{ JSON.stringify(slowReply.data.value) }}</div>
+        <div data-pw-slow-loading>
+          Loading: {{ slowReply.isLoading.value }}
+        </div>
+        <div data-pw-slow-data>
+          Data: {{ JSON.stringify(slowReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -172,11 +215,17 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>No Parameters Test</h3>
       <div class="controls">
-        <button @click="ping" data-pw-ping>Ping</button>
+        <button data-pw-ping @click="ping">
+          Ping
+        </button>
       </div>
       <div class="state">
-        <div data-pw-ping-loading>Loading: {{ pingReply.isLoading.value }}</div>
-        <div data-pw-ping-data>Data: {{ JSON.stringify(pingReply.data.value) }}</div>
+        <div data-pw-ping-loading>
+          Loading: {{ pingReply.isLoading.value }}
+        </div>
+        <div data-pw-ping-data>
+          Data: {{ JSON.stringify(pingReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -184,16 +233,32 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>Data Types Test</h3>
       <div class="controls">
-        <button @click="testDataType('string')" data-pw-test-string>String</button>
-        <button @click="testDataType('number')" data-pw-test-number>Number</button>
-        <button @click="testDataType('boolean')" data-pw-test-boolean>Boolean</button>
-        <button @click="testDataType('array')" data-pw-test-array>Array</button>
-        <button @click="testDataType('object')" data-pw-test-object>Object</button>
-        <button @click="testDataType('null')" data-pw-test-null>Null</button>
+        <button data-pw-test-string @click="testDataType('string')">
+          String
+        </button>
+        <button data-pw-test-number @click="testDataType('number')">
+          Number
+        </button>
+        <button data-pw-test-boolean @click="testDataType('boolean')">
+          Boolean
+        </button>
+        <button data-pw-test-array @click="testDataType('array')">
+          Array
+        </button>
+        <button data-pw-test-object @click="testDataType('object')">
+          Object
+        </button>
+        <button data-pw-test-null @click="testDataType('null')">
+          Null
+        </button>
       </div>
       <div class="state">
-        <div data-pw-datatype-loading>Loading: {{ dataTypeReply.isLoading.value }}</div>
-        <div data-pw-datatype-data>Data: {{ JSON.stringify(dataTypeReply.data.value) }}</div>
+        <div data-pw-datatype-loading>
+          Loading: {{ dataTypeReply.isLoading.value }}
+        </div>
+        <div data-pw-datatype-data>
+          Data: {{ JSON.stringify(dataTypeReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -201,13 +266,23 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>Input Validation Test</h3>
       <div class="controls">
-        <button @click="validateShortInput" data-pw-validate-short>Short Input</button>
-        <button @click="validateValidInput" data-pw-validate-valid>Valid Input</button>
-        <button @click="validateLongInput" data-pw-validate-long>Long Input</button>
+        <button data-pw-validate-short @click="validateShortInput">
+          Short Input
+        </button>
+        <button data-pw-validate-valid @click="validateValidInput">
+          Valid Input
+        </button>
+        <button data-pw-validate-long @click="validateLongInput">
+          Long Input
+        </button>
       </div>
       <div class="state">
-        <div data-pw-validate-loading>Loading: {{ validateReply.isLoading.value }}</div>
-        <div data-pw-validate-data>Data: {{ JSON.stringify(validateReply.data.value) }}</div>
+        <div data-pw-validate-loading>
+          Loading: {{ validateReply.isLoading.value }}
+        </div>
+        <div data-pw-validate-data>
+          Data: {{ JSON.stringify(validateReply.data.value) }}
+        </div>
       </div>
     </div>
 
@@ -215,8 +290,12 @@ const validateLongInput = async () => {
     <div class="section">
       <h3>Concurrent Execution Test</h3>
       <div class="controls">
-        <button @click="startSlowEvent(1000)" data-pw-concurrent-first>Start First</button>
-        <button @click="startSlowEvent(500)" data-pw-concurrent-second>Try Second (Should Fail)</button>
+        <button data-pw-concurrent-first @click="startSlowEvent(1000)">
+          Start First
+        </button>
+        <button data-pw-concurrent-second @click="startSlowEvent(500)">
+          Try Second (Should Fail)
+        </button>
       </div>
     </div>
   </div>

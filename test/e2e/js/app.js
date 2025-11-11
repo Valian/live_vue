@@ -1,19 +1,19 @@
-import "phoenix_html"
-import { Socket } from "phoenix"
-import { LiveSocket } from "phoenix_live_view"
-
 // live_vue related imports
-import { getHooks, createLiveVue, findComponent } from "live_vue"
-import { h } from "vue"
+import { createLiveVue, findComponent, getHooks } from 'live_vue'
+import { Socket } from 'phoenix'
+import { LiveSocket } from 'phoenix_live_view'
+
+import { h } from 'vue'
+import 'phoenix_html'
 
 // polyfill recommended by Vite https://vitejs.dev/config/build-options#build-modulepreload
-import "vite/modulepreload-polyfill"
+import 'vite/modulepreload-polyfill'
 
 // Create the liveVue app directly here
 const liveVueApp = createLiveVue({
-  resolve: name => {
+  resolve: (name) => {
     const components = {
-      ...import.meta.glob("../vue/**/*.vue", { eager: true }),
+      ...import.meta.glob('../vue/**/*.vue', { eager: true }),
     }
 
     return findComponent(components, name)
@@ -26,8 +26,8 @@ const liveVueApp = createLiveVue({
   },
 })
 
-let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {
+const csrfToken = document.querySelector('meta[name=\'csrf-token\']')?.getAttribute('content')
+const liveSocket = new LiveSocket('/live', Socket, {
   params: { _csrf_token: csrfToken },
   hooks: getHooks(liveVueApp),
 })

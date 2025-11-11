@@ -1,17 +1,5 @@
-<template>
-  <div>
-    <h1>Navigation Test</h1>
-    <div id="current-params">{{ JSON.stringify(params) }}</div>
-    <div id="current-query">{{ JSON.stringify(query_params) }}</div>
-
-    <button @click="patchQuery" id="patch-btn">Patch Query</button>
-    <button @click="navigateToAlt" id="navigate-btn">Navigate to Alt</button>
-    <button @click="navigateBack" id="navigate-back-btn">Navigate Back</button>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { useLiveNavigation } from "live_vue"
+import { useLiveNavigation } from 'live_vue'
 
 interface Props {
   params: Record<string, any>
@@ -21,15 +9,37 @@ interface Props {
 const props = defineProps<Props>()
 const { patch, navigate } = useLiveNavigation()
 
-const patchQuery = () => {
-  patch({ foo: "bar", timestamp: Date.now().toString() })
+function patchQuery() {
+  patch({ foo: 'bar', timestamp: Date.now().toString() })
 }
 
-const navigateToAlt = () => {
-  navigate("/navigation/alt/test2?baz=qux")
+function navigateToAlt() {
+  navigate('/navigation/alt/test2?baz=qux')
 }
 
-const navigateBack = () => {
-  navigate("/navigation/test1")
+function navigateBack() {
+  navigate('/navigation/test1')
 }
 </script>
+
+<template>
+  <div>
+    <h1>Navigation Test</h1>
+    <div id="current-params">
+      {{ JSON.stringify(params) }}
+    </div>
+    <div id="current-query">
+      {{ JSON.stringify(query_params) }}
+    </div>
+
+    <button id="patch-btn" @click="patchQuery">
+      Patch Query
+    </button>
+    <button id="navigate-btn" @click="navigateToAlt">
+      Navigate to Alt
+    </button>
+    <button id="navigate-back-btn" @click="navigateBack">
+      Navigate Back
+    </button>
+  </div>
+</template>

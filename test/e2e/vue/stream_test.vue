@@ -1,106 +1,6 @@
-<template>
-  <div id="stream-component">
-    <h2>Stream Test</h2>
-
-    <!-- Add new item form -->
-    <div class="add-form">
-      <h3>Add New Item</h3>
-      <input v-model="newItem.name" placeholder="Item name" data-testid="name-input" />
-      <input v-model="newItem.description" placeholder="Item description" data-testid="description-input" />
-      <button @click="addItem" data-testid="add-button">Add Item</button>
-    </div>
-
-    <!-- Stream controls -->
-    <div class="stream-controls">
-      <button @click="clearStream" data-testid="clear-button">Clear All</button>
-      <button @click="resetStream" data-testid="reset-button">Reset to Default</button>
-      <button @click="resetStreamAt0" data-testid="reset-button-at-0">Reset to Default (at: 0)</button>
-    </div>
-
-    <!-- Limit operation controls -->
-    <div class="limit-controls">
-      <h3>Limit Operations</h3>
-      <div class="limit-section">
-        <h4>Multiple Insert Operations</h4>
-        <button @click="addMultipleStart" data-testid="add-multiple-start-button" class="limit-button">
-          Add 3 Items at Start (Limit: Keep First 5)
-        </button>
-        <button @click="addMultipleEnd" data-testid="add-multiple-end-button" class="limit-button">
-          Add 3 Items at End (Limit: Keep Last 5)
-        </button>
-      </div>
-
-      <div class="limit-section">
-        <h4>Single Insert with Custom Limits</h4>
-        <div class="limit-input-group">
-          <input
-            v-model.number="positiveLimit"
-            type="number"
-            placeholder="Positive limit"
-            min="1"
-            max="10"
-            data-testid="positive-limit-input"
-            class="limit-input"
-          />
-          <button
-            @click="addWithPositiveLimit"
-            data-testid="add-positive-limit-button"
-            class="limit-button"
-            :disabled="!positiveLimit || positiveLimit < 1"
-          >
-            Add Item (Keep First {{ positiveLimit || "?" }})
-          </button>
-        </div>
-
-        <div class="limit-input-group">
-          <input
-            v-model.number="negativeLimit"
-            type="number"
-            placeholder="Negative limit"
-            min="1"
-            max="10"
-            data-testid="negative-limit-input"
-            class="limit-input"
-          />
-          <button
-            @click="addWithNegativeLimit"
-            data-testid="add-negative-limit-button"
-            class="limit-button"
-            :disabled="!negativeLimit || negativeLimit < 1"
-          >
-            Add Item (Keep Last {{ negativeLimit || "?" }})
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Items list -->
-    <div class="items-list">
-      <h3>Items ({{ props.items.length }})</h3>
-      <div v-if="props.items.length === 0" data-testid="empty-message" class="empty-state">No items in the stream</div>
-      <div v-for="item in props.items" :key="item.id" class="item" :data-testid="`item-${item.id}`">
-        <div class="item-content">
-          <h4 data-testid="item-name">{{ item.name }}</h4>
-          <p data-testid="item-description">{{ item.description }}</p>
-          <small data-testid="item-id">ID: {{ item.id }}</small>
-        </div>
-        <button @click="removeItem(item.id)" :data-testid="`remove-${item.id}`" class="remove-button">Remove</button>
-      </div>
-    </div>
-
-    <!-- Debug info -->
-    <div class="debug-info">
-      <h4>Debug Info</h4>
-      <p>Items type: {{ typeof props.items }}</p>
-      <p>Items length: {{ itemsLength }}</p>
-      <pre data-testid="raw-items">{{ JSON.stringify(items, null, 2) }}</pre>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed } from "vue"
-import { useLiveVue } from "live_vue"
+import { useLiveVue } from 'live_vue'
+import { computed, ref } from 'vue'
 
 // Props
 const props = defineProps<{
@@ -116,8 +16,8 @@ const live = useLiveVue()
 
 // Reactive data
 const newItem = ref({
-  name: "",
-  description: "",
+  name: '',
+  description: '',
 })
 
 const positiveLimit = ref(3)
@@ -127,66 +27,182 @@ const negativeLimit = ref(3)
 const itemsLength = computed(() => props.items.length)
 
 // Methods
-const addItem = () => {
+function addItem() {
   if (!newItem.value.name.trim()) {
-    alert("Please enter a name for the item")
+    alert('Please enter a name for the item')
     return
   }
 
   // Send event to LiveView using the correct API
-  live.pushEvent("add_item", {
+  live.pushEvent('add_item', {
     name: newItem.value.name,
     description: newItem.value.description,
   })
 
   // Clear form
   newItem.value = {
-    name: "",
-    description: "",
+    name: '',
+    description: '',
   }
 }
 
-const removeItem = (id: number) => {
-  live.pushEvent("remove_item", { id })
+function removeItem(id: number) {
+  live.pushEvent('remove_item', { id })
 }
 
-const clearStream = () => {
-  live.pushEvent("clear_stream", {})
+function clearStream() {
+  live.pushEvent('clear_stream', {})
 }
 
-const resetStream = () => {
-  live.pushEvent("reset_stream", {})
+function resetStream() {
+  live.pushEvent('reset_stream', {})
 }
 
-const resetStreamAt0 = () => {
-  live.pushEvent("reset_stream_at_0", {})
+function resetStreamAt0() {
+  live.pushEvent('reset_stream_at_0', {})
 }
 
 // Limit operation methods
-const addMultipleStart = () => {
-  live.pushEvent("add_multiple_start", {})
+function addMultipleStart() {
+  live.pushEvent('add_multiple_start', {})
 }
 
-const addMultipleEnd = () => {
-  live.pushEvent("add_multiple_end", {})
+function addMultipleEnd() {
+  live.pushEvent('add_multiple_end', {})
 }
 
-const addWithPositiveLimit = () => {
+function addWithPositiveLimit() {
   if (positiveLimit.value && positiveLimit.value > 0) {
-    live.pushEvent("add_with_positive_limit", {
+    live.pushEvent('add_with_positive_limit', {
       limit: positiveLimit.value.toString(),
     })
   }
 }
 
-const addWithNegativeLimit = () => {
+function addWithNegativeLimit() {
   if (negativeLimit.value && negativeLimit.value > 0) {
-    live.pushEvent("add_with_negative_limit", {
+    live.pushEvent('add_with_negative_limit', {
       limit: negativeLimit.value.toString(),
     })
   }
 }
 </script>
+
+<template>
+  <div id="stream-component">
+    <h2>Stream Test</h2>
+
+    <!-- Add new item form -->
+    <div class="add-form">
+      <h3>Add New Item</h3>
+      <input v-model="newItem.name" placeholder="Item name" data-testid="name-input">
+      <input v-model="newItem.description" placeholder="Item description" data-testid="description-input">
+      <button data-testid="add-button" @click="addItem">
+        Add Item
+      </button>
+    </div>
+
+    <!-- Stream controls -->
+    <div class="stream-controls">
+      <button data-testid="clear-button" @click="clearStream">
+        Clear All
+      </button>
+      <button data-testid="reset-button" @click="resetStream">
+        Reset to Default
+      </button>
+      <button data-testid="reset-button-at-0" @click="resetStreamAt0">
+        Reset to Default (at: 0)
+      </button>
+    </div>
+
+    <!-- Limit operation controls -->
+    <div class="limit-controls">
+      <h3>Limit Operations</h3>
+      <div class="limit-section">
+        <h4>Multiple Insert Operations</h4>
+        <button data-testid="add-multiple-start-button" class="limit-button" @click="addMultipleStart">
+          Add 3 Items at Start (Limit: Keep First 5)
+        </button>
+        <button data-testid="add-multiple-end-button" class="limit-button" @click="addMultipleEnd">
+          Add 3 Items at End (Limit: Keep Last 5)
+        </button>
+      </div>
+
+      <div class="limit-section">
+        <h4>Single Insert with Custom Limits</h4>
+        <div class="limit-input-group">
+          <input
+            v-model.number="positiveLimit"
+            type="number"
+            placeholder="Positive limit"
+            min="1"
+            max="10"
+            data-testid="positive-limit-input"
+            class="limit-input"
+          >
+          <button
+            data-testid="add-positive-limit-button"
+            class="limit-button"
+            :disabled="!positiveLimit || positiveLimit < 1"
+            @click="addWithPositiveLimit"
+          >
+            Add Item (Keep First {{ positiveLimit || "?" }})
+          </button>
+        </div>
+
+        <div class="limit-input-group">
+          <input
+            v-model.number="negativeLimit"
+            type="number"
+            placeholder="Negative limit"
+            min="1"
+            max="10"
+            data-testid="negative-limit-input"
+            class="limit-input"
+          >
+          <button
+            data-testid="add-negative-limit-button"
+            class="limit-button"
+            :disabled="!negativeLimit || negativeLimit < 1"
+            @click="addWithNegativeLimit"
+          >
+            Add Item (Keep Last {{ negativeLimit || "?" }})
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items list -->
+    <div class="items-list">
+      <h3>Items ({{ props.items.length }})</h3>
+      <div v-if="props.items.length === 0" data-testid="empty-message" class="empty-state">
+        No items in the stream
+      </div>
+      <div v-for="item in props.items" :key="item.id" class="item" :data-testid="`item-${item.id}`">
+        <div class="item-content">
+          <h4 data-testid="item-name">
+            {{ item.name }}
+          </h4>
+          <p data-testid="item-description">
+            {{ item.description }}
+          </p>
+          <small data-testid="item-id">ID: {{ item.id }}</small>
+        </div>
+        <button :data-testid="`remove-${item.id}`" class="remove-button" @click="removeItem(item.id)">
+          Remove
+        </button>
+      </div>
+    </div>
+
+    <!-- Debug info -->
+    <div class="debug-info">
+      <h4>Debug Info</h4>
+      <p>Items type: {{ typeof props.items }}</p>
+      <p>Items length: {{ itemsLength }}</p>
+      <pre data-testid="raw-items">{{ JSON.stringify(items, null, 2) }}</pre>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .add-form {
