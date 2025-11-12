@@ -3,7 +3,7 @@
   "compilerOptions": {
     "lib": ["ES2020"],
     "types": ["node", "./assets/js/live_vue/serverElementPolyfill.d.ts"],
-    "allowJs": true,
+    "allowJs": true
   },
   "include": ["assets/js/live_vue/server.ts", "assets/js/live_vue/vitePlugin.ts"]
 }

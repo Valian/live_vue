@@ -1,31 +1,31 @@
 {
-    "compilerOptions": {
-      "target": "ES2020",
-      "useDefineForClassFields": true,
-      "module": "ESNext",
-      "lib": ["ES2020", "DOM", "DOM.Iterable"],
-      "skipLibCheck": true,
+  "compilerOptions": {
+    "target": "ES2020",
+    "jsx": "preserve",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "useDefineForClassFields": true,
+    "module": "ESNext",
 
-      /* Types for Vite https://vitejs.dev/guide/features#client-types */
-      "types": ["vite/client"],
-
-      /* Bundler mode */
-      "moduleResolution": "bundler",
-      "allowImportingTsExtensions": true,
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noEmit": true,
-      "jsx": "preserve",
-
-      /* Linting */
-      "strict": true,
-      "noUnusedLocals": true,
-      "noUnusedParameters": true,
-      "noFallthroughCasesInSwitch": true,
-
-      "paths": {
-        "@/*": ["./*"]
-      }
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./*"]
     },
-    "include": ["js/**/*.ts", "js/**/*.js", "js/**/*.tsx", "vue/**/*.vue",  "vue/index.ts", "*.config.ts"],
-  }
+    "resolveJsonModule": true,
+
+    /* Types for Vite https://vitejs.dev/guide/features#client-types */
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true,
+
+    /* Linting */
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["js/**/*.ts", "js/**/*.js", "js/**/*.tsx", "vue/**/*.vue", "vue/index.ts", "*.config.ts"]
+}

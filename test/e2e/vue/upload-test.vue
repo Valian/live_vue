@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { computed } from "vue"
-import { useLiveUpload, UploadConfig, UploadEntry } from "live_vue"
+import type { UploadConfig, UploadEntry } from 'live_vue'
+import { useLiveUpload } from 'live_vue'
+import { computed } from 'vue'
 
 interface Props {
   upload: UploadConfig
-  uploadedFiles: { name: string; size: number; type: string }[]
+  uploadedFiles: { name: string, size: number, type: string }[]
 }
 
 const props = defineProps<Props>()
 
 const { entries, showFilePicker, addFiles, submit, cancel } = useLiveUpload(() => props.upload, {
-  changeEvent: "validate",
-  submitEvent: "save",
+  changeEvent: 'validate',
+  submitEvent: 'save',
 })
 
 // Computed properties to handle reactive values
@@ -22,13 +23,13 @@ const entriesCount = computed(() => entriesList.value.length)
 const hasGlobalErrors = computed(() => props.upload.errors && props.upload.errors.length > 0)
 const globalErrorEntries = computed(() => props.upload.errors)
 
-const getEntryName = (ref: string) => {
+function getEntryName(ref: string) {
   const entry = entriesList.value.find((e: UploadEntry) => e.ref === ref)
   return entry ? entry.client_name : `Entry ${ref}`
 }
 
 // Handle drag and drop
-const handleDrop = (event: DragEvent) => {
+function handleDrop(event: DragEvent) {
   event.preventDefault()
   if (event.dataTransfer?.files) {
     const files = Array.from(event.dataTransfer.files)
@@ -36,7 +37,7 @@ const handleDrop = (event: DragEvent) => {
   }
 }
 
-const handleDragOver = (event: DragEvent) => {
+function handleDragOver(event: DragEvent) {
   event.preventDefault()
 }
 </script>
@@ -44,23 +45,33 @@ const handleDragOver = (event: DragEvent) => {
 <template>
   <div class="upload-container">
     <div id="upload-info" class="info-section">
-      <div id="max-entries" class="info-item">Max entries: {{ upload.max_entries }}</div>
-      <div id="auto-upload" class="info-item">Auto upload: {{ upload.auto_upload }}</div>
-      <div id="selected-count" class="info-item">Selected files: {{ entriesCount }}</div>
+      <div id="max-entries" class="info-item">
+        Max entries: {{ upload.max_entries }}
+      </div>
+      <div id="auto-upload" class="info-item">
+        Auto upload: {{ upload.auto_upload }}
+      </div>
+      <div id="selected-count" class="info-item">
+        Selected files: {{ entriesCount }}
+      </div>
     </div>
 
     <div class="upload-controls">
-      <button @click="showFilePicker" id="select-files-btn" class="btn btn-primary">Select Files</button>
+      <button id="select-files-btn" class="btn btn-primary" @click="showFilePicker">
+        Select Files
+      </button>
 
-      <button v-if="!upload.auto_upload && entriesCount > 0" @click="submit" id="upload-btn" class="btn btn-success">
+      <button v-if="!upload.auto_upload && entriesCount > 0" id="upload-btn" class="btn btn-success" @click="submit">
         Upload Files
       </button>
 
-      <button v-if="entriesCount > 0" @click="cancel()" id="cancel-all-btn" class="btn btn-danger">Cancel All</button>
+      <button v-if="entriesCount > 0" id="cancel-all-btn" class="btn btn-danger" @click="cancel()">
+        Cancel All
+      </button>
     </div>
 
     <!-- Drag and Drop Zone -->
-    <div id="drop-zone" class="drop-zone" @drop="handleDrop" @dragover="handleDragOver" :phx-drop-target="upload.ref">
+    <div id="drop-zone" class="drop-zone" :phx-drop-target="upload.ref" @drop="handleDrop" @dragover="handleDragOver">
       <p>Drag and drop files here</p>
     </div>
 
@@ -82,12 +93,16 @@ const handleDragOver = (event: DragEvent) => {
           </div>
         </div>
 
-        <button @click="cancel(entry.ref)" class="cancel-entry-btn btn btn-sm">×</button>
+        <button class="cancel-entry-btn btn btn-sm" @click="cancel(entry.ref)">
+          ×
+        </button>
       </div>
     </div>
 
     <div id="uploaded-files" class="uploaded-files">
-      <h3 v-if="uploadedFiles.length > 0">Uploaded Files</h3>
+      <h3 v-if="uploadedFiles.length > 0">
+        Uploaded Files
+      </h3>
       <div v-for="file in uploadedFiles" :key="file.name" class="uploaded-file">
         <span class="uploaded-name">{{ file.name }}</span>
         <span class="uploaded-size">{{ file.size }} bytes</span>
@@ -99,7 +114,9 @@ const handleDragOver = (event: DragEvent) => {
       <h4>Upload Errors:</h4>
       <div v-for="error in globalErrorEntries" :key="error.ref" class="global-error">
         <strong>{{ getEntryName(error.ref) }}:</strong>
-        <div class="error-message">{{ error.error }}</div>
+        <div class="error-message">
+          {{ error.error }}
+        </div>
       </div>
     </div>
   </div>

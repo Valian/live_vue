@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { syncLV } from '../utils.js'
 
 test.describe('useLiveEvent', () => {
@@ -18,7 +18,7 @@ test.describe('useLiveEvent', () => {
     // Verify notification event was received
     await expect(page.locator('#notification-count')).toContainText('Notification Count: 1')
     await expect(page.locator('.notification-event')).toContainText('Hello from test!')
-    
+
     // Verify the message appears in both LiveView state and Vue component
     await expect(page.locator('#message-display')).toContainText('Message: Hello from test!')
     await expect(page.locator('#event-count')).toContainText('Event Count: 1')
@@ -98,7 +98,7 @@ test.describe('useLiveEvent', () => {
       await page.fill('#message-input', `Rapid message ${i}`)
       await page.click('#send-notification-btn')
     }
-    
+
     await syncLV(page)
 
     // Verify all events are received

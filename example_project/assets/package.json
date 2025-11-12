@@ -1,22 +1,11 @@
 {
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vite --host -l warn",
     "lint": "vue-tsc --noEmit",
     "build": "vite build",
     "build-server": "vite build --ssr js/server.js --out-dir ../priv/vue --minify esbuild --ssrManifest && echo '{\"type\": \"module\" } ' > ../priv/vue/package.json"
-  },
-  "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
-    "@types/phoenix_live_view": "^0.20.0",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.9",
-    "vue-tsc": "^2.0.13"
   },
   "dependencies": {
     "@primevue/themes": "^4.0.3",
@@ -30,6 +19,17 @@
     "vite-plugin-vuetify": "^2.0.4",
     "vue": "^3.4.21",
     "vuetify": "^3.7.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@types/phoenix_live_view": "^0.20.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.9",
+    "vue-tsc": "^2.0.13"
   },
   "overrides": {
     "cross-spawn": "^7.0.5",

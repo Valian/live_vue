@@ -4,7 +4,7 @@
 // Conditionally import Socket type from phoenix if available
 // Uses a helper type to safely extract Socket when it exists
 type GetPhoenixSocket<T> = T extends { Socket: infer S } ? S : any
-type PhoenixSocket = GetPhoenixSocket<typeof import("phoenix")>
+type PhoenixSocket = GetPhoenixSocket<typeof import('phoenix')>
 
 // Check if DOM types are available and use them, otherwise use any
 type ServerHTMLElement = unknown extends HTMLElement ? any : HTMLElement
@@ -20,31 +20,31 @@ declare global {
 }
 
 export interface LiveSocketInstanceInterface {
-  version(): string
-  isProfileEnabled(): boolean
-  isDebugEnabled(): boolean
-  isDebugDisabled(): boolean
-  enableDebug(): void
-  enableProfiling(): void
-  disableDebug(): void
-  disableProfiling(): void
-  enableLatencySim(upperBoundMs: number): void
-  disableLatencySim(): void
-  getLatencySim(): number | null
-  getSocket(): PhoenixSocket
-  connect(): void
-  disconnect(callback?: () => void): void
-  replaceTransport(transport: any): void
-  execJS(el: ServerHTMLElement, encodedJS: string, eventType?: string | null): void
-  js(): any // LiveSocketJSCommands - avoiding full interface for simplicity
+  version: () => string
+  isProfileEnabled: () => boolean
+  isDebugEnabled: () => boolean
+  isDebugDisabled: () => boolean
+  enableDebug: () => void
+  enableProfiling: () => void
+  disableDebug: () => void
+  disableProfiling: () => void
+  enableLatencySim: (upperBoundMs: number) => void
+  disableLatencySim: () => void
+  getLatencySim: () => number | null
+  getSocket: () => PhoenixSocket
+  connect: () => void
+  disconnect: (callback?: () => void) => void
+  replaceTransport: (transport: any) => void
+  execJS: (el: ServerHTMLElement, encodedJS: string, eventType?: string | null) => void
+  js: () => any // LiveSocketJSCommands - avoiding full interface for simplicity
 
   // Navigation methods used by useLiveNavigation
-  pushHistoryPatch(event: ServerEvent, href: string, kind: string, el: any): void
-  historyRedirect(event: ServerEvent, href: string, kind: string, el: any, callback: any): void
+  pushHistoryPatch: (event: ServerEvent, href: string, kind: string, el: any) => void
+  historyRedirect: (event: ServerEvent, href: string, kind: string, el: any, callback: any) => void
 }
 
 export type OnReply = (reply: any, ref: number) => any
-export type CallbackRef = {
+export interface CallbackRef {
   event: string
   callback: (payload: any) => any
 }
@@ -59,24 +59,22 @@ export interface HookInterface {
   destroyed?: () => void
   disconnected?: () => void
   reconnected?: () => void
-  js(): any // HookJSCommands
-  pushEvent(event: string, payload: any, onReply: OnReply): void
-  pushEvent(event: string, payload?: any): Promise<any>
-  pushEventTo(selectorOrTarget: PhxTarget, event: string, payload: object, onReply: OnReply): void
-  pushEventTo(
+  js: () => any // HookJSCommands
+  pushEvent: ((event: string, payload: any, onReply: OnReply) => void) & ((event: string, payload?: any) => Promise<any>)
+  pushEventTo: ((selectorOrTarget: PhxTarget, event: string, payload: object, onReply: OnReply) => void) & ((
     selectorOrTarget: PhxTarget,
     event: string,
-    payload?: object
-  ): Promise<
+    payload?: object,
+  ) => Promise<
     PromiseSettledResult<{
       reply: any
       ref: number
     }>[]
-  >
-  handleEvent(event: string, callback: (payload: any) => any): CallbackRef
-  removeHandleEvent(ref: CallbackRef): void
-  upload(name: any, files: any): any
-  uploadTo(selectorOrTarget: PhxTarget, name: any, files: any): any
+  >)
+  handleEvent: (event: string, callback: (payload: any) => any) => CallbackRef
+  removeHandleEvent: (ref: CallbackRef) => void
+  upload: (name: any, files: any) => any
+  uploadTo: (selectorOrTarget: PhxTarget, name: any, files: any) => any
   [key: PropertyKey]: any
 }
 

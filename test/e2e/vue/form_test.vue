@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { useLiveForm, type Form } from "live_vue"
+import type { Form } from 'live_vue'
+import { useLiveForm } from 'live_vue'
 
 // Define a simple form structure for testing
-type TestForm = {
+interface TestForm {
   name: string
   email: string
   age: number
@@ -24,38 +25,39 @@ const props = defineProps<{
 }>()
 
 const form = useLiveForm(() => props.form, {
-  changeEvent: "validate",
-  submitEvent: "submit",
+  changeEvent: 'validate',
+  submitEvent: 'submit',
   debounceInMiliseconds: 300,
 })
 
 // Basic fields
-const nameField = form.field("name")
-const emailField = form.field("email")
-const ageField = form.field("age")
+const nameField = form.field('name')
+const emailField = form.field('email')
+const ageField = form.field('age')
 
 // Checkbox fields
-const acceptTermsField = form.field("acceptTerms", { type: "checkbox" })
-const newsletterField = form.field("newsletter", { type: "checkbox" })
+const acceptTermsField = form.field('acceptTerms', { type: 'checkbox' })
+const newsletterField = form.field('newsletter', { type: 'checkbox' })
 
 // Multi-checkbox fields for preferences
-const emailPrefField = form.field("preferences", { type: "checkbox", value: "email" })
-const smsPrefField = form.field("preferences", { type: "checkbox", value: "sms" })
-const pushPrefField = form.field("preferences", { type: "checkbox", value: "push" })
+const emailPrefField = form.field('preferences', { type: 'checkbox', value: 'email' })
+const smsPrefField = form.field('preferences', { type: 'checkbox', value: 'sms' })
+const pushPrefField = form.field('preferences', { type: 'checkbox', value: 'push' })
 
 // Nested object fields
-const profileField = form.field("profile")
-const bioField = profileField.field("bio")
+const profileField = form.field('profile')
+const bioField = profileField.field('bio')
 
 // Array fields
-const skillsArray = form.fieldArray("profile.skills")
-const itemsArray = form.fieldArray("items")
+const skillsArray = form.fieldArray('profile.skills')
+const itemsArray = form.fieldArray('items')
 
-const submitForm = async () => {
+async function submitForm() {
   try {
     await form.submit()
-  } catch (error) {
-    console.error("Form submission failed:", error)
+  }
+  catch (error) {
+    console.error('Form submission failed:', error)
   }
 }
 </script>
@@ -66,9 +68,15 @@ const submitForm = async () => {
 
     <!-- Form State Display -->
     <div class="form-state" data-pw-form-state>
-      <div data-pw-is-valid>Valid: {{ form.isValid.value ? "true" : "false" }}</div>
-      <div data-pw-is-dirty>Dirty: {{ form.isDirty.value ? "true" : "false" }}</div>
-      <div data-pw-is-touched>Touched: {{ form.isTouched.value ? "true" : "false" }}</div>
+      <div data-pw-is-valid>
+        Valid: {{ form.isValid.value ? "true" : "false" }}
+      </div>
+      <div data-pw-is-dirty>
+        Dirty: {{ form.isDirty.value ? "true" : "false" }}
+      </div>
+      <div data-pw-is-touched>
+        Touched: {{ form.isTouched.value ? "true" : "false" }}
+      </div>
       <div data-pw-values>
         Values:
         <pre>{{ JSON.stringify(props.form, null, 2) }}</pre>
@@ -80,16 +88,16 @@ const submitForm = async () => {
       <div class="field">
         <label :for="nameField.inputAttrs.value.id">Name</label>
         <input
-          :value="nameField.inputAttrs.value.value"
-          @input="nameField.inputAttrs.value.onInput"
-          @blur="nameField.inputAttrs.value.onBlur"
-          :name="nameField.inputAttrs.value.name"
           :id="nameField.inputAttrs.value.id"
+          :value="nameField.inputAttrs.value.value"
+          :name="nameField.inputAttrs.value.name"
           :aria-invalid="nameField.inputAttrs.value['aria-invalid']"
           :aria-describedby="nameField.inputAttrs.value['aria-describedby']"
           data-pw-name-input
           placeholder="Enter name"
-        />
+          @input="nameField.inputAttrs.value.onInput"
+          @blur="nameField.inputAttrs.value.onBlur"
+        >
         <div v-if="nameField.errorMessage.value" class="error" data-pw-name-error>
           {{ nameField.errorMessage.value }}
         </div>
@@ -98,17 +106,17 @@ const submitForm = async () => {
       <div class="field">
         <label :for="emailField.inputAttrs.value.id">Email</label>
         <input
-          :value="emailField.inputAttrs.value.value"
-          @input="emailField.inputAttrs.value.onInput"
-          @blur="emailField.inputAttrs.value.onBlur"
-          :name="emailField.inputAttrs.value.name"
           :id="emailField.inputAttrs.value.id"
+          :value="emailField.inputAttrs.value.value"
+          :name="emailField.inputAttrs.value.name"
           :aria-invalid="emailField.inputAttrs.value['aria-invalid']"
           :aria-describedby="emailField.inputAttrs.value['aria-describedby']"
           data-pw-email-input
           type="email"
           placeholder="Enter email"
-        />
+          @input="emailField.inputAttrs.value.onInput"
+          @blur="emailField.inputAttrs.value.onBlur"
+        >
         <div v-if="emailField.errorMessage.value" class="error" data-pw-email-error>
           {{ emailField.errorMessage.value }}
         </div>
@@ -116,7 +124,7 @@ const submitForm = async () => {
 
       <div class="field">
         <label :for="ageField.inputAttrs.value.id">Age</label>
-        <input v-bind="ageField.inputAttrs.value" data-pw-age-input type="number" placeholder="Enter age" />
+        <input v-bind="ageField.inputAttrs.value" data-pw-age-input type="number" placeholder="Enter age">
         <div v-if="ageField.errorMessage.value" class="error" data-pw-age-error>
           {{ ageField.errorMessage.value }}
         </div>
@@ -130,7 +138,7 @@ const submitForm = async () => {
       <!-- Single Checkbox -->
       <div class="field checkbox-field">
         <label>
-          <input v-bind="acceptTermsField.inputAttrs.value" data-pw-accept-terms />
+          <input v-bind="acceptTermsField.inputAttrs.value" data-pw-accept-terms>
           Accept Terms and Conditions
         </label>
         <div v-if="acceptTermsField.errorMessage.value" class="error" data-pw-accept-terms-error>
@@ -141,7 +149,7 @@ const submitForm = async () => {
       <!-- Another Single Checkbox -->
       <div class="field checkbox-field">
         <label>
-          <input v-bind="newsletterField.inputAttrs.value" data-pw-newsletter />
+          <input v-bind="newsletterField.inputAttrs.value" data-pw-newsletter>
           Subscribe to Newsletter
         </label>
         <div v-if="newsletterField.errorMessage.value" class="error" data-pw-newsletter-error>
@@ -154,15 +162,15 @@ const submitForm = async () => {
         <label>Preferences (select multiple)</label>
         <div class="checkbox-group">
           <label class="checkbox-option">
-            <input v-bind="emailPrefField.inputAttrs.value" data-pw-preferences-email />
+            <input v-bind="emailPrefField.inputAttrs.value" data-pw-preferences-email>
             Email Notifications
           </label>
           <label class="checkbox-option">
-            <input v-bind="smsPrefField.inputAttrs.value" data-pw-preferences-sms />
+            <input v-bind="smsPrefField.inputAttrs.value" data-pw-preferences-sms>
             SMS Notifications
           </label>
           <label class="checkbox-option">
-            <input v-bind="pushPrefField.inputAttrs.value" data-pw-preferences-push />
+            <input v-bind="pushPrefField.inputAttrs.value" data-pw-preferences-push>
             Push Notifications
           </label>
         </div>
@@ -177,7 +185,7 @@ const submitForm = async () => {
       <h3>Profile</h3>
       <div class="field">
         <label :for="bioField.inputAttrs.value.id">Bio</label>
-        <textarea v-bind="bioField.inputAttrs.value" data-pw-bio-input placeholder="Enter bio" rows="3"></textarea>
+        <textarea v-bind="bioField.inputAttrs.value" data-pw-bio-input placeholder="Enter bio" rows="3" />
         <div v-if="bioField.errorMessage.value" class="error" data-pw-bio-error>
           {{ bioField.errorMessage.value }}
         </div>
@@ -188,7 +196,9 @@ const submitForm = async () => {
     <div class="skills-section">
       <div class="skills-header">
         <h3>Skills</h3>
-        <button @click="skillsArray.add('')" data-pw-add-skill>Add Skill</button>
+        <button data-pw-add-skill @click="skillsArray.add('')">
+          Add Skill
+        </button>
       </div>
 
       <div class="skills-list">
@@ -198,8 +208,10 @@ const submitForm = async () => {
           class="skill-item"
           :data-pw-skill-item="index"
         >
-          <input v-bind="skillField.inputAttrs.value" :data-pw-skill-input="index" placeholder="Enter skill" />
-          <button @click="() => skillsArray.remove(index)" :data-pw-remove-skill="index">Remove</button>
+          <input v-bind="skillField.inputAttrs.value" :data-pw-skill-input="index" placeholder="Enter skill">
+          <button :data-pw-remove-skill="index" @click="() => skillsArray.remove(index)">
+            Remove
+          </button>
         </div>
       </div>
     </div>
@@ -208,7 +220,9 @@ const submitForm = async () => {
     <div class="items-section">
       <div class="items-header">
         <h3>Items</h3>
-        <button @click="() => itemsArray.add({ title: '', tags: [] })" data-pw-add-item>Add Item</button>
+        <button data-pw-add-item @click="() => itemsArray.add({ title: '', tags: [] })">
+          Add Item
+        </button>
       </div>
 
       <div class="items-list">
@@ -220,7 +234,9 @@ const submitForm = async () => {
         >
           <div class="item-header">
             <h4>Item {{ itemIndex + 1 }}</h4>
-            <button @click="() => itemsArray.remove(itemIndex)" :data-pw-remove-item="itemIndex">Remove Item</button>
+            <button :data-pw-remove-item="itemIndex" @click="() => itemsArray.remove(itemIndex)">
+              Remove Item
+            </button>
           </div>
 
           <div class="field">
@@ -229,7 +245,7 @@ const submitForm = async () => {
               v-bind="itemField.field('title').inputAttrs.value"
               :data-pw-item-title="itemIndex"
               placeholder="Enter item title"
-            />
+            >
             <div v-if="itemField.field('title').errorMessage.value" class="error">
               {{ itemField.field("title").errorMessage.value }}
             </div>
@@ -239,7 +255,7 @@ const submitForm = async () => {
           <div class="tags-section">
             <div class="tags-header">
               <label>Tags</label>
-              <button @click="() => itemsArray.fieldArray(`[${itemIndex}].tags`).add('')" :data-pw-add-tag="itemIndex">
+              <button :data-pw-add-tag="itemIndex" @click="() => itemsArray.fieldArray(`[${itemIndex}].tags`).add('')">
                 Add Tag
               </button>
             </div>
@@ -255,10 +271,10 @@ const submitForm = async () => {
                   v-bind="tagField.inputAttrs.value"
                   :data-pw-tag-input="`${itemIndex}-${tagIndex}`"
                   placeholder="Enter tag"
-                />
+                >
                 <button
-                  @click="() => itemsArray.fieldArray(`[${itemIndex}].tags`).remove(tagIndex)"
                   :data-pw-remove-tag="`${itemIndex}-${tagIndex}`"
+                  @click="() => itemsArray.fieldArray(`[${itemIndex}].tags`).remove(tagIndex)"
                 >
                   Remove
                 </button>
@@ -271,8 +287,12 @@ const submitForm = async () => {
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button @click="form.reset()" data-pw-reset>Reset</button>
-      <button @click="submitForm" :disabled="!form.isValid.value" data-pw-submit>Submit</button>
+      <button data-pw-reset @click="form.reset()">
+        Reset
+      </button>
+      <button :disabled="!form.isValid.value" data-pw-submit @click="submitForm">
+        Submit
+      </button>
     </div>
   </div>
 </template>

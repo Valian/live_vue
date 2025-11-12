@@ -1,14 +1,16 @@
-import { createApp, createSSRApp, h, reactive, type App } from "vue"
-import { migrateToLiveVueApp } from "./app.js"
-import { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
-import { liveInjectKey } from "./use.js"
-import { mapValues } from "./utils.js"
-import { applyPatch, type Operation } from "./jsonPatch.js"
+import type { App } from 'vue'
+import type { Operation } from './jsonPatch.js'
+import type { ComponentMap, Hook, LiveVueApp, LiveVueOptions } from './types.js'
+import { createApp, createSSRApp, h, reactive } from 'vue'
+import { migrateToLiveVueApp } from './app.js'
+import { applyPatch } from './jsonPatch.js'
+import { liveInjectKey } from './use.js'
+import { mapValues } from './utils.js'
 
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
  */
-const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string, any> | null => {
+function getAttributeJson(el: HTMLElement, attributeName: string): Record<string, any> | null {
   const data = el.getAttribute(attributeName)
   return data ? JSON.parse(data) : null
 }
@@ -18,12 +20,12 @@ const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string
  * The slots are parsed from the "data-slots" attribute.
  * The slots are converted to a function that returns a div with the innerHTML set to the base64 decoded slot.
  */
-const getSlots = (el: HTMLElement): Record<string, () => any> => {
-  const dataSlots = getAttributeJson(el, "data-slots") || {}
-  return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
+function getSlots(el: HTMLElement): Record<string, () => any> {
+  const dataSlots = getAttributeJson(el, 'data-slots') || {}
+  return mapValues(dataSlots, base64 => () => h('div', { innerHTML: atob(base64).trim() }))
 }
 
-const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {
+function getDiff(el: HTMLElement, attributeName: string): Operation[] {
   const dataPropsDiff = getAttributeJson(el, attributeName) || []
   return dataPropsDiff.map(([op, path, value]: [string, string, any]) => ({
     op,
@@ -41,17 +43,18 @@ const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {
  * @param liveSocket - The LiveSocket instance.
  * @returns The handlers as an object.
  */
-const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: any) => void> => {
-  const handlers = getAttributeJson(el, "data-handlers") || {}
+function getHandlers(el: HTMLElement, liveSocket: any): Record<string, (event: any) => void> {
+  const handlers = getAttributeJson(el, 'data-handlers') || {}
   const result: Record<string, (event: any) => void> = {}
   for (const handlerName in handlers) {
     const ops = handlers[handlerName]
     const snakeCaseName = `on${handlerName.charAt(0).toUpperCase() + handlerName.slice(1)}`
-    result[snakeCaseName] = event => {
+    result[snakeCaseName] = (event) => {
       // a little bit of magic to replace the event with the value of the input
       const parsedOps = JSON.parse(ops)
       const replacedOps = parsedOps.map(([op, args, ...other]: [string, any, ...any[]]) => {
-        if (op === "push" && !args.value) args.value = event
+        if (op === 'push' && !args.value)
+          args.value = event
         return [op, args, ...other]
       })
       liveSocket.execJS(el, JSON.stringify(replacedOps))
@@ -68,61 +71,67 @@ const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: a
  * @param liveSocket - The LiveSocket instance.
  * @returns The props as an object.
  */
-const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
-  ...(getAttributeJson(el, "data-props") || {}),
-  ...getHandlers(el, liveSocket),
-})
+function getProps(el: HTMLElement, liveSocket: any): Record<string, any> {
+  return {
+    ...(getAttributeJson(el, 'data-props') || {}),
+    ...getHandlers(el, liveSocket),
+  }
+}
 
-export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
-  async mounted() {
-    const componentName = this.el.getAttribute("data-name") as string
-    const component = await resolve(componentName)
+export function getVueHook({ resolve, setup }: LiveVueApp): Hook {
+  return {
+    async mounted() {
+      const componentName = this.el.getAttribute('data-name') as string
+      const component = await resolve(componentName)
 
-    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+      const makeApp = this.el.getAttribute('data-ssr') === 'true' ? createSSRApp : createApp
 
-    const props = reactive(getProps(this.el, this.liveSocket))
-    const slots = reactive(getSlots(this.el))
-    // let's apply initial stream diff here, since all stream changes are sent in that attribute
-    applyPatch(props, getDiff(this.el, "data-streams-diff"))
+      const props = reactive(getProps(this.el, this.liveSocket))
+      const slots = reactive(getSlots(this.el))
+      // let's apply initial stream diff here, since all stream changes are sent in that attribute
+      applyPatch(props, getDiff(this.el, 'data-streams-diff'))
 
-    this.vue = { props, slots, app: null }
-    const app = setup({
-      createApp: makeApp,
-      component,
-      props,
-      slots,
-      plugin: {
-        install: (app: App) => {
-          app.provide(liveInjectKey, this)
-          app.config.globalProperties.$live = this
+      this.vue = { props, slots, app: null }
+      const app = setup({
+        createApp: makeApp,
+        component,
+        props,
+        slots,
+        plugin: {
+          install: (app: App) => {
+            app.provide(liveInjectKey, this)
+            app.config.globalProperties.$live = this
+          },
         },
-      },
-      el: this.el,
-      ssr: false,
-    })
+        el: this.el,
+        ssr: false,
+      })
 
-    if (!app) throw new Error("Setup function did not return a Vue app!")
+      if (!app)
+        throw new Error('Setup function did not return a Vue app!')
 
-    this.vue.app = app
-  },
-  updated() {
-    if (this.el.getAttribute("data-use-diff") === "true") {
-      applyPatch(this.vue.props, getDiff(this.el, "data-props-diff"))
-    } else {
-      Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
-    }
-    // we're always applying streams diff, since all stream changes are sent in that attribute
-    applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
-  },
-  destroyed() {
-    const instance = this.vue.app
-    // TODO - is there maybe a better way to cleanup the app?
-    if (instance) {
-      window.addEventListener("phx:page-loading-stop", () => instance.unmount(), { once: true })
-    }
-  },
-})
+      this.vue.app = app
+    },
+    updated() {
+      if (this.el.getAttribute('data-use-diff') === 'true') {
+        applyPatch(this.vue.props, getDiff(this.el, 'data-props-diff'))
+      }
+      else {
+        Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
+      }
+      // we're always applying streams diff, since all stream changes are sent in that attribute
+      applyPatch(this.vue.props, getDiff(this.el, 'data-streams-diff'))
+      Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+    },
+    destroyed() {
+      const instance = this.vue.app
+      // TODO - is there maybe a better way to cleanup the app?
+      if (instance) {
+        window.addEventListener('phx:page-loading-stop', () => instance.unmount(), { once: true })
+      }
+    },
+  }
+}
 
 /**
  * Returns the hooks for the LiveVue app.
@@ -130,14 +139,14 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
  * @param options - The options for the LiveVue app.
  * @returns The hooks for the LiveVue app.
  */
-type VueHooks = { VueHook: Hook }
+interface VueHooks { VueHook: Hook }
 type getHooksAppFn = (app: LiveVueApp) => VueHooks
-type getHooksComponentsOptions = { initializeApp?: LiveVueOptions["setup"] }
+interface getHooksComponentsOptions { initializeApp?: LiveVueOptions['setup'] }
 type getHooksComponentsFn = (components: ComponentMap, options?: getHooksComponentsOptions) => VueHooks
 
 export const getHooks: getHooksComponentsFn | getHooksAppFn = (
   componentsOrApp: ComponentMap | LiveVueApp,
-  options?: getHooksComponentsOptions
+  options?: getHooksComponentsOptions,
 ) => {
   const app = migrateToLiveVueApp(componentsOrApp, options ?? {})
   return { VueHook: getVueHook(app) }
