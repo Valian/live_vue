@@ -93,11 +93,11 @@ export interface LiveVueOptions {
   setup?: (context: SetupContext) => App
 }
 
-export interface LiveVueApp {
+export type LiveVueApp = {
   setup: (context: SetupContext) => App
   resolve: (path: string) => ComponentOrComponentPromise
 }
 
-export interface LiveVue {
+export type LiveVue = {
   VueHook: ViewHook
 }

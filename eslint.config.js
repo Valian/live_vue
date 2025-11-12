@@ -6,7 +6,11 @@ export default antfu(
     gitignore: {
       files: ['.gitignore', 'example_project/.gitignore'],
     },
-    typescript: true,
+    typescript: {
+      overrides: {
+        'ts/consistent-type-definitions': 'off',
+      },
+    },
     vue: {
       overrides: {
         'vue/no-unused-properties': 'warn',

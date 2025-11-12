@@ -21,12 +21,12 @@ export function defaultSetup({ createApp, component, props, slots, plugin, el }:
   return app
 }
 
-function isLiveVueApp(components: ComponentMap | LiveVueApp): components is LiveVueApp {
+function isLiveVueApp(components: ComponentMap | LiveVueOptions): components is LiveVueApp {
   return ('resolve' in components && typeof components.resolve === 'function')
     && ('setup' in components && typeof components.setup === 'function')
 }
 
-export function migrateToLiveVueApp(components: ComponentMap | LiveVueApp, options: { initializeApp?: (context: SetupContext) => App } = {}): LiveVueApp {
+export function migrateToLiveVueApp(components: ComponentMap | LiveVueOptions, options: { initializeApp?: (context: SetupContext) => App } = {}): LiveVueApp {
   if (isLiveVueApp(components)) {
     return components
   }

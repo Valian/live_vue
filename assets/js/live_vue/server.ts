@@ -1,10 +1,9 @@
 // @ts-config ./tsconfig.server.json
 
-import type { LiveVueApp } from 'live_vue'
 import type { ViewHook } from 'phoenix_live_view'
 import type { App, Component } from 'vue'
 import type { SSRContext } from 'vue/server-renderer'
-import type { VueArgs } from './types.js'
+import type { LiveVueOptions, VueArgs } from './types.js'
 import fs from 'node:fs'
 import { basename, resolve } from 'node:path'
 import { createSSRApp, h } from 'vue'
@@ -37,7 +36,7 @@ const mockLive: Partial<Omit<ViewHook, 'el'>> & {
     app: {},
   },
 }
-export function getRender(componentsOrApp: Components | LiveVueApp, manifest: Manifest = {}) {
+export function getRender(componentsOrApp: Components | LiveVueOptions, manifest: Manifest = {}) {
   const { resolve, setup } = migrateToLiveVueApp(componentsOrApp)
 
   return async (name: string, props: Record<string, any>, slots: Record<string, string>) => {
@@ -56,8 +55,7 @@ export function getRender(componentsOrApp: Components | LiveVueApp, manifest: Ma
           app.provide('_live_vue', Object.assign({}, mockLive))
         },
       },
-      // @ts-expect-error - this is just an IDE issue. the compiler is correctly processing this with the server tsconfig
-      el: {},
+      el: {} as Element,
       ssr: true,
     })
 
