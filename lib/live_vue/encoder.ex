@@ -133,32 +133,30 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
     )
   rescue
     error in [Protocol.UndefinedError] ->
-      error =
-        if Code.ensure_loaded?(Ecto) do
-          case error.value do
-            %Ecto.Association.NotLoaded{} ->
-              Map.update!(error, :description, fn description ->
-                [first | rest] = String.split(description, "\n\n")
-
-                addition = """
-                To prevent this error from happening in forms, you can explicitly encode form using LiveVue.Encoder.encode(form, nillify_not_loaded: true) option.
-                """
-
-                Enum.join([first | [addition | rest]], "\n\n")
-              end)
-
-            _val ->
-              error
-          end
-        else
-          error
-        end
-
-      reraise error, __STACKTRACE__
+      reraise maybe_enhance_error(error), __STACKTRACE__
   end
 
   defp get_form_validity(%{source: %{valid?: valid}}), do: valid
   defp get_form_validity(_), do: true
+
+  # Conditionally compiled helper to enhance error messages when Ecto is available
+  if Code.ensure_loaded?(Ecto) do
+    defp maybe_enhance_error(%{value: %Ecto.Association.NotLoaded{}} = error) do
+      Map.update!(error, :description, fn description ->
+        [first | rest] = String.split(description, "\n\n")
+
+        addition = """
+        To prevent this error from happening in forms, you can explicitly encode form using LiveVue.Encoder.encode(form, nillify_not_loaded: true) option.
+        """
+
+        Enum.join([first | [addition | rest]], "\n\n")
+      end)
+    end
+
+    defp maybe_enhance_error(error), do: error
+  else
+    defp maybe_enhance_error(error), do: error
+  end
 
   if Code.ensure_loaded?(Ecto) do
     @relations [:embed, :assoc]
