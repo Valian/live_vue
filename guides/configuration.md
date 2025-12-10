@@ -91,13 +91,9 @@ export default createLiveVue({
       ...import.meta.glob("../../lib/**/*.vue", { eager: true }),
     }
 
-    // findComponent resolves the component based on suffix.
-    // Equivalent to this snippet + some error handling:
-    // for (const [key, value] of Object.entries(components)) {
-    //   if (key.endsWith(`${name}.vue`) || key.endsWith(`${name}/index.vue`)) {
-    //     return value
-    //   }
-    // }
+    // findComponent resolves by matching path segments from the end.
+    // It handles both Component.vue and Component/index.vue patterns,
+    // and throws helpful errors for not-found or ambiguous matches.
     return findComponent(components, name)
   },
 

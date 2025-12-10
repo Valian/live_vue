@@ -818,7 +818,7 @@ Creates a LiveVue application instance. For complete configuration options, see 
 
 ### findComponent(components, name)
 
-A flexible helper function to resolve a component from a map of available components. It finds a component by checking if the key ends with either `name.vue` or `name/index.vue`.
+A flexible helper function to resolve a component from a map of available components. It matches components by comparing path segments from the end, ensuring exact segment matching (e.g., `workspace` won't match `create-workspace`).
 
 This is particularly useful when using Vite's `import.meta.glob` to import all components, as it allows for a simple and conventional way to organize and resolve them.
 
@@ -835,9 +835,11 @@ const components = import.meta.glob(["./**/*.vue", "../../lib/**/*.vue"]);
 //    -> Matches: `./components/admin/Dashboard.vue`
 // 3. By directory with an index file: `findComponent(components, 'forms/Button')`
 //    -> Matches: `./components/forms/Button/index.vue`
+// 4. With .vue suffix (optional): `findComponent(components, 'UserProfile.vue')`
+//    -> Matches: `./components/UserProfile.vue`
 ```
 
-If the component is not found, it will throw a helpful error listing all available components.
+If the component is not found, it throws an error listing all available components. If multiple components match (ambiguous), it throws an error listing all matches so you can use a more specific path.
 
 **Parameters:**
 - `components` (object): A map of component paths to component modules, typically from `import.meta.glob`.
