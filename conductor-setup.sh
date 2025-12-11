@@ -24,7 +24,7 @@ mix deps.get
 
 # Install Node dependencies
 echo "📦 Installing Node dependencies..."
-npm install
+npm ci
 
 # Build assets
 echo "🔨 Building assets..."
