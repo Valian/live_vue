@@ -75,8 +75,10 @@ defmodule Mix.Tasks.LiveVue.Install do
 
       Igniter.update_file(igniter, web_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          # Check if LiveVue is already added to avoid duplicate additions
-          if String.contains?(content, "use LiveVue") do
+          # Check if LiveVue is already added to avoid duplicate additions.
+          # Use regex to match "use LiveVue" as a standalone module, not as part of
+          # another module name (e.g., "use LiveVueWebsiteWeb" should not match).
+          if Regex.match?(~r/use LiveVue\b/, content) do
             content
           else
             # Get the short module name (without Elixir. prefix)
