@@ -175,14 +175,41 @@ defmodule LiveVue.MixProject do
       "assets.watch": ["cmd npm run dev"],
       "assets.test": ["cmd npm test"],
       "e2e.test": ["cmd npm run e2e:test"],
-      "release.patch": ["assets.build", "expublish.patch --branch=main --disable-publish"],
-      "release.minor": ["assets.build", "expublish.minor --branch=main --disable-publish"],
-      "release.major": ["assets.build", "expublish.major --branch=main --disable-publish"]
+      "release.patch": ["assets.build", &prepare_for_release/1, "expublish.patch --branch=main --disable-publish", &restore_after_release/1],
+      "release.minor": ["assets.build", &prepare_for_release/1, "expublish.minor --branch=main --disable-publish", &restore_after_release/1],
+      "release.major": ["assets.build", &prepare_for_release/1, "expublish.major --branch=main --disable-publish", &restore_after_release/1]
     ]
   end
 
   defp copy_images(_) do
     File.mkdir_p!("./doc/images")
     File.cp_r("./guides/images", "./doc/images")
+  end
+
+  # For development, package.json points to TS source files (assets/js/live_vue/*.ts)
+  # so Vite can handle transpilation directly. For hex.pm releases, we need to point
+  # to the pre-compiled JS files in priv/static/*.js.
+  defp prepare_for_release(_) do
+    content = File.read!("package.json")
+
+    updated =
+      content
+      |> String.replace("assets/js/live_vue/index.ts", "priv/static/index.js")
+      |> String.replace("assets/js/live_vue/vitePlugin.ts", "priv/static/vitePlugin.js")
+      |> String.replace("assets/js/live_vue/server.ts", "priv/static/server.js")
+
+    File.write!("package.json", updated)
+  end
+
+  defp restore_after_release(_) do
+    content = File.read!("package.json")
+
+    updated =
+      content
+      |> String.replace("priv/static/index.js", "assets/js/live_vue/index.ts")
+      |> String.replace("priv/static/vitePlugin.js", "assets/js/live_vue/vitePlugin.ts")
+      |> String.replace("priv/static/server.js", "assets/js/live_vue/server.ts")
+
+    File.write!("package.json", updated)
   end
 end
