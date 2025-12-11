@@ -74,6 +74,16 @@ Key utilities in `test/e2e/utils.js`:
 
 Commit format: `type: description` (feat/fix/docs/test/refactor/chore)
 
+## Release Process
+
+`package.json` exports point to TypeScript source files (`assets/js/live_vue/*.ts`) during development. This allows installing directly from GitHub without a build step, since Vite handles TS transpilation.
+
+For hex.pm releases, `mix release.{patch,minor,major}` automatically:
+1. Builds assets (`npm run build` → `priv/static/*.js`)
+2. Swaps `package.json` exports to compiled JS paths
+3. Runs expublish (commits, tags)
+4. Restores `package.json` to TS paths
+
 ## Notes
 
 - This is a library - use `example_project/` for manual testing
