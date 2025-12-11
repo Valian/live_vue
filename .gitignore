@@ -33,7 +33,6 @@ node_modules/
 
 RELEASE.md
 
-priv/static
 .elixir_ls/
 .vscode/
 
