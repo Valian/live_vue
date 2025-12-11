@@ -192,11 +192,18 @@ defmodule LiveVue.MixProject do
   defp prepare_for_release(_) do
     content = File.read!("package.json")
 
+    # Replace import paths: .ts -> .js
+    # Replace types paths: .ts -> .d.ts
     updated =
       content
-      |> String.replace("assets/js/live_vue/index.ts", "priv/static/index.js")
-      |> String.replace("assets/js/live_vue/vitePlugin.ts", "priv/static/vitePlugin.js")
-      |> String.replace("assets/js/live_vue/server.ts", "priv/static/server.js")
+      |> String.replace(~s("import": "./assets/js/live_vue/index.ts"), ~s("import": "./priv/static/index.js"))
+      |> String.replace(~s("import": "./assets/js/live_vue/vitePlugin.ts"), ~s("import": "./priv/static/vitePlugin.js"))
+      |> String.replace(~s("import": "./assets/js/live_vue/server.ts"), ~s("import": "./priv/static/server.js"))
+      |> String.replace(~s("types": "assets/js/live_vue/index.ts"), ~s("types": "priv/static/index.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/index.ts"), ~s("types": "./priv/static/index.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/vitePlugin.ts"), ~s("types": "./priv/static/vitePlugin.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/server.ts"), ~s("types": "./priv/static/server.d.ts"))
+      |> String.replace(~s("main": "assets/js/live_vue/index.ts"), ~s("main": "priv/static/index.js"))
 
     File.write!("package.json", updated)
   end
@@ -206,9 +213,14 @@ defmodule LiveVue.MixProject do
 
     updated =
       content
-      |> String.replace("priv/static/index.js", "assets/js/live_vue/index.ts")
-      |> String.replace("priv/static/vitePlugin.js", "assets/js/live_vue/vitePlugin.ts")
-      |> String.replace("priv/static/server.js", "assets/js/live_vue/server.ts")
+      |> String.replace(~s("import": "./priv/static/index.js"), ~s("import": "./assets/js/live_vue/index.ts"))
+      |> String.replace(~s("import": "./priv/static/vitePlugin.js"), ~s("import": "./assets/js/live_vue/vitePlugin.ts"))
+      |> String.replace(~s("import": "./priv/static/server.js"), ~s("import": "./assets/js/live_vue/server.ts"))
+      |> String.replace(~s("types": "priv/static/index.d.ts"), ~s("types": "assets/js/live_vue/index.ts"))
+      |> String.replace(~s("types": "./priv/static/index.d.ts"), ~s("types": "./assets/js/live_vue/index.ts"))
+      |> String.replace(~s("types": "./priv/static/vitePlugin.d.ts"), ~s("types": "./assets/js/live_vue/vitePlugin.ts"))
+      |> String.replace(~s("types": "./priv/static/server.d.ts"), ~s("types": "./assets/js/live_vue/server.ts"))
+      |> String.replace(~s("main": "priv/static/index.js"), ~s("main": "assets/js/live_vue/index.ts"))
 
     File.write!("package.json", updated)
   end
