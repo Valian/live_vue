@@ -26,12 +26,8 @@ mix deps.get
 echo "📦 Installing Node dependencies..."
 npm ci
 
-# Build assets
-echo "🔨 Building assets..."
-npm run build
-
 # Install Playwright browsers for E2E tests
 echo "🎭 Installing Playwright browsers..."
 npm run e2e:install
 
-echo "✅ Setup complete! Run 'mix assets.watch' to start development."
+echo "✅ Setup complete! Run 'cd example_project && mix phx.server' to start development."

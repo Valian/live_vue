@@ -7,8 +7,6 @@
   "type": "module",
   "scripts": {
     "format": "npx prettier --write assets",
-    "build": "rm -rf priv/static && tsc --project tsconfig.client.json && tsc --project tsconfig.server.json",
-    "dev": "concurrently \"tsc --watch --project tsconfig.client.json\" \"tsc --watch --project tsconfig.server.json\"",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
@@ -27,7 +25,6 @@
     "@types/node": "^22.9.1",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vitest/ui": "^3.2.4",
-    "concurrently": "^9.0.1",
     "jsdom": "^26.1.0",
     "prettier": "2.8.7",
     "typescript": "^5.6.2",
@@ -59,8 +56,7 @@
     "README.md",
     "LICENSE.md",
     "package.json",
-    "priv/static/*",
-    "priv/static/*.d.ts"
+    "assets/js/live_vue"
   ],
   "overrides": {
     "nanoid": "^3.3.8",
