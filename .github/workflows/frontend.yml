@@ -33,6 +33,6 @@ jobs:
       - name: Install npm dependencies
         run: npm install
       - name: Type check with TypeScript
-        run: npm run build
+        run: npx tsc --noEmit
       - name: Run frontend tests
         run: npm test
