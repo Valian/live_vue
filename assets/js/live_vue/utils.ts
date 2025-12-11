@@ -1,5 +1,5 @@
 import { isProxy, isReactive, isRef, toRaw } from "vue"
-import { ComponentMap, ComponentOrComponentPromise } from "./types.js"
+import type { ComponentMap, ComponentOrComponentPromise } from "./types.js"
 
 /**
  * Maps the values of an object using a callback function and returns a new object with the mapped values.

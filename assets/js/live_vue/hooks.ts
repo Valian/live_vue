@@ -1,6 +1,6 @@
 import { createApp, createSSRApp, h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
-import { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
+import type { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
 import { mapValues } from "./utils.js"
 import { applyPatch, type Operation } from "./jsonPatch.js"

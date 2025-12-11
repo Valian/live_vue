@@ -1,5 +1,5 @@
-import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, ComputedRef, Ref } from "vue"
-import { MaybeRefOrGetter } from "vue"
+import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, type ComputedRef, type Ref } from "vue"
+import type { MaybeRefOrGetter } from "vue"
 import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types.js"
 
 export const liveInjectKey = "_live_vue"

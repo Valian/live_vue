@@ -2,11 +2,11 @@
 
 import fs from "fs"
 import { basename, resolve } from "path"
-import { ViewHook } from "phoenix_live_view"
-import { App, Component, createSSRApp, h } from "vue"
+import type { ViewHook } from "phoenix_live_view"
+import { type App, type Component, createSSRApp, h } from "vue"
 import { renderToString, type SSRContext } from "vue/server-renderer"
 import { migrateToLiveVueApp } from "./app.js"
-import { LiveVueOptions, VueArgs } from "./types.js"
+import type { LiveVueOptions, VueArgs } from "./types.js"
 import { mapValues } from "./utils.js"
 
 type Components = Record<string, Component>
