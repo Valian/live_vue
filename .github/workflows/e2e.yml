@@ -44,9 +44,6 @@ jobs:
       - name: Install npm dependencies (root)
         run: npm install
 
-      - name: Build LiveVue package
-        run: npm run build
-
       - name: Install E2E dependencies and browsers
         run: npm run e2e:install
 
