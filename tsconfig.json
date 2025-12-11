@@ -7,15 +7,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "declarationDir": "./priv/static",
-    "declaration": true,
-    "emitDeclarationOnly": false,
-    "outDir": "./priv/static",
-    "allowJs": true,
+    "noEmit": true,
+    "lib": ["ES2020", "DOM"],
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "live_vue": ["./priv/static/index"]
+      "live_vue": ["./assets/js/live_vue/index"]
     }
   },
-  "exclude": ["node_modules"],
+  "include": ["assets/js/live_vue/**/*.ts"],
+  "exclude": ["node_modules"]
 }
