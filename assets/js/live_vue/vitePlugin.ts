@@ -1,7 +1,7 @@
 /// <reference types="@types/node" />
 
-import { IncomingMessage, ServerResponse } from "http"
-import { Connect, ModuleNode, Plugin } from "vite"
+import type { IncomingMessage, ServerResponse } from "http"
+import type { Connect, ModuleNode, Plugin } from "vite"
 
 interface PluginOptions {
   path?: string

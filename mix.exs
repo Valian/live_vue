@@ -175,14 +175,53 @@ defmodule LiveVue.MixProject do
       "assets.watch": ["cmd npm run dev"],
       "assets.test": ["cmd npm test"],
       "e2e.test": ["cmd npm run e2e:test"],
-      "release.patch": ["assets.build", "expublish.patch --branch=main --disable-publish"],
-      "release.minor": ["assets.build", "expublish.minor --branch=main --disable-publish"],
-      "release.major": ["assets.build", "expublish.major --branch=main --disable-publish"]
+      "release.patch": ["assets.build", &prepare_for_release/1, "expublish.patch --branch=main --disable-publish", &restore_after_release/1],
+      "release.minor": ["assets.build", &prepare_for_release/1, "expublish.minor --branch=main --disable-publish", &restore_after_release/1],
+      "release.major": ["assets.build", &prepare_for_release/1, "expublish.major --branch=main --disable-publish", &restore_after_release/1]
     ]
   end
 
   defp copy_images(_) do
     File.mkdir_p!("./doc/images")
     File.cp_r("./guides/images", "./doc/images")
+  end
+
+  # For development, package.json points to TS source files (assets/js/live_vue/*.ts)
+  # so Vite can handle transpilation directly. For hex.pm releases, we need to point
+  # to the pre-compiled JS files in priv/static/*.js.
+  defp prepare_for_release(_) do
+    content = File.read!("package.json")
+
+    # Replace import paths: .ts -> .js
+    # Replace types paths: .ts -> .d.ts
+    updated =
+      content
+      |> String.replace(~s("import": "./assets/js/live_vue/index.ts"), ~s("import": "./priv/static/index.js"))
+      |> String.replace(~s("import": "./assets/js/live_vue/vitePlugin.ts"), ~s("import": "./priv/static/vitePlugin.js"))
+      |> String.replace(~s("import": "./assets/js/live_vue/server.ts"), ~s("import": "./priv/static/server.js"))
+      |> String.replace(~s("types": "assets/js/live_vue/index.ts"), ~s("types": "priv/static/index.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/index.ts"), ~s("types": "./priv/static/index.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/vitePlugin.ts"), ~s("types": "./priv/static/vitePlugin.d.ts"))
+      |> String.replace(~s("types": "./assets/js/live_vue/server.ts"), ~s("types": "./priv/static/server.d.ts"))
+      |> String.replace(~s("main": "assets/js/live_vue/index.ts"), ~s("main": "priv/static/index.js"))
+
+    File.write!("package.json", updated)
+  end
+
+  defp restore_after_release(_) do
+    content = File.read!("package.json")
+
+    updated =
+      content
+      |> String.replace(~s("import": "./priv/static/index.js"), ~s("import": "./assets/js/live_vue/index.ts"))
+      |> String.replace(~s("import": "./priv/static/vitePlugin.js"), ~s("import": "./assets/js/live_vue/vitePlugin.ts"))
+      |> String.replace(~s("import": "./priv/static/server.js"), ~s("import": "./assets/js/live_vue/server.ts"))
+      |> String.replace(~s("types": "priv/static/index.d.ts"), ~s("types": "assets/js/live_vue/index.ts"))
+      |> String.replace(~s("types": "./priv/static/index.d.ts"), ~s("types": "./assets/js/live_vue/index.ts"))
+      |> String.replace(~s("types": "./priv/static/vitePlugin.d.ts"), ~s("types": "./assets/js/live_vue/vitePlugin.ts"))
+      |> String.replace(~s("types": "./priv/static/server.d.ts"), ~s("types": "./assets/js/live_vue/server.ts"))
+      |> String.replace(~s("main": "priv/static/index.js"), ~s("main": "assets/js/live_vue/index.ts"))
+
+    File.write!("package.json", updated)
   end
 end

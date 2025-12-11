@@ -12,7 +12,7 @@ import {
   type MaybeRefOrGetter,
   type InjectionKey,
   readonly,
-  ComputedRef,
+  type ComputedRef,
 } from "vue"
 import { useLiveVue } from "./use"
 import {

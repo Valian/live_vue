@@ -35,20 +35,20 @@
     "vitest": "^3.2.4",
     "vue": "^3.5.10"
   },
-  "main": "priv/static/index.js",
-  "types": "priv/static/index.d.ts",
+  "main": "assets/js/live_vue/index.ts",
+  "types": "assets/js/live_vue/index.ts",
   "exports": {
     "./vitePlugin": {
-      "import": "./priv/static/vitePlugin.js",
-      "types": "./priv/static/vitePlugin.d.ts"
+      "import": "./assets/js/live_vue/vitePlugin.ts",
+      "types": "./assets/js/live_vue/vitePlugin.ts"
     },
     "./server": {
-      "import": "./priv/static/server.js",
-      "types": "./priv/static/server.d.ts"
+      "import": "./assets/js/live_vue/server.ts",
+      "types": "./assets/js/live_vue/server.ts"
     },
     ".": {
-      "import": "./priv/static/index.js",
-      "types": "./priv/static/index.d.ts"
+      "import": "./assets/js/live_vue/index.ts",
+      "types": "./assets/js/live_vue/index.ts"
     }
   },
   "repository": {
