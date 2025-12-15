@@ -132,6 +132,7 @@ defmodule LiveVue.E2E.Router do
       live "/streams", StreamLive
       live "/form-test", FormTestLive
       live "/event-reply-test", EventReplyTestLive
+      live "/slot-test", SlotTestLive
     end
   end
 
@@ -201,6 +202,7 @@ Code.require_file("test/e2e/support/form_test_live.ex", __DIR__ |> Path.dirname(
 Code.require_file("test/e2e/support/prop_diff_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
 Code.require_file("test/e2e/support/upload_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
 Code.require_file("test/e2e/support/event_reply_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
+Code.require_file("test/e2e/support/slot_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
 
 # Start PubSub and Endpoint
 {:ok, _} =
