@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { ref, reactive, type App } from "vue"
 import { getVueHook } from "./hooks"
 import type { LiveVueApp, Hook } from "./types"
+import { toUtf8Base64 } from "./utils"
 
 // Mock Vue component for testing
 const MockComponent = {
@@ -139,7 +140,7 @@ describe("getVueHook", () => {
     })
 
     it("should parse slots from data-slots attribute", async () => {
-      const mockSlots = { default: btoa("<p>Slot content</p>") }
+      const mockSlots = { default: toUtf8Base64("<p>😸Slot content😸</p>") }
       mockHookContext.el.getAttribute.mockImplementation((name: string) => {
         if (name === "data-name") return "TestComponent"
         if (name === "data-slots") return JSON.stringify(mockSlots)
@@ -279,8 +280,8 @@ describe("getVueHook", () => {
 
     it("should update slots", () => {
       const newSlots = {
-        default: btoa("<p>Updated slot content</p>"),
-        header: btoa("<h1>Header</h1>"),
+        default: toUtf8Base64("<p>Updated slot content</p>"),
+        header: toUtf8Base64("<h1>Header</h1>"),
       }
 
       mockHookContext.el.getAttribute.mockImplementation((name: string) => {

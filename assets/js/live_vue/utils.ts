@@ -390,3 +390,28 @@ export function deepEqual(a: any, b: any): boolean {
 export function sanitizeId(input: string): string {
   return input.replace(/\./g, "_").replace(/\[|\]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "")
 }
+
+/**
+ * Takes a string that has been encoded in UTF-8 and then Base64 and returns
+ * a decoded JS string.
+ */
+export const fromUtf8Base64 = (base64: string) => {
+  // atob decodes the Base64 string, but returns each UTF-8 byte as an ASCII
+  // character. So we need to get the values of these characters, put them in
+  // a Uint8Array and then decode that back into a string. Ideally, we'd use
+  // the Uint8Array.fromBase64 function, but this isn't widely available yet
+  const utf8AsciiString = atob(base64);
+  const utf8Uint8Array = new Uint8Array(utf8AsciiString.length);
+  for (let i = 0; i < utf8AsciiString.length; i++) {
+    utf8Uint8Array[i] = utf8AsciiString.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8").decode(utf8Uint8Array);
+}
+
+/**
+ * Encodes a JS string in UTF-8 and Base64. Only here for testing purposes!
+ */
+export const toUtf8Base64 = (str: string) => {
+  const utf8Uint8Array = new TextEncoder().encode(str);
+  return btoa(String.fromCharCode(...utf8Uint8Array));
+}
