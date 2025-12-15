@@ -409,7 +409,10 @@ export const fromUtf8Base64 = (base64: string) => {
 }
 
 /**
- * Encodes a JS string in UTF-8 and Base64. Only here for testing purposes!
+ * Encodes a JS string in UTF-8 and Base64. Only here for testing purposes:
+ * because it uses the spread operator, it will break on strings whose
+ * UTF-8 encoding is longer than 64KiB, so it is NOT suitable for production
+ * use!
  */
 export const toUtf8Base64 = (str: string) => {
   const utf8Uint8Array = new TextEncoder().encode(str);
