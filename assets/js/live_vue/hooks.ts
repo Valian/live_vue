@@ -2,7 +2,7 @@ import { createApp, createSSRApp, h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
-import { mapValues } from "./utils.js"
+import { mapValues, fromUtf8Base64 } from "./utils.js"
 import { applyPatch, type Operation } from "./jsonPatch.js"
 
 /**
@@ -20,7 +20,7 @@ const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string
  */
 const getSlots = (el: HTMLElement): Record<string, () => any> => {
   const dataSlots = getAttributeJson(el, "data-slots") || {}
-  return mapValues(dataSlots, base64 => () => h("div", { innerHTML: atob(base64).trim() }))
+  return mapValues(dataSlots, base64 => () => h("div", { innerHTML: fromUtf8Base64(base64).trim() }))
 }
 
 const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {

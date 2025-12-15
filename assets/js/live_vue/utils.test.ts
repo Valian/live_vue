@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { findComponent } from "./utils"
+import { findComponent, toUtf8Base64, fromUtf8Base64 } from "./utils"
 import type { ComponentMap } from "./types"
 
 describe("findComponent", () => {
@@ -122,7 +122,7 @@ describe("findComponent", () => {
       "../../lib/live_vue/web/pages/workspace/index.vue": MockWorkspaceComponent,
       "../../lib/live_vue/web/pages/workspace.vue": MockCreateWorkspaceComponent,
     }
-    
+
     expect(() => findComponent(components, "workspace")).toThrow("Component 'workspace' is ambiguous")
   })
 
@@ -132,5 +132,26 @@ describe("findComponent", () => {
     }
 
     expect(() => findComponent(components, "")).toThrow("Component '' not found!")
+  })
+})
+
+describe("base64 functions", () => {
+
+  it("should symmetrically encode to and decode from base64", () => {
+    for (const input of ["", "Hello!", "Wrocław", "🦡", "中國"]) {
+      const base64 = toUtf8Base64(input);
+      expect(fromUtf8Base64(base64)).toEqual(input);
+    }
+  })
+
+  it("should decode bas 64 strings encoded by Elixir", () => {
+    for (const [base64, decoded] of [
+      ["", ""],
+      ["Q2Fmw6k=", "Café"],
+      ["8J+SgEZlZGVyaWNh", "💀Federica"],
+      ["5YiY5oWI5qyj", "刘慈欣"]
+    ]) {
+      expect(fromUtf8Base64(base64)).toEqual(decoded);
+    }
   })
 })
