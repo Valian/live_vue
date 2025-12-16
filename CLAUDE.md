@@ -32,7 +32,7 @@ assets/js/live_vue/
 ├── use.ts                   # Vue composables (useLiveEvent, etc.)
 ├── useLiveForm.ts           # Form handling with Ecto changesets
 ├── jsonPatch.ts             # Efficient prop diffing
-└── vitePlugin.ts            # Vite plugin for component discovery
+└── vitePlugin.js            # Vite plugin for component discovery
 example_project/             # Test app using library directly
 test/e2e/                    # Playwright tests with Phoenix server
 ```

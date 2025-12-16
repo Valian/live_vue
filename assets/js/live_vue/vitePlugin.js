@@ -1,68 +1,71 @@
-/// <reference types="@types/node" />
+/// <reference types="vite/client" />
 
-import type { IncomingMessage, ServerResponse } from "http"
-import type { Connect, ModuleNode, Plugin } from "vite"
+/**
+ * @typedef {Object} PluginOptions
+ * @property {string} [path] - SSR render endpoint path (default: "/ssr_render")
+ * @property {string} [entrypoint] - SSR entrypoint file (default: "./js/server.js")
+ */
 
-interface PluginOptions {
-  path?: string
-  entrypoint?: string
-}
-
-interface ExtendedIncomingMessage extends Connect.IncomingMessage {
-  body?: Record<string, unknown> // or more specific type if known
-}
-
-function hotUpdateType(path: string): "css-update" | "js-update" | null {
+/**
+ * @param {string} path
+ * @returns {"css-update" | "js-update" | null}
+ */
+function hotUpdateType(path) {
   if (path.endsWith("css")) return "css-update"
   if (path.endsWith("js")) return "js-update"
   return null
 }
 
-const jsonResponse = (res: ServerResponse<IncomingMessage>, statusCode: number, data: unknown) => {
+/**
+ * @param {import("http").ServerResponse} res
+ * @param {number} statusCode
+ * @param {unknown} data
+ */
+const jsonResponse = (res, statusCode, data) => {
   res.statusCode = statusCode
   res.setHeader("Content-Type", "application/json")
   res.end(JSON.stringify(data))
 }
 
-// Custom JSON parsing middleware
-const jsonMiddleware = (
-  req: ExtendedIncomingMessage,
-  res: ServerResponse<IncomingMessage>,
-  next: () => Promise<void>
-) => {
+/**
+ * Custom JSON parsing middleware
+ * @param {import("http").IncomingMessage & { body?: Record<string, unknown> }} req
+ * @param {import("http").ServerResponse} res
+ * @param {() => Promise<void>} next
+ */
+const jsonMiddleware = (req, res, next) => {
   let data = ""
 
-  // Listen for data event to collect the chunks of data
   req.on("data", chunk => {
     data += chunk
   })
 
-  // Listen for end event to finish data collection
   req.on("end", () => {
     try {
-      // Parse the collected data as JSON
       req.body = JSON.parse(data)
-      next() // Proceed to the next middleware
+      next()
     } catch (error) {
-      // Handle JSON parse error
       jsonResponse(res, 400, { error: "Invalid JSON" })
     }
   })
 
-  // Handle error event
-  req.on("error", (err: Error) => {
+  req.on("error", err => {
     console.error(err)
     jsonResponse(res, 500, { error: "Internal Server Error" })
   })
 }
 
-function liveVuePlugin(opts: PluginOptions = {}): Plugin {
+/**
+ * LiveVue Vite plugin for SSR and hot reload support
+ * @param {PluginOptions} [opts]
+ * @returns {import("vite").Plugin}
+ */
+function liveVuePlugin(opts = {}) {
   return {
     name: "live-vue",
     handleHotUpdate({ file, modules, server, timestamp }) {
       if (file.match(/\.(heex|ex)$/)) {
-        // if it's and .ex or .heex file, invalidate all related files so they'll be updated correctly
-        const invalidatedModules = new Set<ModuleNode>()
+        const invalidatedModules = new Set()
         for (const mod of modules) {
           server.moduleGraph.invalidateModule(mod, invalidatedModules, timestamp, true)
         }
@@ -84,26 +87,21 @@ function liveVuePlugin(opts: PluginOptions = {}): Plugin {
           }
         })
 
-        // ask client to hot-reload updated modules
         server.ws.send({
           type: "update",
           updates,
         })
 
-        // we handle the hot update ourselves
         return []
       }
     },
     configureServer(server) {
-      // Terminate the watcher when Phoenix quits
-      // configureServer is only called in dev, so it's safe to use here
       process.stdin.on("close", () => process.exit(0))
       process.stdin.resume()
 
-      // setup SSR endpoint /ssr_render
       const path = opts.path || "/ssr_render"
       const entrypoint = opts.entrypoint || "./js/server.js"
-      server.middlewares.use(function liveVueMiddleware(req: ExtendedIncomingMessage, res, next) {
+      server.middlewares.use(function liveVueMiddleware(req, res, next) {
         if (req.method == "POST" && req.url?.split("?", 1)[0] === path) {
           jsonMiddleware(req, res, async () => {
             try {

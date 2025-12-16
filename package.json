@@ -36,8 +36,7 @@
   "types": "assets/js/live_vue/index.ts",
   "exports": {
     "./vitePlugin": {
-      "import": "./assets/js/live_vue/vitePlugin.ts",
-      "types": "./assets/js/live_vue/vitePlugin.ts"
+      "import": "./assets/js/live_vue/vitePlugin.js"
     },
     "./server": {
       "import": "./assets/js/live_vue/server.ts",
