@@ -59,7 +59,6 @@ defmodule Mix.Tasks.LiveVue.Install do
     # Configure environments (config/dev.exs and config/prod.exs)
     defp configure_environments(igniter, _app_name) do
       igniter
-      |> Config.configure("config.exs", :live_vue, [:shared_props], [])
       |> Config.configure("config.exs", :live_vue, [:ssr], true)
       |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
       |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})

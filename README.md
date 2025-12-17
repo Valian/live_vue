@@ -186,7 +186,6 @@ mix expublish.minor --allow-untracked --branch=main
 
 - [x] `useLiveEvent` - automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
 - [x] JSON Patch diffing - send only changed props over the WebSocket
-- [x] Shared props - automatically included in all components
 - [x] VS Code extension - syntax highlighting for `~VUE` sigil
 - [x] Igniter installer - one-line installation for Phoenix 1.8+ projects
 - [x] `useEventReply` - easy handling of `{:reply, data, socket}` responses

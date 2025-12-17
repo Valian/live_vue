@@ -19,7 +19,6 @@ defmodule LiveVueExamplesWeb.LiveSlots do
 
   def handle_event("add-tag", _, socket) do
     tag = Enum.random(["nice", "wow", "so cool"])
-    # flash is a shared prop, so it's always available for Vue components
     socket = put_flash(socket, :info, "Tag #{tag} added")
     {:noreply, update(socket, :tags, &(&1 ++ [tag]))}
   end

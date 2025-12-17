@@ -51,7 +51,6 @@ defmodule LiveVue do
 
   @ssr_default Application.compile_env(:live_vue, :ssr, true)
   @diff_default Application.compile_env(:live_vue, :enable_props_diff, true)
-  @shared_props_config Application.compile_env(:live_vue, :shared_props, [])
 
   defmacro __using__(_opts) do
     quote do
@@ -81,8 +80,6 @@ defmodule LiveVue do
       </.vue>
   """
   def vue(assigns) do
-    # Merge shared props from socket assigns
-    assigns = merge_socket_props(@shared_props_config, assigns)
     init = assigns.__changed__ == nil
     dead = assigns[:"v-socket"] == nil or not LiveView.connected?(assigns[:"v-socket"])
     use_diff = Map.get(assigns, :"v-diff", @diff_default)
@@ -158,75 +155,6 @@ defmodule LiveVue do
       class={@class}
     ><%= raw(@ssr_render[:html]) %></div>
     """
-  end
-
-  @doc """
-  An utility function that automatically adds selected socket assigns to the props of the Vue component.
-
-  It preserves `__changed__` status of the socket assigns, so we can still send minimal diffs to the client.
-
-  ## Configuration
-
-  That function is automatically called with `:shared_props` configuration for each render.
-
-  You can configure which socket assigns should be automatically added to the props of all Vue components.
-
-  ```elixir
-  config :live_vue,
-    shared_props: [
-      :flash,
-      {:current_scope, :scope}
-    ]
-  ```
-  """
-  def merge_socket_props([_ | _] = props, %{"v-socket": %Phoenix.LiveView.Socket{} = socket} = assigns) do
-    socket_assigns = socket.assigns.__assigns__
-    socket_changed = Map.get(socket_assigns, :__changed__)
-
-    Enum.reduce(props, assigns, fn prop_config, assigns ->
-      {socket_key, prop_name} =
-        case prop_config do
-          atom when is_atom(atom) ->
-            {atom, atom}
-
-          {prop, key} ->
-            {prop, key}
-
-          other ->
-            raise "Invalid shared prop config: #{inspect(other)}, expected prop name or {socket_name, prop_name} or {[:parent, :child], prop_name}"
-        end
-
-      case assigns do
-        # we don't want to overwrite existing props with socket values
-        %{^prop_name => _} ->
-          assigns
-
-        _ ->
-          socket_keys = List.wrap(socket_key)
-
-          # When structure changes (e.g., from map to string or vice versa), get_in might fail
-          # In such cases, we handle it gracefully and return nil for the current value
-          prop = safe_get_in(socket_assigns, socket_keys)
-          assigns = Map.put(assigns, prop_name, prop)
-
-          if assigns[:__changed__] && socket_changed && Map.has_key?(socket_changed, hd(socket_keys)) do
-            # Similarly handle structure changes for the old value in __changed__
-            # We mark it as a complete change with `true` when get_in fails
-            old_value = safe_get_in(socket_changed, socket_keys, true)
-            put_in(assigns.__changed__[prop_name], old_value)
-          else
-            assigns
-          end
-      end
-    end)
-  end
-
-  def merge_socket_props(_props, assigns), do: assigns
-
-  defp safe_get_in(source, keys, default \\ nil) do
-    get_in(source, keys)
-  rescue
-    FunctionClauseError -> default
   end
 
   # Calculates minimal JSON Patch operations for changed props only.
