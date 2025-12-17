@@ -10,9 +10,6 @@ mix test                          # Elixir tests
 npm test                          # Vitest (assets/js/live_vue/*.test.ts)
 npm run e2e:test                  # Playwright E2E (test/e2e/)
 
-# Development
-cd example_project && mix phx.server   # Test at localhost:4000
-
 # Setup
 mix setup                         # First-time setup (deps + npm install)
 ```
@@ -33,8 +30,7 @@ assets/js/live_vue/
 ├── useLiveForm.ts           # Form handling with Ecto changesets
 ├── jsonPatch.ts             # Efficient prop diffing
 └── vitePlugin.js            # Vite plugin for component discovery
-example_project/             # Test app using library directly
-test/e2e/                    # Playwright tests with Phoenix server
+test/e2e/                    # Playwright E2E tests with Phoenix server
 ```
 
 ## Key Patterns
@@ -81,6 +77,5 @@ For hex.pm releases, `mix release.{patch,minor,major}` runs expublish (commits, 
 
 ## Notes
 
-- This is a library - use `example_project/` for manual testing
-- Changes to lib/ are immediately reflected in example_project/
+- This is a library - use E2E tests (`npm run e2e:test`) for testing
 - CI: Elixir (.github/workflows/elixir.yml), Frontend (.github/workflows/frontend.yml)
