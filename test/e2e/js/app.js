@@ -13,7 +13,7 @@ import "vite/modulepreload-polyfill"
 const liveVueApp = createLiveVue({
   resolve: name => {
     const components = {
-      ...import.meta.glob("../vue/**/*.vue", { eager: true }),
+      ...import.meta.glob("../features/**/*.vue", { eager: true }),
     }
 
     return findComponent(components, name)

@@ -59,7 +59,23 @@ test/e2e/                    # Playwright E2E tests with Phoenix server
 
 ## E2E Testing
 
-Vue components in `test/e2e/vue/`, discovered via `import.meta.glob("../vue/**/*.vue")`.
+Colocated feature structure in `test/e2e/features/`:
+
+```
+test/e2e/features/
+├── basic/            # Each feature is a directory
+│   ├── live.ex       # LiveView module
+│   ├── counter.vue   # Vue component(s)
+│   └── basic.spec.js # Playwright test
+├── form/
+├── stream/
+└── ...
+```
+
+To add a new E2E test:
+1. Create `test/e2e/features/my-feature/`
+2. Add `live.ex` (LiveView), `*.vue` (components), `*.spec.js` (test)
+3. Add route to `test/e2e/test_helper.exs` router
 
 Key utilities in `test/e2e/utils.js`:
 - `syncLV(page)` - Wait for LiveView connection

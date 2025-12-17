@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { syncLV } from '../utils.js'
+import { syncLV } from '../../utils.js'
 
 test.describe('useLiveNavigation', () => {
   test('should patch query params and navigate between routes', async ({ page }) => {

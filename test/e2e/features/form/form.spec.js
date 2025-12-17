@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { syncLV, evalLV } from "../utils.js"
+import { syncLV, evalLV } from "../../utils.js"
 
 test.describe("useLiveForm E2E Tests", () => {
   test.beforeEach(async ({ page }) => {

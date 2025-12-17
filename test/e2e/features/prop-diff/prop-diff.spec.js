@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { syncLV } from "../utils.js"
+import { syncLV } from "../../utils.js"
 
 // Read and parse props from the page
 const getProps = async page => {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { syncLV } from '../utils.js'
+import { syncLV } from '../../utils.js'
 
 test.describe('useLiveEvent', () => {
   test('should receive notification events from server', async ({ page }) => {
