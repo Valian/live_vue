@@ -32,19 +32,19 @@
     "vitest": "^3.2.4",
     "vue": "^3.5.10"
   },
-  "main": "assets/js/live_vue/index.ts",
-  "types": "assets/js/live_vue/index.ts",
+  "main": "assets/index.ts",
+  "types": "assets/index.ts",
   "exports": {
     "./vitePlugin": {
-      "import": "./assets/js/live_vue/vitePlugin.js"
+      "import": "./assets/vitePlugin.js"
     },
     "./server": {
-      "import": "./assets/js/live_vue/server.ts",
-      "types": "./assets/js/live_vue/server.ts"
+      "import": "./assets/server.ts",
+      "types": "./assets/server.ts"
     },
     ".": {
-      "import": "./assets/js/live_vue/index.ts",
-      "types": "./assets/js/live_vue/index.ts"
+      "import": "./assets/index.ts",
+      "types": "./assets/index.ts"
     }
   },
   "repository": {
@@ -55,7 +55,7 @@
     "README.md",
     "LICENSE.md",
     "package.json",
-    "assets/js/live_vue"
+    "assets"
   ],
   "overrides": {
     "nanoid": "^3.3.8",

@@ -7,7 +7,7 @@ Vue.js + Phoenix LiveView integration library. Version 1.0.0-rc.4.
 ```bash
 # Tests
 mix test                          # Elixir tests
-npm test                          # Vitest (assets/js/live_vue/*.test.ts)
+npm test                          # Vitest (assets/*.test.ts)
 npm run e2e:test                  # Playwright E2E (test/e2e/)
 
 # Setup
@@ -23,7 +23,7 @@ lib/
 ├── live_vue/encoder.ex      # JSON encoding for Vue props
 ├── live_vue/slots.ex        # Slot interoperability
 └── live_vue/ssr/            # SSR: NodeJS and ViteJS modes
-assets/js/live_vue/
+assets/
 ├── index.ts                 # Main entry, getHooks()
 ├── hooks.ts                 # Phoenix LiveView hooks
 ├── use.ts                   # Vue composables (useLiveEvent, etc.)
@@ -87,7 +87,7 @@ Commit format: `type: description` (feat/fix/docs/test/refactor/chore)
 
 ## Release Process
 
-No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/js/live_vue/*.ts`). Vite handles TS transpilation when consumers bundle their app.
+No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/*.ts`). Vite handles TS transpilation when consumers bundle their app.
 
 For hex.pm releases, `mix release.{patch,minor,major}` runs expublish (commits, tags, publishes).
 
