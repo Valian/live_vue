@@ -34,7 +34,12 @@ config :live_vue,
 
   # Shared props configuration
   # Props that are automatically added to all Vue components
-  shared_props: []
+  shared_props: [],
+
+  # Gettext backend for translating form validation errors
+  # When set, Phoenix.HTML.Form errors are translated using this backend
+  # Example: MyApp.Gettext
+  gettext_backend: nil
 ```
 
 ### Environment-Specific Configuration
@@ -295,6 +300,12 @@ SSR is intelligently applied:
 - **Skips during**: Live navigation and WebSocket updates
 - **Can be disabled**: Per-component with `v-ssr={false}`
 
+> #### What are "dead renders"? {: .info}
+>
+> A "dead render" occurs when the page is loaded without an active WebSocket connection - this includes the initial HTTP request before LiveView connects. During this phase, SSR renders the Vue component to HTML on the server so users see content immediately.
+>
+> Once the WebSocket connects (making the view "live"), SSR is skipped because Vue components are already mounted and hydrated client-side. This means subsequent prop updates go directly to the mounted Vue instance without re-running SSR.
+
 This gives you the SEO and performance benefits of SSR without the overhead during live updates.
 
 ### Per-Component SSR Control
@@ -410,12 +421,34 @@ Shared props can be configured in two ways:
    shared_props: [{:current_user, :user}, {:user_preferences, :prefs}]
    ```
 
-3. **Nested mapping**: Use a tuple `{[:parent, :child], prop_name}` to pass a extract a nested value from the socket
+3. **Nested mapping**: Use a tuple `{[:parent, :child], prop_name}` to extract a nested value from the socket
    ```elixir
    shared_props: [
     {[:scope, :user], :user},
     {[:streams, :items], :items}
    ]
+   ```
+
+   **Complete example with nested mapping:**
+   ```elixir
+   # config/config.exs
+   config :live_vue,
+     shared_props: [
+       :flash,
+       {[:scope, :current_user], :user}  # Extract @scope.current_user as :user prop
+     ]
+
+   # In your LiveView mount
+   def mount(_params, _session, socket) do
+     {:ok, assign(socket, scope: %{current_user: get_current_user()})}
+   end
+   ```
+
+   ```vue
+   <!-- All Vue components automatically receive the nested value -->
+   <script setup>
+   defineProps<{ user: User, flash: any }>()
+   </script>
    ```
 
 

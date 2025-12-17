@@ -51,7 +51,7 @@ test/e2e/                    # Playwright tests with Phoenix server
 ```
 
 ### Vue Composables (TypeScript)
-- `useLive()` - Access to `$live.pushEvent()`, props
+- `useLiveVue()` - Access to `$live.pushEvent()`, props
 - `useLiveEvent(name, handler)` - LiveView event subscription
 - `useLiveNavigation()` - `patch()` and `navigate()` helpers
 - `useLiveForm(formName)` - Server-side validation with Ecto

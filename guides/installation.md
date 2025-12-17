@@ -63,8 +63,6 @@ This will automatically configure your project with all necessary LiveVue setup.
 >
 > Manual installation instructions are currently outdated and don't work with current versions of dependencies (Tailwind, Phoenix, etc).
 >
-> If you need manual installation for LiveVue <= 0.7, see the [v0.7 documentation](https://hexdocs.pm/live_vue/0.7.3/installation.html).
->
 > **We strongly recommend using the Igniter installation above.**
 
 The manual installation process involves many complex steps including:

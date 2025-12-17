@@ -1063,7 +1063,7 @@ const emailHasError = computed(() => {
 
 ### Data Transformation
 
-Transform form data before sending to the server:
+Transform form data before sending to the server. The `prepareData` function is applied to form data before **both** `changeEvent` (validation) and `submitEvent` (submission) requests, ensuring consistent data transformation for all server communication:
 
 ```html
 <script setup>
@@ -1349,18 +1349,22 @@ Usage:
 <script setup>
 import { useField, useArrayField } from 'live_vue'
 
+// These composables require a parent component that called useLiveForm()
 const nameField = useField('name')
 const skillsArray = useArrayField('skills')
-
-// Error handling for missing form context
-try {
-  const field = useField('some_field')
-} catch (error) {
-  console.error('Component must be used within a form context:', error.message)
-  // Handle gracefully or show error message
-}
 </script>
 ```
+
+If `useField()` or `useArrayField()` are used outside a form context (i.e., not in a child component of one that called `useLiveForm()`), they will throw an error:
+
+```
+useField() can only be used inside components where a form has been provided.
+Make sure a parent component calls useLiveForm() first.
+```
+
+This error indicates you need to either:
+1. Call `useLiveForm()` in a parent component, or
+2. Use the `form.field()` method directly instead of `useField()`
 
 ## Server-Side Integration
 
@@ -1448,6 +1452,9 @@ defmodule MyAppWeb.UserFormLive do
     changeset =
       user
       |> User.changeset(user_params)
+      # Setting :action is crucial - without it, the changeset won't expose errors.
+      # Ecto changesets only show errors when an action is set (like :validate, :insert, :update).
+      # This triggers error display in the Vue form without actually persisting data.
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, form: to_form(changeset, as: :user))}
@@ -1699,11 +1706,14 @@ const nameField = form.field('name')
 const emailField = form.field('email', { type: 'email' })
 const subjectField = form.field('subject')
 const messageField = form.field('message')
-const contactMethodField = form.field('contact_method')
+// For radio buttons, create separate field instances with different values
+// The { type: 'radio', value: '...' } options ensure proper checked state binding
+const contactMethodEmail = form.field('contact_method', { type: 'radio', value: 'email' })
+const contactMethodPhone = form.field('contact_method', { type: 'radio', value: 'phone' })
 const phoneField = form.field('phone', { type: 'tel' })
 
 const needsPhone = computed(() =>
-  contactMethodField.value.value === 'phone'
+  contactMethodEmail.value.value === 'phone'
 )
 
 const submitForm = async () => {
@@ -1756,11 +1766,12 @@ const submitForm = async () => {
       <label>Preferred Contact Method</label>
       <div class="radio-group">
         <label>
-          <input type="radio" v-bind="contactMethodField.inputAttrs.value" value="email" />
+          <!-- inputAttrs includes type="radio", value="email", checked state, and event handlers -->
+          <input v-bind="contactMethodEmail.inputAttrs.value" />
           Email
         </label>
         <label>
-          <input type="radio" v-bind="contactMethodField.inputAttrs.value" value="phone" />
+          <input v-bind="contactMethodPhone.inputAttrs.value" />
           Phone
         </label>
       </div>
@@ -1893,9 +1904,7 @@ const submitForm = async () => {
 
 ### Complex Nested Form
 
-An advanced form with nested objects, arrays, and dynamic fields:
-
-For a complete example of a complex nested form, see the [FormExample.vue](https://github.com/Valian/live_vue/blob/main/example_project/assets/vue/FormExample.vue) in the LiveVue repository, which demonstrates:
+An advanced form with nested objects, arrays, and dynamic fields can include:
 
 - Nested object fields (`owner.name`, `owner.email`)
 - Array fields with objects (`team_members[]`)
@@ -1903,6 +1912,8 @@ For a complete example of a complex nested form, see the [FormExample.vue](https
 - Dynamic field operations (add/remove/reorder)
 - Complex validation scenarios
 - Form state management
+
+See the patterns earlier in this guide for implementing each of these features, or explore interactive examples at [livevue.skalecki.dev](https://livevue.skalecki.dev).
 
 ## Next Steps
 

@@ -36,7 +36,7 @@ The implementation is straightforward:
    - Event handlers configured
    - SSR content (when enabled)
 
-2. **Initialization**: The [LiveVue hook](https://github.com/Valian/live_vue/blob/main/assets/js/live_vue/hooks.js):
+2. **Initialization**: The [LiveVue hook](https://github.com/Valian/live_vue/blob/main/assets/js/live_vue/hooks.ts):
    - Mounts on element creation
    - Sets up event handlers
    - Injects the hook for `useLiveVue`
@@ -73,8 +73,9 @@ LiveVue implements several performance optimizations:
    - Enables efficient JSON patch calculations (using [Jsonpatch](https://github.com/corka149/jsonpatch) library)
    - Reduces payload sizes by sending only changed fields
 
-4. **Coming Soon**:
-   - Sending only updated props
+4. **JSON Patch Diffing**:
+   - Only changed props are sent over the WebSocket
+   - Uses JSON Patch format for minimal payloads
 
 ### What is the LiveVue.Encoder Protocol?
 
@@ -159,13 +160,10 @@ Since the nested component's HTML is just inert markup at that point, Phoenix Li
 
 ### How Do I Use TypeScript?
 
-LiveVue provides full TypeScript support:
-
-1. Use the example `tsconfig.json`
-2. Check `example_project/assets/ts_config_example` for:
-   - LiveVue entrypoint
-   - Tailwind setup
-   - Vite config
+LiveVue provides full TypeScript support out of the box. The Igniter installer sets up TypeScript automatically with proper configuration for:
+- Vue single-file components with `<script setup lang="ts">`
+- Type-safe props with `defineProps<T>()`
+- LiveVue composables with full type inference
 
 For `app.js`, since it's harder to convert directly:
 ```javascript
@@ -230,7 +228,7 @@ For a detailed comparison with other solutions, see [Comparison](comparison.md).
 
 ## Additional Resources
 
+- [LiveVue Examples](https://livevue.skalecki.dev) - Live demo website with interactive examples
 - [GitHub Discussions](https://github.com/Valian/live_vue/discussions)
-- [Example Project](https://github.com/Valian/live_vue/tree/main/example_project)
 - [Vue Documentation](https://vuejs.org/)
 - [Phoenix LiveView Documentation](https://hexdocs.pm/phoenix_live_view)

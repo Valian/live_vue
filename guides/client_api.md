@@ -871,9 +871,9 @@ LiveVue provides full TypeScript support for Phoenix LiveView's `AsyncResult` st
 `AsyncResult<T>` represents the state of an asynchronous operation (like `assign_async`, `stream_async`, or `start_async`) with the following fields:
 
 - `ok`: Boolean indicating if the operation has completed successfully at least once
-- `loading`: Loading state - can be `null`, `string[]` (list of keys from `assign_async`), or custom loading data
-- `failed`: Error state - unwrapped from Elixir error tuples for JSON compatibility
-- `result`: The successful result data of type `T`
+- `loading`: Loading state - `string[]` (list of loading keys from `assign_async`) or `null` when not loading
+- `failed`: Error state - unwrapped from Elixir error tuples for JSON compatibility, or `null` if no error
+- `result`: The successful result data of type `T`, or `null` if not yet loaded
 
 ### Usage Examples
 
@@ -897,13 +897,9 @@ if (props.userResult.ok && props.userResult.result) {
   console.log('User:', props.userResult.result.name)
 }
 
-// Handle different loading states
-if (props.userResult.loading === true) {
-  console.log('Loading...')
-} else if (Array.isArray(props.userResult.loading)) {
-  console.log('Loading keys:', props.userResult.loading) // ['users', 'posts']
-} else if (props.userResult.loading) {
-  console.log('Custom loading state:', props.userResult.loading)
+// Handle loading states
+if (props.userResult.loading) {
+  console.log('Loading keys:', props.userResult.loading) // e.g., ['user']
 }
 
 // Handle errors (automatically unwrapped from {:error, reason} tuples)
@@ -1102,33 +1098,6 @@ const debouncedSearch = debounce((query: string) => {
 }, 300)
 
 watch(searchQuery, debouncedSearch)
-</script>
-```
-
-### Event Cleanup
-
-```html
-<script setup lang="ts">
-import { useLiveVue } from 'live_vue'
-import { onMounted, onUnmounted } from 'vue'
-
-const live = useLiveVue()
-
-// Helper function to clean up event listeners
-// will likely be added to LiveVue in the future
-export function useLiveEvent(event, callback) {
-  let callbackRef = null
-  onMounted(() => {
-    callbackRef = live.handleEvent(event, callback)
-  })
-  onUnmounted(() => {
-    if (callbackRef) live.removeHandleEvent(callbackRef)
-    callbackRef = null
-  })
-}
-
-
-useLiveEvent("data_update", (data) => console.log("Data updated:", data))
 </script>
 ```
 

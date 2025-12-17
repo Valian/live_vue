@@ -338,9 +338,11 @@ const {
         Choose Files
       </button>
 
-      <!-- Manual upload for non-auto uploads -->
+      <!-- Manual upload button - only shown when auto_upload is false -->
+      <!-- In this example, auto_upload: true is set on the server, so this won't display -->
+      <!-- Include this pattern when you want to support both auto and manual upload modes -->
       <button
-        v-if="!upload.auto_upload && entries.length > 0"
+        v-if="!props.upload.auto_upload && entries.length > 0"
         @click="submit"
         class="btn-success"
       >
@@ -403,7 +405,7 @@ const {
 - **Drag & drop**: Use `addFiles()` method to support drag-and-drop functionality
 - **Cancellation**: Cancel individual files or all uploads
 
-For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.md#useliveuploadevent-callback).
+For the complete API reference, see [`useLiveUpload()` in the Client API guide](client_api.md#useliveuploaduploadconfig-options).
 
 ## Phoenix Streams
 

@@ -196,6 +196,7 @@ For more details, see [Component Reference](component_reference.md#custom-struct
 ## Next Steps
 
 Now that you have your first component working, explore:
+- [Live Examples](https://livevue.skalecki.dev) - Interactive demos to see LiveVue in action
 - [Basic Usage](basic_usage.md) for more patterns and the ~VUE sigil
 - [Component Reference](component_reference.md) for complete syntax documentation
 - [FAQ](faq.md) for common questions and troubleshooting
