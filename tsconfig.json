@@ -12,9 +12,9 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "live_vue": ["./assets/js/live_vue/index"]
+      "live_vue": ["./assets/index"]
     }
   },
-  "include": ["assets/js/live_vue/**/*.ts"],
+  "include": ["assets/**/*.ts"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }

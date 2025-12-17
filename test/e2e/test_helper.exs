@@ -15,7 +15,7 @@ Application.put_env(:live_vue, LiveVue.E2E.Endpoint,
   live_reload: [
     patterns: [
       ~r"lib/live_vue/.*(ex|exs)$",
-      ~r"test/e2e/.*\.(ex|exs|vue|js|ts)$"
+      ~r"test/e2e/features/.*\.(ex|exs|vue|js|ts)$"
     ]
   ]
 )
@@ -193,18 +193,8 @@ defmodule LiveVue.E2E.Endpoint do
   defp halt(conn, _opts), do: conn
 end
 
-# Load support files
-Code.require_file("test/e2e/support/test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/navigation_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/event_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/stream_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/form_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/prop_diff_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/upload_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/event_reply_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-Code.require_file("test/e2e/support/slot_test_live.ex", __DIR__ |> Path.dirname() |> Path.dirname())
-
 # Start PubSub and Endpoint
+# Note: LiveView modules are compiled from test/e2e/features/*/live.ex via elixirc_paths in mix.exs
 {:ok, _} =
   Supervisor.start_link(
     [

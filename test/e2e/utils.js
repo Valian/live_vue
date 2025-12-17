@@ -2,8 +2,10 @@ import { expect } from "@playwright/test"
 
 // Wait for LiveView to be ready and Vue components to be mounted
 export const syncLV = async page => {
+  // Use longer timeout for connection - websocket setup can take time under load
+  const connectionTimeout = { timeout: 5000 }
   const promises = [
-    expect(page.locator(".phx-connected").first()).toBeVisible(),
+    expect(page.locator(".phx-connected").first()).toBeVisible(connectionTimeout),
     expect(page.locator(".phx-change-loading")).toHaveCount(0),
     expect(page.locator(".phx-click-loading")).toHaveCount(0),
     expect(page.locator(".phx-submit-loading")).toHaveCount(0),

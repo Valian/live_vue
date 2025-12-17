@@ -7,11 +7,8 @@ Vue.js + Phoenix LiveView integration library. Version 1.0.0-rc.4.
 ```bash
 # Tests
 mix test                          # Elixir tests
-npm test                          # Vitest (assets/js/live_vue/*.test.ts)
+npm test                          # Vitest (assets/*.test.ts)
 npm run e2e:test                  # Playwright E2E (test/e2e/)
-
-# Development
-cd example_project && mix phx.server   # Test at localhost:4000
 
 # Setup
 mix setup                         # First-time setup (deps + npm install)
@@ -26,15 +23,14 @@ lib/
 ├── live_vue/encoder.ex      # JSON encoding for Vue props
 ├── live_vue/slots.ex        # Slot interoperability
 └── live_vue/ssr/            # SSR: NodeJS and ViteJS modes
-assets/js/live_vue/
+assets/
 ├── index.ts                 # Main entry, getHooks()
 ├── hooks.ts                 # Phoenix LiveView hooks
 ├── use.ts                   # Vue composables (useLiveEvent, etc.)
 ├── useLiveForm.ts           # Form handling with Ecto changesets
 ├── jsonPatch.ts             # Efficient prop diffing
 └── vitePlugin.js            # Vite plugin for component discovery
-example_project/             # Test app using library directly
-test/e2e/                    # Playwright tests with Phoenix server
+test/e2e/                    # Playwright E2E tests with Phoenix server
 ```
 
 ## Key Patterns
@@ -63,7 +59,23 @@ test/e2e/                    # Playwright tests with Phoenix server
 
 ## E2E Testing
 
-Vue components in `test/e2e/vue/`, discovered via `import.meta.glob("../vue/**/*.vue")`.
+Colocated feature structure in `test/e2e/features/`:
+
+```
+test/e2e/features/
+├── basic/            # Each feature is a directory
+│   ├── live.ex       # LiveView module
+│   ├── counter.vue   # Vue component(s)
+│   └── basic.spec.js # Playwright test
+├── form/
+├── stream/
+└── ...
+```
+
+To add a new E2E test:
+1. Create `test/e2e/features/my-feature/`
+2. Add `live.ex` (LiveView), `*.vue` (components), `*.spec.js` (test)
+3. Add route to `test/e2e/test_helper.exs` router
 
 Key utilities in `test/e2e/utils.js`:
 - `syncLV(page)` - Wait for LiveView connection
@@ -75,12 +87,11 @@ Commit format: `type: description` (feat/fix/docs/test/refactor/chore)
 
 ## Release Process
 
-No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/js/live_vue/*.ts`). Vite handles TS transpilation when consumers bundle their app.
+No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/*.ts`). Vite handles TS transpilation when consumers bundle their app.
 
 For hex.pm releases, `mix release.{patch,minor,major}` runs expublish (commits, tags, publishes).
 
 ## Notes
 
-- This is a library - use `example_project/` for manual testing
-- Changes to lib/ are immediately reflected in example_project/
+- This is a library - use E2E tests (`npm run e2e:test`) for testing
 - CI: Elixir (.github/workflows/elixir.yml), Frontend (.github/workflows/frontend.yml)

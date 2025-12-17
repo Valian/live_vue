@@ -113,7 +113,7 @@ defmodule LiveVue.MixProject do
         Changelog: @repo_url <> "/blob/master/CHANGELOG.md",
         GitHub: @repo_url
       },
-      files: ~w(assets/js/live_vue lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md usage-rules.md)
+      files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md usage-rules.md)
     ]
   end
 
@@ -131,7 +131,7 @@ defmodule LiveVue.MixProject do
     ]
   end
 
-  defp elixirc_paths(:e2e), do: ["lib", "test/e2e/support"]
+  defp elixirc_paths(:e2e), do: ["lib", "test/e2e/features"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp listeners(:e2e), do: [Phoenix.CodeReloader]

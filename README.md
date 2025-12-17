@@ -150,17 +150,21 @@ You can read more about differences between Vue and Svelte [in FAQ](guides/faq.m
 
 Ensure you have Node.js installed. Clone the repo and run `mix setup`.
 
-#### Example Project
-
-You can use `/example_project` as a way to test `live_vue` locally.
-
-- Clone this repo
-- Go to example_project dir
-- Run `mix setup`
-- Run `mix phx.server` to start the server
-- Open [http://localhost:4000](http://localhost:4000) in your browser
-
 No build step is required for the library itself - Vite handles TypeScript transpilation when consumers bundle their app.
+
+Use `npm run e2e:test` to run the Playwright E2E tests.
+
+### Testing Local Changes in Another Project
+
+To test local LiveVue changes in a separate Phoenix project, use a path dependency in your project's `mix.exs`:
+
+```elixir
+{:live_vue, path: "../live_vue"}
+```
+
+Then run `mix deps.get && npm install`. The installer already configures `package.json` to use `file:./deps/live_vue`, so both Elixir and npm will point to your local copy.
+
+Elixir changes are reflected immediately. For TypeScript changes, run `npm install` again to pick them up.
 
 ### Releasing
 
