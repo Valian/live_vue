@@ -26,6 +26,7 @@ Vue inside Phoenix LiveView with seamless end-to-end reactivity.
 
 ## Resources
 
+-   [Live Examples](https://livevue.skalecki.dev) - Interactive demos
 -   [HexDocs](https://hexdocs.pm/live_vue)
 -   [HexPackage](https://hex.pm/packages/live_vue)
 -   [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view)
@@ -181,17 +182,16 @@ mix expublish.minor --dry-run --allow-untracked --branch=main
 mix expublish.minor --allow-untracked --branch=main
 ```
 
-## Roadmap 🎯
+## Features Implemented 🎯
 
-
-- [x] `useLiveEvent` - an utility automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
-- [x] ~~optimize payload - send only [`json_patch`](https://hexdocs.pm/jsonpatch/readme.html) diffs of updated props~~ ✅ **Done!**
-- [x] shared props automatically included in all components
-- [x] VS code extension highlighting `~VUE` sigil ✅ **Done!**
-- [x] ~~try to use [Igniter](https://hexdocs.pm/igniter/) as a way of installing LiveVue in a project~~ ✅ **Done!**
-- [x] `useEventReply` - an utility similar to [`useFetch`](https://vueuse.org/core/useFetch/) making it easy to get data from `&handle_event/3 -> {:reply, data, socket}` responses
-- [x] `useLiveForm` - an utility to effortlessly use Ecto changesets & server-side validation, similar to HEEX ✅ **Done!**
-- [x] **Phoenix Streams** - Full support for `stream()` operations with transparent patches ✅ **Done!**
+- [x] `useLiveEvent` - automatically attaching & detaching [`handleEvent`](https://hexdocs.pm/phoenix_live_view/js-interop.html#client-hooks-via-phx-hook)
+- [x] JSON Patch diffing - send only changed props over the WebSocket
+- [x] Shared props - automatically included in all components
+- [x] VS Code extension - syntax highlighting for `~VUE` sigil
+- [x] Igniter installer - one-line installation for Phoenix 1.8+ projects
+- [x] `useEventReply` - easy handling of `{:reply, data, socket}` responses
+- [x] `useLiveForm` - Ecto changesets & server-side validation
+- [x] Phoenix Streams - full support for `stream()` operations
 
 ## Credits
 

@@ -300,28 +300,26 @@ All integrations have similar server load characteristics since they use LiveVie
 ## Community and Ecosystem
 
 ### LiveSvelte
-- **Stars**: ~1.5k GitHub stars
 - **Maturity**: Most mature integration
 - **Community**: Active development and community
 - **Documentation**: Comprehensive with examples
 
 ### LiveVue
-- **Stars**: ~330 GitHub stars
 - **Maturity**: Stable and well-documented
 - **Community**: Growing community
 - **Documentation**: Extensive guides and examples
 
 ### LiveReact
-- **Stars**: ~260 GitHub stars
 - **Maturity**: Recently reached v1.0
 - **Community**: Active development
 - **Documentation**: Good documentation
 
 ### LiveState
-- **Stars**: ~260 GitHub stars
 - **Maturity**: Stable for specific use cases
 - **Community**: Focused on embeddable apps
 - **Documentation**: Good for target use cases
+
+For current GitHub star counts, check each project's repository directly.
 
 ## Conclusion
 

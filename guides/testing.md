@@ -8,6 +8,20 @@ Testing LiveVue components differs from traditional Phoenix LiveView testing in 
 - Traditional LiveView testing uses `render_component/2` to get final HTML
 - LiveVue testing provides helpers to inspect the Vue component configuration before client-side rendering
 
+## Dependencies
+
+The `LiveVue.Test` module requires the `lazy_html` package for parsing HTML. Add it to your test dependencies:
+
+```elixir
+# mix.exs
+defp deps do
+  [
+    # ... other deps
+    {:lazy_html, ">= 0.1.0", only: :test}
+  ]
+end
+```
+
 ## Testing Configuration
 
 For comprehensive testing, you should disable props diffing in your test environment to ensure `LiveVue.Test.get_vue/2` always returns complete props data:
@@ -161,7 +175,47 @@ end
 
 ## Integration Testing
 
-For full integration tests, you should use headless browser to render components. Currently this guide is a work in progress.
+For full integration tests with client-side Vue rendering, use a headless browser with Playwright.
+
+### Playwright Setup
+
+LiveVue's E2E tests use Playwright. Here's a typical test structure:
+
+```javascript
+// tests/e2e/example.spec.js
+import { test, expect } from "@playwright/test"
+
+// Helper to wait for LiveView connection
+const syncLV = async page => {
+  await Promise.all([
+    expect(page.locator(".phx-connected").first()).toBeVisible(),
+    expect(page.locator(".phx-change-loading")).toHaveCount(0),
+    new Promise(resolve => setTimeout(resolve, 50)),
+  ])
+}
+
+test("Vue component renders and responds to events", async ({ page }) => {
+  await page.goto("/counter")
+  await syncLV(page)
+
+  // Verify Vue component is mounted
+  await expect(page.locator('[phx-hook="VueHook"]')).toBeVisible()
+
+  // Check initial state
+  await expect(page.locator("[data-testid='count']")).toHaveText("0")
+
+  // Trigger event and verify update
+  await page.click("button")
+  await syncLV(page)
+  await expect(page.locator("[data-testid='count']")).toHaveText("1")
+})
+```
+
+### Tips for E2E Tests
+
+1. **Wait for LiveView**: Always use `syncLV()` after navigation or events
+2. **Use data attributes**: Add `data-testid` or `data-pw-*` attributes for reliable selectors
+3. **Test Vue + LiveView interaction**: Verify props update correctly after server events
 
 ## Best Practices
 

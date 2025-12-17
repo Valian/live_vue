@@ -354,7 +354,20 @@ defmodule User do
   @derive {LiveVue.Encoder, except: [:password, :secret_key]}
   defstruct [:name, :email, :password, :secret_key]
 end
+
+# For Ecto schemas with associations that may not be loaded
+defmodule Post do
+  use Ecto.Schema
+  @derive {LiveVue.Encoder, except: [:__meta__], nillify_not_loaded: true}
+
+  schema "posts" do
+    field :title, :string
+    belongs_to :author, User  # Will be nil if not preloaded, instead of raising
+  end
+end
 ```
+
+The `nillify_not_loaded: true` option converts Ecto's `%Ecto.Association.NotLoaded{}` structs to `nil` instead of raising an error. This is useful when you want to pass Ecto schemas as props without always preloading all associations.
 
 #### Custom Implementation
 

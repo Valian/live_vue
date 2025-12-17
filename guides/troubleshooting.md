@@ -278,6 +278,10 @@ npm run build
      ]
    ```
 
+3. **Understand HMR scope:**
+   - **Vue files**: Hot Module Replacement works seamlessly - changes to `.vue` files are reflected instantly without page refresh
+   - **Elixir files**: Changes to `.ex` and `.heex` files trigger a LiveView re-render via Phoenix's code reloading, not Vite HMR. This still provides fast feedback but works through LiveView's WebSocket connection rather than Vite's HMR
+
 ## SSR Issues
 
 ### SSR Not Working
@@ -454,7 +458,7 @@ export default defineConfig({
 1. **Check browser console for errors**
 2. **Verify all configuration steps** (see [Configuration](configuration.md))
 3. **Test with minimal reproduction case**
-4. **Check if issue exists in example project**
+4. **Create a fresh project with Igniter to verify the issue isn't in your configuration**
 
 ### Where to Get Help
 
@@ -475,6 +479,7 @@ Include:
 
 ## Next Steps
 
+- [Live Examples](https://livevue.skalecki.dev) - Working examples to compare against
 - [FAQ](faq.md) for conceptual questions
 - [Architecture](architecture.md) to understand how things work
 - [Configuration](configuration.md) for advanced setup options
