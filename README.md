@@ -147,7 +147,7 @@ You can read more about differences between Vue and Svelte [in FAQ](guides/faq.m
 
 ### Local Setup
 
-Ensure you have node installed. Clone the repo and run `mix setup`. You can then run `mix assets.watch` to start a watcher for the assets.
+Ensure you have Node.js installed. Clone the repo and run `mix setup`.
 
 #### Example Project
 
@@ -159,20 +159,7 @@ You can use `/example_project` as a way to test `live_vue` locally.
 - Run `mix phx.server` to start the server
 - Open [http://localhost:4000](http://localhost:4000) in your browser
 
-
-### Building Static Files
-
-LiveVue is written in TypeScript. To see the changes you made, you have to recompile the assets. You can do it with:
-
-```bash
-mix assets.build
-```
-
-Or run the watcher:
-
-```bash
-mix assets.watch
-```
+No build step is required for the library itself - Vite handles TypeScript transpilation when consumers bundle their app.
 
 ### Releasing
 
@@ -190,8 +177,8 @@ git commit -m "INSTALLATION version bump"
 # to ensure everything works fine
 mix expublish.minor --dry-run --allow-untracked --branch=main
 
-# to publish everything
-mix do assets.build, expublish.minor --allow-untracked --branch=main
+# to publish
+mix expublish.minor --allow-untracked --branch=main
 ```
 
 ## Roadmap 🎯

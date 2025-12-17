@@ -10,12 +10,11 @@ mix test                          # Elixir tests
 npm test                          # Vitest (assets/js/live_vue/*.test.ts)
 npm run e2e:test                  # Playwright E2E (test/e2e/)
 
-# Development (mix assets.watch runs in background automatically)
+# Development
 cd example_project && mix phx.server   # Test at localhost:4000
 
-# Build & Setup
-mix setup                         # First-time setup
-mix assets.build                  # Build assets (usually automatic)
+# Setup
+mix setup                         # First-time setup (deps + npm install)
 ```
 
 ## Project Structure
@@ -33,7 +32,7 @@ assets/js/live_vue/
 ├── use.ts                   # Vue composables (useLiveEvent, etc.)
 ├── useLiveForm.ts           # Form handling with Ecto changesets
 ├── jsonPatch.ts             # Efficient prop diffing
-└── vitePlugin.ts            # Vite plugin for component discovery
+└── vitePlugin.js            # Vite plugin for component discovery
 example_project/             # Test app using library directly
 test/e2e/                    # Playwright tests with Phoenix server
 ```
@@ -76,13 +75,9 @@ Commit format: `type: description` (feat/fix/docs/test/refactor/chore)
 
 ## Release Process
 
-`package.json` exports point to TypeScript source files (`assets/js/live_vue/*.ts`) during development. This allows installing directly from GitHub without a build step, since Vite handles TS transpilation.
+No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/js/live_vue/*.ts`). Vite handles TS transpilation when consumers bundle their app.
 
-For hex.pm releases, `mix release.{patch,minor,major}` automatically:
-1. Builds assets (`npm run build` → `priv/static/*.js`)
-2. Swaps `package.json` exports to compiled JS paths
-3. Runs expublish (commits, tags)
-4. Restores `package.json` to TS paths
+For hex.pm releases, `mix release.{patch,minor,major}` runs expublish (commits, tags, publishes).
 
 ## Notes
 

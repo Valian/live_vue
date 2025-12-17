@@ -1,5 +1,3 @@
-// @ts-config ./tsconfig.server.json
-
 import fs from "fs"
 import { basename, resolve } from "path"
 import type { ViewHook } from "phoenix_live_view"
