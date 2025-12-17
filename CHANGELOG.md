@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [Unreleased]
+
+### Removed
+
+- **Removed `shared_props` configuration** - This feature had a fundamental flaw: LiveView only re-renders components when explicitly-passed assigns change. Since shared props were injected at render time (not in the template), changes to shared props would not trigger component re-renders. Pass props explicitly instead: `<.vue flash={@flash} user={@current_user} ... />`
+
 ## 1.0.0-rc.4 - 2025-10-19
 
 ### Improvements

@@ -32,10 +32,6 @@ config :live_vue,
   # Useful for testing scenarios where you need complete props state
   enable_props_diff: true,
 
-  # Shared props configuration
-  # Props that are automatically added to all Vue components
-  shared_props: [],
-
   # Gettext backend for translating form validation errors
   # When set, Phoenix.HTML.Form errors are translated using this backend
   # Example: MyApp.Gettext
@@ -390,101 +386,23 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 - Consider adjusting the NodeJS pool size based on your server capacity
 - Disable SSR for components that don't benefit from it
 
-## Shared Props Configuration
+## Shared Props (Removed)
 
-LiveVue offers a configuration option that enables developers to specify props that are automatically passed to all Vue components. This feature ensures consistent data availability across components without the need to manually pass props in every instance.
-
-### How to Configure
-
-To set shared props, define the desired properties in your LiveView configuration. These props will then be injected into every Vue component rendered within LiveView contexts, streamlining data management and improving code maintainability.
-
-```elixir
-config :live_vue,
-  shared_props: [
-    :flash,                    # Pass flash messages to all components
-    {:current_user, :user},    # Pass current_user from socket as 'user' prop
-    :locale                    # Pass locale setting to all components
-  ]
-```
-
-### Configuration Options
-
-Shared props can be configured in two ways:
-
-1. **Direct mapping**: Use an atom to pass the socket assign with the same name
-   ```elixir
-   shared_props: [:flash, :current_user]
-   ```
-
-2. **Renamed mapping**: Use a tuple `{socket_key, prop_name}` to rename the prop
-   ```elixir
-   shared_props: [{:current_user, :user}, {:user_preferences, :prefs}]
-   ```
-
-3. **Nested mapping**: Use a tuple `{[:parent, :child], prop_name}` to extract a nested value from the socket
-   ```elixir
-   shared_props: [
-    {[:scope, :user], :user},
-    {[:streams, :items], :items}
-   ]
-   ```
-
-   **Complete example with nested mapping:**
-   ```elixir
-   # config/config.exs
-   config :live_vue,
-     shared_props: [
-       :flash,
-       {[:scope, :current_user], :user}  # Extract @scope.current_user as :user prop
-     ]
-
-   # In your LiveView mount
-   def mount(_params, _session, socket) do
-     {:ok, assign(socket, scope: %{current_user: get_current_user()})}
-   end
-   ```
-
-   ```vue
-   <!-- All Vue components automatically receive the nested value -->
-   <script setup>
-   defineProps<{ user: User, flash: any }>()
-   </script>
-   ```
-
-
-### How It Works
-
-The `merge_socket_props/2` function automatically:
-- Extracts specified assigns from the LiveView socket
-- Adds them as props to every Vue component
-- Preserves change tracking for efficient prop diffing
-- Only processes components rendered within LiveView contexts (requires `v-socket`)
-
-### Example Usage
-
-With the configuration above, all Vue components automatically receive the configured props:
-
-```vue
-<!-- MyComponent.vue -->
-<template>
-  <div>
-    <div v-if="flash.info">{{ flash.info }}</div>
-    <p>Welcome, {{ user.name }}!</p>
-    <p>Current locale: {{ locale }}</p>
-  </div>
-</template>
-
-<script setup>
-// These props are automatically available without explicit passing
-defineProps(['flash', 'user', 'locale'])
-</script>
-```
-
-```elixir
-<!-- In your LiveView template -->
-<!-- No need to manually pass flash, user, or locale -->
-<.vue v-component="MyComponent" v-socket={@socket} custom_prop="value" />
-```
+> **Note**: The `shared_props` configuration option was removed in v1.0.0.
+>
+> This feature allowed automatic injection of socket assigns into all Vue components.
+> However, it had a fundamental flaw: LiveView only re-renders components when their
+> explicitly-passed assigns change. Since shared props were injected at render time
+> (not passed explicitly in the template), changes to shared props would not trigger
+> component re-renders.
+>
+> **Workaround**: Pass props explicitly in your templates:
+> ```elixir
+> <.vue v-component="MyComponent" v-socket={@socket} flash={@flash} user={@current_user} />
+> ```
+>
+> This ensures LiveView's change tracking works correctly and your Vue components
+> receive updates when the data changes.
 
 
 ## Troubleshooting Configuration
