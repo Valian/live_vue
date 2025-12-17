@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { syncLV } from "../utils.js"
+import { syncLV } from "../../utils.js"
 
 test.describe("LiveVue Stream Integration", () => {
   test.beforeEach(async ({ page }) => {

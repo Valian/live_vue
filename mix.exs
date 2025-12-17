@@ -131,7 +131,7 @@ defmodule LiveVue.MixProject do
     ]
   end
 
-  defp elixirc_paths(:e2e), do: ["lib", "test/e2e/support"]
+  defp elixirc_paths(:e2e), do: ["lib", "test/e2e/features"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp listeners(:e2e), do: [Phoenix.CodeReloader]

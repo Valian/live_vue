@@ -4,81 +4,105 @@ This directory contains end-to-end tests for the LiveVue library using Playwrigh
 
 ## Setup
 
-1. Install Playwright dependencies:
+1. Install Playwright browsers:
    ```bash
    npm run e2e:install
-   npx playwright install
-   ```
-
-2. Install browsers:
-   ```bash
-   cd test/e2e && npx playwright install
    ```
 
 ## Running Tests
 
-### Run all tests
 ```bash
-npm run e2e:test
+npm run e2e:test           # Run all tests
+npm run e2e:test:headed    # Run with browser UI
+npm run e2e:test:debug     # Debug interactively
 ```
 
-### Run tests with browser UI (headed mode)
-```bash
-npm run e2e:test:headed
+## Structure
+
+Tests are organized as colocated features - each feature has its LiveView, Vue components, and tests in one directory:
+
+```
+test/e2e/
+├── features/
+│   ├── basic/              # Basic counter test
+│   │   ├── live.ex         # LiveView module (LiveVue.E2E.TestLive)
+│   │   ├── counter.vue     # Vue component
+│   │   └── basic.spec.js   # Playwright test
+│   ├── form/               # Form validation tests
+│   ├── stream/             # LiveView streams tests
+│   ├── event/              # useLiveEvent tests
+│   ├── event-reply/        # Event reply tests
+│   ├── navigation/         # useLiveNavigation tests
+│   ├── prop-diff/          # Prop diffing tests
+│   ├── slot/               # Slot rendering tests
+│   └── upload/             # File upload tests
+├── js/
+│   └── app.js              # Vue/LiveSocket bootstrap
+├── test_helper.exs         # Phoenix endpoint, routes, layout
+├── utils.js                # Test utilities
+├── playwright.config.js
+└── vite.config.js
 ```
 
-### Debug tests interactively
-```bash
-npm run e2e:test:debug
-```
+## Adding a New Test Feature
 
-### Run tests for a specific browser
-```bash
-cd test/e2e && npx playwright test --project=chromium
-```
+1. Create directory: `test/e2e/features/my-feature/`
 
-## Test Structure
+2. Add LiveView (`live.ex`):
+   ```elixir
+   defmodule LiveVue.E2E.MyFeatureLive do
+     use Phoenix.LiveView
 
-- `playwright.config.js` - Playwright configuration
-- `test_helper.exs` - Test server setup with Phoenix endpoint
-- `utils.js` - JavaScript test utilities for LiveView/Vue synchronization
-- `support/` - Test LiveViews and Vue components
-- `tests/` - Actual test files
+     def mount(_params, _session, socket) do
+       {:ok, assign(socket, :data, "hello")}
+     end
+
+     def render(assigns) do
+       ~H"""
+       <LiveVue.vue data={@data} v-component="my_component" v-socket={@socket} />
+       """
+     end
+   end
+   ```
+
+3. Add Vue component (`my_component.vue`):
+   ```vue
+   <script setup lang="ts">
+   defineProps<{ data: string }>()
+   </script>
+   <template>
+     <div data-testid="output">{{ data }}</div>
+   </template>
+   ```
+
+4. Add route to `test_helper.exs`:
+   ```elixir
+   live "/my-feature", MyFeatureLive
+   ```
+
+5. Add test (`my-feature.spec.js`):
+   ```javascript
+   import { test, expect } from "@playwright/test"
+   import { syncLV } from "../../utils.js"
+
+   test("my feature works", async ({ page }) => {
+     await page.goto("/my-feature")
+     await syncLV(page)
+     await expect(page.getByTestId("output")).toHaveText("hello")
+   })
+   ```
+
+## Test Utilities
+
+- `syncLV(page)` - Wait for LiveView to connect and finish loading
+- `evalLV(page, code)` - Execute Elixir code in LiveView process (returns result)
 
 ## Test Server
 
-The test server runs on http://localhost:4004 and provides:
+Runs on http://localhost:4004. Routes are defined in `test_helper.exs`.
 
-- `/health` - Health check endpoint
-- `/test-vue` - Basic Vue component test
-- `/test-vue-props` - Props passing test
-- `/test-vue-events` - Event emission test
+## Notes
 
-## Key Testing Utilities
-
-- `syncLV(page)` - Wait for LiveView to be ready
-- `syncVue(page)` - Wait for Vue components to be mounted
-- `evalLV(page, code)` - Execute Elixir code in LiveView process
-
-## Adding New Tests
-
-1. Create test LiveViews in `support/test_live.ex`
-2. Add corresponding Vue components in `support/vue_components.js`
-3. Add routes in `test_helper.exs`
-4. Write tests in `tests/` directory
-
-## Current Test Coverage
-
-- ✅ Vue component rendering in LiveView
-- ✅ Props passing from LiveView to Vue
-- ✅ Event emission from Vue to LiveView
-- ✅ LiveView/Vue state synchronization
-- ✅ Server-side code execution from tests
-
-## Future Enhancements
-
-- Form integration testing
-- Component lifecycle testing
-- Error handling scenarios
-- Performance testing
-- WebSocket reconnection testing
+- LiveView modules are compiled via `elixirc_paths(:e2e)` in `mix.exs`
+- Vue components are discovered via `import.meta.glob("../features/**/*.vue")`
+- Each feature can have multiple Vue components if needed

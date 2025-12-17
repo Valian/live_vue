@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { syncLV } from "../utils.js"
+import { syncLV } from "../../utils.js"
 
 test.describe("LiveVue Slot Non-ASCII Character Tests", () => {
   test("renders non-ASCII characters in slots correctly", async ({ page }) => {
