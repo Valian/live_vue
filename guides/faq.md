@@ -36,7 +36,7 @@ The implementation is straightforward:
    - Event handlers configured
    - SSR content (when enabled)
 
-2. **Initialization**: The [LiveVue hook](https://github.com/Valian/live_vue/blob/main/assets/js/live_vue/hooks.ts):
+2. **Initialization**: The [LiveVue hook](https://github.com/Valian/live_vue/blob/main/assets/hooks.ts):
    - Mounts on element creation
    - Sets up event handlers
    - Injects the hook for `useLiveVue`
