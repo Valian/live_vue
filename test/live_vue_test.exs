@@ -230,4 +230,40 @@ defmodule LiveVueTest do
       assert vue.slots == %{}
     end
   end
+
+  describe "edge cases" do
+    def edge_case_component(assigns) do
+      ~H"""
+      <.vue name="John" v-component="MyComponent" />
+      """
+    end
+
+    test "raises ArgumentError with invalid option key" do
+      html = render_component(&edge_case_component/1)
+
+      assert_raise ArgumentError,
+                   "invalid keyword option for get_vue/2: foo",
+                   fn ->
+                     Test.get_vue(html, foo: "bar")
+                   end
+    end
+
+    test "raises error when no Vue components found" do
+      html = "<div>No Vue components here</div>"
+
+      assert_raise RuntimeError,
+                   "No Vue components found in the rendered HTML",
+                   fn ->
+                     Test.get_vue(html)
+                   end
+    end
+
+    test "handles missing attributes gracefully" do
+      html = render_component(&edge_case_component/1)
+      vue = Test.get_vue(html)
+
+      # Components without class attribute should return nil or empty string
+      assert vue.class in [nil, ""]
+    end
+  end
 end
