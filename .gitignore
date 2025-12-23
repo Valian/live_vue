@@ -38,3 +38,4 @@ node_modules/
 test/e2e/priv/static/
 test-results/
 playwright-report/
+priv
