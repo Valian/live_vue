@@ -113,7 +113,8 @@ defmodule LiveVue.MixProject do
         Changelog: @repo_url <> "/blob/master/CHANGELOG.md",
         GitHub: @repo_url
       },
-      files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md usage-rules.md)
+      files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md usage-rules.md),
+      exclude_patterns: [~r/\.test\.ts$/]
     ]
   end
 
