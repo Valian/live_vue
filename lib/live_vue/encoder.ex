@@ -146,7 +146,7 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
         [first | rest] = String.split(description, "\n\n")
 
         addition = """
-        To prevent this error from happening in forms, you can explicitly encode form using LiveVue.Encoder.encode(form, nillify_not_loaded: true) option.
+        To prevent this error from happening in forms, you can explicitly encode form using LiveVue.Encoder.encode(form, nilify_not_loaded: true) option.
         """
 
         Enum.join([first | [addition | rest]], "\n\n")
@@ -189,7 +189,7 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
             %Ecto.Association.NotLoaded{} = not_loaded ->
               # I was thinking how to solve this correctly
               # but for now I think ignoring this is the best option
-              if opts[:nillify_not_loaded], do: nil, else: not_loaded
+              if opts[:nilify_not_loaded], do: nil, else: not_loaded
 
             %{__meta__: _} = value ->
               Map.delete(value, :__meta__)
@@ -212,7 +212,7 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
           case Map.fetch!(source.data, field) do
             %Ecto.Association.NotLoaded{} = not_loaded ->
               # let's return nil for not loaded associations
-              if opts[:nillify_not_loaded], do: nil, else: not_loaded
+              if opts[:nilify_not_loaded], do: nil, else: not_loaded
 
             [%{__meta__: _} | _] = value ->
               Enum.map(value, &Map.delete(&1, :__meta__))
