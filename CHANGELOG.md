@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Removed `shared_props` configuration** - This feature had a fundamental flaw: LiveView only re-renders components when explicitly-passed assigns change. Since shared props were injected at render time (not in the template), changes to shared props would not trigger component re-renders. Pass props explicitly instead: `<.vue flash={@flash} user={@current_user} ... />`
 
+### Fixed
+
+- **Renamed `nillify_all` to `nilify_all` in `LiveVue.Encoder`**. It was a typo and the new spelling is consistent with rest of the Elixir ecosystem.
+
 ## 1.0.0-rc.4 - 2025-10-19
 
 ### Improvements
