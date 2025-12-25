@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Renamed `nillify_all` to `nilify_all` in `LiveVue.Encoder`**. It was a typo and the new spelling is consistent with rest of the Elixir ecosystem.
+- **Renamed `nillify_not_loaded` to `nilify_not_loaded` in `LiveVue.Encoder`**. It was a typo and the new spelling is consistent with rest of the Elixir ecosystem.
 
 ## 1.0.0-rc.4 - 2025-10-19
 
