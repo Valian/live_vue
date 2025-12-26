@@ -358,7 +358,7 @@ end
 # For Ecto schemas with associations that may not be loaded
 defmodule Post do
   use Ecto.Schema
-  @derive {LiveVue.Encoder, except: [:__meta__], nillify_not_loaded: true}
+  @derive {LiveVue.Encoder, except: [:__meta__], nilify_not_loaded: true}
 
   schema "posts" do
     field :title, :string
@@ -367,7 +367,7 @@ defmodule Post do
 end
 ```
 
-The `nillify_not_loaded: true` option converts Ecto's `%Ecto.Association.NotLoaded{}` structs to `nil` instead of raising an error. This is useful when you want to pass Ecto schemas as props without always preloading all associations.
+The `nilify_not_loaded: true` option converts Ecto's `%Ecto.Association.NotLoaded{}` structs to `nil` instead of raising an error. This is useful when you want to pass Ecto schemas as props without always preloading all associations.
 
 #### Custom Implementation
 
