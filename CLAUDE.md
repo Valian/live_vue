@@ -89,7 +89,7 @@ Commit format: `type: description` (feat/fix/docs/test/refactor/chore)
 
 No JS build step required. `package.json` exports point directly to TypeScript source files (`assets/*.ts`). Vite handles TS transpilation when consumers bundle their app.
 
-For hex.pm releases, `mix release.{patch,minor,major}` runs expublish (commits, tags, publishes).
+For hex.pm releases, `mix release.{patch,minor,major}` runs easy_publish (bumps version, updates CHANGELOG, commits, tags, pushes, publishes to Hex).
 
 ## Notes
 
