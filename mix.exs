@@ -156,7 +156,7 @@ defmodule LiveVue.MixProject do
       # dev dependencies
       {:ex_doc, "~> 0.38", only: :dev, runtime: false, warn_if_outdated: true},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:expublish, "~> 2.5", only: [:dev], runtime: false},
+      {:easy_publish, "~> 0.1", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:makeup_html, "~> 0.1.0", only: :dev, runtime: false},
       {:styler, "~> 1.5", only: [:dev, :test], runtime: false},
@@ -174,9 +174,9 @@ defmodule LiveVue.MixProject do
       precommit: ["test", "format", "e2e.test", "assets.test"],
       "assets.test": ["cmd npm test"],
       "e2e.test": ["cmd npm run e2e:test"],
-      "release.patch": ["expublish.patch --branch=main --disable-publish"],
-      "release.minor": ["expublish.minor --branch=main --disable-publish"],
-      "release.major": ["expublish.major --branch=main --disable-publish"]
+      "release.patch": ["easy_publish.release patch --branch=main"],
+      "release.minor": ["easy_publish.release minor --branch=main"],
+      "release.major": ["easy_publish.release major --branch=main"]
     ]
   end
 
