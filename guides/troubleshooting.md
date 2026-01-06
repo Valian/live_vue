@@ -308,9 +308,20 @@ node --version  # Should be 19+
 ```elixir
 # application.ex
 children = [
-  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
+  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(:your_app), pool_size: 4]},
   # ... other children
 ]
+```
+
+Replace `:your_app` with your application's atom name.
+
+**Getting `:undefined` or `MatchError` from `server_path()`?**
+
+This happens when using `server_path/0` (without arguments) in production releases. The function relies on `:application.get_application/0` which may not work correctly during supervisor startup in OTP releases.
+
+**Solution**: Always use `server_path/1` with your explicit app name:
+```elixir
+{NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(:my_app), pool_size: 4]}
 ```
 
 **Verify server bundle exists:**

@@ -90,7 +90,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       # Check that SSR production setup was applied
       app_file = project.rewrite.sources["lib/test/application.ex"]
       assert app_file.content =~ ~r/NodeJS\.Supervisor/
-      assert app_file.content =~ ~r/path: LiveVue\.SSR\.NodeJS\.server_path\(\)/
+      assert app_file.content =~ ~r/path: LiveVue\.SSR\.NodeJS\.server_path\(:test\)/
       assert app_file.content =~ ~r/pool_size: 4/
 
       # Check that AGENTS.md was updated with usage rules

@@ -74,13 +74,32 @@ defmodule LiveVue.SSR.NodeJSTest do
   end
 
   describe "server_path/0" do
-    test "returns the priv directory path for the current application" do
+    test "raises MatchError when called outside application context" do
       # server_path/0 uses :application.get_application() which returns :undefined
       # when called outside of application context (like in tests)
-      # This is expected behavior - it's designed to be called from within an application
+      # This is expected behavior - use server_path/1 instead for reliable paths
       assert_raise MatchError, fn ->
         NodeJSRenderer.server_path()
       end
+    end
+  end
+
+  describe "server_path/1" do
+    test "returns the priv directory path for the given application" do
+      # server_path/1 takes an explicit app name and returns its priv directory
+      path = NodeJSRenderer.server_path(:live_vue)
+
+      assert is_binary(path)
+      assert String.ends_with?(path, "/priv")
+      assert String.contains?(path, "live_vue")
+    end
+
+    test "works with any valid application atom" do
+      # Should work with any loaded application
+      path = NodeJSRenderer.server_path(:elixir)
+
+      assert is_binary(path)
+      assert String.ends_with?(path, "/priv")
     end
   end
 end

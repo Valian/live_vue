@@ -357,10 +357,12 @@ For production deployments, you'll need Node.js 19+ and proper configuration:
 
 ```elixir
 children = [
-  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
+  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(:your_app), pool_size: 4]},
   # ... other children
 ]
 ```
+
+Replace `:your_app` with your application's atom name (found in `mix.exs` under `project/0`).
 
 3. **Build server bundle** as part of your deployment:
 

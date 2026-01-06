@@ -320,7 +320,7 @@ defmodule Mix.Tasks.LiveVue.Install do
     end
 
     # Setup SSR for production in application.ex
-    defp setup_ssr_for_production(igniter, _app_name) do
+    defp setup_ssr_for_production(igniter, app_name) do
       app_module = igniter |> Igniter.Project.Application.app_name() |> to_string()
       app_file = "lib/#{Macro.underscore(app_module)}/application.ex"
 
@@ -332,7 +332,7 @@ defmodule Mix.Tasks.LiveVue.Install do
             String.replace(
               content,
               ~r/(children = \[\s*\n)/,
-              "\\1      {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},\n"
+              "\\1      {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(:#{app_name}), pool_size: 4]},\n"
             )
           else
             content
