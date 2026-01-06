@@ -1,6 +1,6 @@
 # LiveVue Library Development
 
-Vue.js + Phoenix LiveView integration library. Version 1.0.0-rc.4.
+Vue.js + Phoenix LiveView integration library. Version 1.0.0.
 
 ## Quick Reference
 

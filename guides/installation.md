@@ -46,7 +46,7 @@ This command will:
 To add LiveVue to an existing Phoenix 1.8+ project:
 
 ```bash
-mix igniter.install live_vue@1.0.0-rc.4
+mix igniter.install live_vue
 ```
 
 This will automatically configure your project with all necessary LiveVue setup.
@@ -54,7 +54,7 @@ This will automatically configure your project with all necessary LiveVue setup.
 > #### Important Limitations {: .warning}
 >
 > - **Phoenix 1.8+ required**: The Igniter installer depends on `phoenix_vite` and modern Phoenix features that are only available in Phoenix 1.8+
-> - **Pre-Igniter LiveVue upgrade not supported**: If you have an existing LiveVue installation from before the Igniter installer was introduced, upgrading via `mix igniter.install live_vue@1.0.0-rc.4` is not supported due to significant changes in the installation process. On the other hand, you should be able to bump version of LiveVue in your `mix.exs` file and everything should still work.
+> - **Pre-Igniter LiveVue upgrade not supported**: If you have an existing LiveVue installation from before the Igniter installer was introduced, upgrading via `mix igniter.install live_vue` is not supported due to significant changes in the installation process. On the other hand, you should be able to bump version of LiveVue in your `mix.exs` file and everything should still work.
 > - **LiveVue itself works with Phoenix 1.7**: While the automated installer requires Phoenix 1.8+, the LiveVue library itself is compatible with Phoenix 1.7 if installed manually
 
 ## Manual Installation
