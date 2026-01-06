@@ -5,7 +5,7 @@ defmodule LiveVue.SSRTest do
 
   defmodule MockSSRRenderer do
     @moduledoc false
-    @behaviour LiveVue.SSR
+    @behaviour SSR
 
     @impl true
     def render("WithPreload", _props, _slots) do
@@ -97,8 +97,8 @@ defmodule LiveVue.SSRTest do
       result = SSR.render("Echo", props, slots)
 
       assert result.html =~ "\"count\":42"
-      assert result.html =~ "\"title\":\"Test\""
-      assert result.html =~ "\"default\":\"<span>Content</span>\""
+      assert result.html =~ ~s("title":"Test")
+      assert result.html =~ ~s("default":"<span>Content</span>")
     end
   end
 
@@ -150,7 +150,8 @@ defmodule LiveVue.SSRTest do
 
   describe "render/3 edge cases" do
     defmodule EdgeCaseRenderer do
-      @behaviour LiveVue.SSR
+      @moduledoc false
+      @behaviour SSR
 
       @impl true
       def render("MultipleDelimiters", _props, _slots) do

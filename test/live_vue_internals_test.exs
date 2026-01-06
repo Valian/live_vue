@@ -5,6 +5,7 @@ defmodule LiveVueInternalsTest do
 
   alias LiveVue.Test
   alias Phoenix.LiveView.LiveStream
+  alias Phoenix.LiveView.Socket
 
   # Test module for Encoder protocol
   defmodule ItemWithoutId do
@@ -175,7 +176,7 @@ defmodule LiveVueInternalsTest do
 
       # Both streams should be processed
       decoded_streams = decode_patch(vue.streams_diff)
-      stream_paths = Enum.map(decoded_streams, & &1["path"]) |> Enum.uniq()
+      stream_paths = decoded_streams |> Enum.map(& &1["path"]) |> Enum.uniq()
 
       assert "/users" in stream_paths
       assert "/posts" in stream_paths
@@ -381,10 +382,11 @@ defmodule LiveVueInternalsTest do
       vue = render_vue_assigns(assigns)
 
       # Remove operations should be 2-element lists (no value)
-      remove_ops = Enum.filter(vue.streams_diff, fn
-        ["remove", _path] -> true
-        _ -> false
-      end)
+      remove_ops =
+        Enum.filter(vue.streams_diff, fn
+          ["remove", _path] -> true
+          _ -> false
+        end)
 
       assert length(remove_ops) > 0
     end
@@ -435,7 +437,7 @@ defmodule LiveVueInternalsTest do
 
   describe "get_socket/1 - various assign patterns" do
     test "returns socket from :socket assign" do
-      socket = %Phoenix.LiveView.Socket{transport_pid: self()}
+      socket = %Socket{transport_pid: self()}
 
       assigns = %{
         socket: socket,
@@ -449,7 +451,7 @@ defmodule LiveVueInternalsTest do
     end
 
     test "returns socket from nested [:vue_opts, :socket]" do
-      socket = %Phoenix.LiveView.Socket{transport_pid: self()}
+      socket = %Socket{transport_pid: self()}
 
       assigns = %{
         vue_opts: %{socket: socket},
@@ -463,8 +465,8 @@ defmodule LiveVueInternalsTest do
     end
 
     test "prefers [:vue_opts, :socket] over :socket" do
-      socket1 = %Phoenix.LiveView.Socket{transport_pid: self()}
-      socket2 = %Phoenix.LiveView.Socket{transport_pid: self()}
+      socket1 = %Socket{transport_pid: self()}
+      socket2 = %Socket{transport_pid: self()}
 
       assigns = %{
         socket: socket1,

@@ -1645,6 +1645,7 @@ defmodule LiveVue.EncoderFormTest do
       # Nested errors should also have matching length
       nested_errors = encoded.errors.nested.items
       assert length(nested_errors) == 3
+
       assert nested_errors == [
                %{name: ["can't be blank"], age: ["must be greater than 0"]},
                nil,
