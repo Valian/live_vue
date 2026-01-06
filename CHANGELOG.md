@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
-## UNRELEASED
+## 1.0.0 - 2026-01-06
 
 After over four months of release candidates and community feedback, LiveVue 1.0 is ready. This release brings a complete rewrite of the developer experience—from a simplified no-build-step architecture to powerful new composables for forms, file uploads, and real-time communication. Whether you're building interactive dashboards, complex forms with server-side validation, or real-time collaborative features, LiveVue now provides first-class tooling to make Vue and Phoenix LiveView work together seamlessly.
 
