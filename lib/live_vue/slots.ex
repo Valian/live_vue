@@ -34,7 +34,7 @@ defmodule LiveVue.Slots do
     <% end %>
     """
     |> Phoenix.HTML.Safe.to_iodata()
-    |> List.to_string()
+    |> IO.iodata_to_binary()
     |> String.trim()
   end
 end
