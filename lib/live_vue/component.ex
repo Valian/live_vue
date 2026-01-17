@@ -108,8 +108,9 @@ defmodule LiveVue.Component do
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket flash __changed__ __given__"a,
-    do: :special
+  defp normalize_key(key, _val)
+       when key in ~w"id class v-ssr v-diff v-component v-socket socket flash myself live_action __changed__ __given__"a,
+       do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
