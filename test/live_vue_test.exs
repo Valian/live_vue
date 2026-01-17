@@ -29,7 +29,7 @@ defmodule LiveVueTest do
       html = render_component(&simple_component/1)
       vue = Test.get_vue(html)
 
-      assert vue.id =~ ~r/MyComponent-\d+/
+      assert vue.id == "MyComponent"
     end
   end
 
