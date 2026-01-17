@@ -179,6 +179,55 @@ defmodule LiveVue.Test do
     end
   end
 
+  @doc """
+  Simulates the LiveComponent lifecycle to render a Vue component.
+
+  This is useful for unit testing Vue component configuration, props, and diffs
+  without needing a full integration test.
+
+  ## Examples
+
+      # Render initial state
+      assigns = %{name: "John", "v-component": "MyComponent"}
+      vue = LiveVue.Test.render_vue_component(assigns)
+      assert vue.props["name"] == "John"
+
+      # Render update with diffing
+      assigns = assign(assigns, :name, "Jane")
+      vue = LiveVue.Test.render_vue_component(assigns)
+      assert vue.props_diff == [["replace", "/name", "Jane"]]
+  """
+  def render_vue_component(assigns) do
+    socket = %Phoenix.LiveView.Socket{endpoint: LiveVue.Endpoint, transport_pid: self()}
+    {:ok, socket} = LiveVue.Component.mount(socket)
+
+    is_update = assigns[:__changed__] != nil and assigns[:__changed__] != %{}
+
+    socket =
+      if is_update do
+        old_assigns =
+          Enum.reduce(assigns.__changed__, assigns, fn {key, old_val}, acc ->
+            Map.put(acc, key, old_val)
+          end)
+
+        old_props = LiveVue.Component.extract(old_assigns, :props)
+
+        # Seed socket to look like it's already mounted
+        socket
+        |> Phoenix.Component.assign(:props, old_props)
+        |> Phoenix.Component.assign(:component_name, assigns[:"v-component"])
+      else
+        socket
+      end
+
+    assigns = Map.put_new(assigns, :id, "test-id")
+    {:ok, socket} = LiveVue.Component.update(assigns, socket)
+
+    rendered = LiveVue.Component.render(socket.assigns)
+    html = rendered |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
+    get_vue(html)
+  end
+
   defp attr_from_tree({_tag, attrs, _children}, name) do
     case Enum.find(attrs, fn {k, _v} -> k == name end) do
       {^name, value} -> value

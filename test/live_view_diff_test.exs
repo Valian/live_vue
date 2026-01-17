@@ -26,12 +26,7 @@ defmodule LiveViewDiffTest do
     defstruct [:name, :age, :email, :password, :secret_key]
   end
 
-  # Utility function to render Vue assigns and get parsed Vue properties
-  defp render_vue_assigns(assigns) do
-    rendered = LiveVue.vue(assigns)
-    html = rendered |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
-    Test.get_vue(html)
-  end
+  defdelegate render_vue_assigns(assigns), to: Test, as: :render_vue_component
 
   # Utility function to assert JSON patches are equal by sorting both by path
   defp assert_patches_equal(actual, expected) do
@@ -42,11 +37,9 @@ defmodule LiveViewDiffTest do
   end
 
   defp decode_patch(patch_list) do
-    patch_list
-    |> Enum.map(fn patch ->
+    Enum.map(patch_list, fn patch ->
       %{"op" => Enum.at(patch, 0), "path" => Enum.at(patch, 1), "value" => Enum.at(patch, 2)}
     end)
-    |> Enum.reject(fn patch -> patch["op"] == "test" end)
   end
 
   defp apply_patch!(patch_list, initial_data) do
@@ -197,7 +190,7 @@ defmodule LiveViewDiffTest do
       assert_patches_equal(vue.props_diff, [])
 
       # But props should still contain the unchanged prop values
-      assert vue.props == %{}
+      assert vue.props == %{"name" => "John", "age" => 30}
       assert vue.handlers == %{"click" => %JS{ops: [["push", %{event: "test"}]]}}
     end
 
@@ -662,7 +655,6 @@ defmodule LiveViewDiffTest do
         }
       ]
 
-      assert vue.props == %{}
       assert_patches_equal(vue.streams_diff, expected_patches)
       assert_patches_equal(vue.props_diff, [])
     end
@@ -682,7 +674,6 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
-        %{"op" => "replace", "path" => "/users", "value" => []},
         %{
           "op" => "upsert",
           "path" => "/users/-",
@@ -708,7 +699,6 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
-        %{"op" => "replace", "path" => "/users", "value" => []},
         %{"op" => "remove", "path" => "/users/$$users-2", "value" => nil}
       ]
 
@@ -729,7 +719,6 @@ defmodule LiveViewDiffTest do
       vue = render_vue_assigns(assigns)
 
       expected_patches = [
-        %{"op" => "replace", "path" => "/users", "value" => []},
         %{"op" => "replace", "path" => "/users", "value" => []}
       ]
 
@@ -756,9 +745,8 @@ defmodule LiveViewDiffTest do
 
       expected_patches = [
         %{"op" => "replace", "path" => "/users", "value" => []},
-        %{"op" => "replace", "path" => "/users", "value" => []},
-        %{"op" => "remove", "path" => "/users/$$users-1", "value" => nil},
         %{"op" => "limit", "path" => "/users", "value" => 10},
+        %{"op" => "remove", "path" => "/users/$$users-1", "value" => nil},
         %{
           "op" => "upsert",
           "path" => "/users/-",

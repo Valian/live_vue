@@ -7,6 +7,8 @@ defmodule LiveVueInternalsTest do
   alias Phoenix.LiveView.LiveStream
   alias Phoenix.LiveView.Socket
 
+  defdelegate render_vue_assigns(assigns), to: Test, as: :render_vue_component
+
   # Test module for Encoder protocol
   defmodule ItemWithoutId do
     @moduledoc false
@@ -20,23 +22,14 @@ defmodule LiveVueInternalsTest do
     defstruct [:id, :name]
   end
 
-  # Utility function to render Vue assigns and get parsed Vue properties
-  defp render_vue_assigns(assigns) do
-    rendered = LiveVue.vue(assigns)
-    html = rendered |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
-    Test.get_vue(html)
-  end
-
   # Utility function to decode patches
   defp decode_patch(patch_list) do
-    patch_list
-    |> Enum.map(fn patch ->
+    Enum.map(patch_list, fn patch ->
       case patch do
         [op, path] -> %{"op" => op, "path" => path}
         [op, path, value] -> %{"op" => op, "path" => path, "value" => value}
       end
     end)
-    |> Enum.reject(fn patch -> patch["op"] == "test" end)
   end
 
   # Utility function to assert JSON patches are equal by sorting both by path
@@ -425,8 +418,8 @@ defmodule LiveVueInternalsTest do
       assigns = assign(assigns, :name, "Jane")
       vue = render_vue_assigns(assigns)
 
-      # Only changed prop should be in props when using diff
-      assert vue.props == %{"name" => "Jane"}
+      # Props should contain full state (LiveComponent requirement)
+      assert vue.props == %{"name" => "Jane", "age" => 30, "active" => true}
 
       # And should have corresponding diff
       decoded = decode_patch(vue.props_diff)
