@@ -63,7 +63,7 @@ defmodule MyAppWeb.CounterLive do
 
   def render(assigns) do
     ~H"""
-    <.vue count={@count} v-component="Counter" v-socket={@socket} />
+    <.vue count={@count} v-component="Counter" />
     """
   end
 

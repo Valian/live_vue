@@ -111,7 +111,7 @@ defmodule LiveVue.E2E.PropDiffTestLive do
     ~H"""
     <div>
       <h1>Prop Diff Test LiveView</h1>
-      <LiveVue.vue data={@data} v-component="prop-display" v-socket={@socket} />
+      <LiveVue.vue data={@data} v-component="prop-display" />
       
     <!-- Test Controls -->
       <div class="mt-8 space-y-4">

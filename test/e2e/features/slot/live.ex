@@ -11,23 +11,23 @@ defmodule LiveVue.E2E.SlotTestLive do
     <div>
       <h1>Non-ASCII Slot Test</h1>
 
-      <LiveVue.vue v-component="slot_test" v-socket={@socket} label="Test 1: Polish">
+      <LiveVue.vue id="slot-polish" v-component="slot_test" label="Test 1: Polish">
         Zażółć gęślą jaźń
       </LiveVue.vue>
 
-      <LiveVue.vue v-component="slot_test" v-socket={@socket} label="Test 2: Japanese">
+      <LiveVue.vue id="slot-japanese" v-component="slot_test" label="Test 2: Japanese">
         こんにちは世界
       </LiveVue.vue>
 
-      <LiveVue.vue v-component="slot_test" v-socket={@socket} label="Test 3: Emoji">
+      <LiveVue.vue id="slot-emoji" v-component="slot_test" label="Test 3: Emoji">
         Hello 🌍 World 🎉 Party 🚀
       </LiveVue.vue>
 
-      <LiveVue.vue v-component="slot_test" v-socket={@socket} label="Test 4: Mixed">
+      <LiveVue.vue id="slot-mixed" v-component="slot_test" label="Test 4: Mixed">
         Привет мир! 你好世界! مرحبا بالعالم
       </LiveVue.vue>
 
-      <LiveVue.vue v-component="slot_test" v-socket={@socket} label="Test 5: Special chars">
+      <LiveVue.vue id="slot-special" v-component="slot_test" label="Test 5: Special chars">
         Ñoño café résumé naïve
       </LiveVue.vue>
     </div>

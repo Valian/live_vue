@@ -131,13 +131,13 @@ Since the nested component's HTML is just inert markup at that point, Phoenix Li
 
     ```elixir
     # Instead of this:
-    <.Card v-socket={@socket}>
-      <.UserProfile user={@user} v-socket={@socket} />
+    <.Card>
+      <.UserProfile user={@user} />
     </.Card>
 
     # Do this:
-    <.Card v-socket={@socket} />
-    <.UserProfile user={@user} v-socket={@socket} />
+    <.Card />
+    <.UserProfile user={@user} />
     ```
 
 2.  **Standard Vue Components:** You can nest standard (non-LiveVue) Vue components inside a LiveVue component. These child components are defined entirely within the parent's Vue template and do not have a corresponding `<.vue>` tag in LiveView. They can receive props from their LiveVue parent and manage their own state as usual.

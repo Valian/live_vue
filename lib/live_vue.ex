@@ -26,7 +26,6 @@ defmodule LiveVue do
       (e.g., "my-class" or "my-class another-class")
     * `v-ssr` (boolean) - Whether to render the component on the server. Defaults to the value set
       in config (default: true)
-    * `v-socket` (LiveView.Socket) - LiveView socket, should be provided when rendering inside LiveView
 
   ### Event Handlers
     * `v-on:*` - Vue event handlers can be attached using the `v-on:` prefix
@@ -76,19 +75,9 @@ defmodule LiveVue do
   end
 
   defp id(name) do
-    # a small trick to avoid collisions of IDs but keep them consistent across dead and live render
-    # id(name) is called only once during the whole LiveView lifecycle because it's not using any assigns
-    number = Process.get(:live_vue_counter, 1)
-    Process.put(:live_vue_counter, number + 1)
-    "#{name}-#{number}"
-  end
-
-  @doc false
-  def get_socket(assigns) do
-    case get_in(assigns, [:vue_opts, :socket]) || assigns[:socket] do
-      %Phoenix.LiveView.Socket{} = socket -> socket
-      _ -> nil
-    end
+    # If multiple components of the same name are used, the user MUST provide an explicit ID.
+    # See: https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html#:~:text=You%20must%20always%20pass%20the%20module%20and%20id%20attributes.
+    name |> String.replace(~r/[^a-z0-9\-_]+/i, "-") |> String.trim("-")
   end
 
   @doc false
@@ -116,7 +105,6 @@ defmodule LiveVue do
       <LiveVue.vue
         class={get_in(assigns, [:vue_opts, :class])}
         v-component={"_build/#{__MODULE__}"}
-        v-socket={get_socket(assigns)}
         v-ssr={get_in(assigns, [:vue_opts, :ssr]) != false}
         {Map.drop(assigns, [:vue_opts, :socket, :flash, :live_action])}
       />

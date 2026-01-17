@@ -12,7 +12,7 @@ defmodule LiveVue.E2E.TestLive do
 
   def render(assigns) do
     ~H"""
-    <LiveVue.vue count={@counter} v-component="counter" v-socket={@socket} />
+    <LiveVue.vue count={@counter} v-component="counter" />
     """
   end
 end

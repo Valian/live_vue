@@ -5,7 +5,6 @@ defmodule LiveVueInternalsTest do
 
   alias LiveVue.Test
   alias Phoenix.LiveView.LiveStream
-  alias Phoenix.LiveView.Socket
 
   defdelegate render_vue_assigns(assigns), to: Test, as: :render_vue_component
 
@@ -231,7 +230,6 @@ defmodule LiveVueInternalsTest do
       assigns = %{
         users: stream,
         "v-component": "TestComponent",
-        "v-socket": nil,
         __changed__: nil
       }
 
@@ -428,74 +426,6 @@ defmodule LiveVueInternalsTest do
     end
   end
 
-  describe "get_socket/1 - various assign patterns" do
-    test "returns socket from :socket assign" do
-      socket = %Socket{transport_pid: self()}
-
-      assigns = %{
-        socket: socket,
-        name: "test",
-        "v-component": "TestComponent",
-        __changed__: nil
-      }
-
-      result = LiveVue.get_socket(assigns)
-      assert result == socket
-    end
-
-    test "returns socket from nested [:vue_opts, :socket]" do
-      socket = %Socket{transport_pid: self()}
-
-      assigns = %{
-        vue_opts: %{socket: socket},
-        name: "test",
-        "v-component": "TestComponent",
-        __changed__: nil
-      }
-
-      result = LiveVue.get_socket(assigns)
-      assert result == socket
-    end
-
-    test "prefers [:vue_opts, :socket] over :socket" do
-      socket1 = %Socket{transport_pid: self()}
-      socket2 = %Socket{transport_pid: self()}
-
-      assigns = %{
-        socket: socket1,
-        vue_opts: %{socket: socket2},
-        name: "test",
-        "v-component": "TestComponent",
-        __changed__: nil
-      }
-
-      result = LiveVue.get_socket(assigns)
-      assert result == socket2
-    end
-
-    test "returns nil when no socket present" do
-      assigns = %{
-        name: "test",
-        "v-component": "TestComponent",
-        __changed__: nil
-      }
-
-      result = LiveVue.get_socket(assigns)
-      assert result == nil
-    end
-
-    test "returns nil when socket is not a Socket struct" do
-      assigns = %{
-        socket: "not a socket",
-        "v-component": "TestComponent",
-        __changed__: nil
-      }
-
-      result = LiveVue.get_socket(assigns)
-      assert result == nil
-    end
-  end
-
   describe "LiveStream edge cases" do
     test "stream with update_only flag creates replace operation" do
       stream = LiveStream.new(:users, make_ref(), [], [])
@@ -606,7 +536,6 @@ defmodule LiveVueInternalsTest do
         "v-ssr": false,
         "v-diff": false,
         "v-component": "TestComponent",
-        "v-socket": nil,
         regular_prop: "value",
         __changed__: nil
       }

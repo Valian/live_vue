@@ -180,7 +180,7 @@ defmodule LiveVue.E2E.FormTestLive do
   def render(assigns) do
     ~H"""
     <div id="form-test">
-      <LiveVue.vue form={@form} v-component="form_test" v-socket={@socket} />
+      <LiveVue.vue form={@form} v-component="form_test" />
     </div>
     """
   end

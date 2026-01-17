@@ -46,7 +46,7 @@ assets/
 **Use** the same name in the `v-component` attribute (match case exactly, without the extension). **Always** pass the socket to the component:
 
 ```elixir
-<.vue v-component="UserProfile" user={@user} v-socket={@socket} />
+<.vue v-component="UserProfile" user={@user} />
 ```
 
 ## Props and Data Flow
@@ -58,7 +58,6 @@ assets/
 ```elixir
 <.vue
   v-component="ShoppingCart"
-  v-socket={@socket}
   cartItems={@cart_items}
   cartTotal={@cart_total}
   currency={@currency}
@@ -68,14 +67,15 @@ assets/
 **DO NOT** rely on Vue components to fetch their own data:
 
 ```vue
-❌ <!-- WRONG: Fetching data in Vue component -->
+❌
+<!-- WRONG: Fetching data in Vue component -->
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from "vue"
 
 const items = ref([])
 
 onMounted(async () => {
-  const response = await fetch('/api/cart')
+  const response = await fetch("/api/cart")
   items.value = await response.json()
 })
 </script>
@@ -134,20 +134,18 @@ end
 
 ```vue
 <script setup>
-import { useLiveVue } from 'live_vue'
+import { useLiveVue } from "live_vue"
 
 const live = useLiveVue()
 
-const handleCustomAction = (data) => {
-  live.pushEvent('custom_action', data)
+const handleCustomAction = data => {
+  live.pushEvent("custom_action", data)
 }
 </script>
 
 <template>
   <!-- You can also use $live directly in templates -->
-  <button @click="$live.pushEvent('simple_action', { value: 'hello' })">
-    Click me
-  </button>
+  <button @click="$live.pushEvent('simple_action', { value: 'hello' })">Click me</button>
 </template>
 ```
 
@@ -155,11 +153,11 @@ const handleCustomAction = (data) => {
 
 ```vue
 <script setup>
-import { useLiveEvent } from 'live_vue'
+import { useLiveEvent } from "live_vue"
 
-useLiveEvent('notification', (data) => {
+useLiveEvent("notification", data => {
   // Handle server-sent notification
-  console.log('Received:', data)
+  console.log("Received:", data)
 })
 </script>
 ```
@@ -171,7 +169,7 @@ By default, live_vue uses SSR.**DO** disable SSR for components with client-only
 ```elixir
 <.vue
   v-component="ClientOnlyMap"
-  v-socket={@socket}
+
   v-ssr={false}
 />
 ```
@@ -182,7 +180,7 @@ By default, live_vue uses SSR.**DO** disable SSR for components with client-only
 
 ```vue
 <script setup>
-import { Link } from 'live_vue'
+import { Link } from "live_vue"
 </script>
 
 <template>
@@ -203,18 +201,18 @@ import { Link } from 'live_vue'
 
 ```vue
 <script setup>
-import { useLiveNavigation } from 'live_vue'
+import { useLiveNavigation } from "live_vue"
 
 const { patch, navigate } = useLiveNavigation()
 
 // Same route, different params
-const updateUser = (user) => patch(`/users/${user.id}`)
+const updateUser = user => patch(`/users/${user.id}`)
 
 // Same route, different query params with replace history
-const goToTab = (tab) => patch({ tab: tab }, { replace: true })
+const goToTab = tab => patch({ tab: tab }, { replace: true })
 
 // Different route
-const goToPage = (path) => navigate(path)
+const goToPage = path => navigate(path)
 </script>
 ```
 
@@ -228,22 +226,13 @@ const goToPage = (path) => navigate(path)
 
 ```vue
 <script setup>
-import { useLiveUpload } from 'live_vue'
+import { useLiveUpload } from "live_vue"
 
-const {
-  entries,
-  progress,
-  showFilePicker,
-  addFiles,
-  submit,
-  cancel,
-  clear,
-  valid
-} = useLiveUpload(
+const { entries, progress, showFilePicker, addFiles, submit, cancel, clear, valid } = useLiveUpload(
   () => props.uploadConfig,
   {
-    changeEvent: 'validate_upload',
-    submitEvent: 'save_upload'
+    changeEvent: "validate_upload",
+    submitEvent: "save_upload",
   }
 )
 </script>
@@ -253,11 +242,7 @@ const {
 
 ```vue
 <template>
-  <div
-    @drop.prevent="addFiles($event.dataTransfer)"
-    @dragover.prevent
-    class="upload-zone"
-  >
+  <div @drop.prevent="addFiles($event.dataTransfer)" @dragover.prevent class="upload-zone">
     <p v-if="entries.length === 0">Drop files here or</p>
     <button @click="showFilePicker">Choose Files</button>
 
@@ -301,15 +286,14 @@ test "renders user profile component", %{conn: conn} do
 end
 ```
 
-
 ## Troubleshooting
 
 Problem: Component is not found on the client side
 Solution:
+
 1. Make sure you use the correct name in the `v-component` attribute (should match file name exactly, without the extension).
 2. Restart the server to pick up newly created components.
 3. Ensure resolve function can find that component in `assets/vue/index.ts`.
-
 
 ## Forms and Validation
 
@@ -363,7 +347,7 @@ const removeTag = (index) => tagsArray.remove(index)
   <!-- Basic field with validation -->
   <input
     v-bind="nameField.inputAttrs.value"
-    :class="{ 'error': nameField.isTouched.value && nameField.errorMessage.value }"
+    :class="{ error: nameField.isTouched.value && nameField.errorMessage.value }"
   />
   <div v-if="nameField.errorMessage.value">
     {{ nameField.errorMessage.value }}
@@ -376,9 +360,7 @@ const removeTag = (index) => tagsArray.remove(index)
   </div>
 
   <!-- Form actions -->
-  <button @click="form.submit()" :disabled="!form.isValid.value">
-    Submit
-  </button>
+  <button @click="form.submit()" :disabled="!form.isValid.value">Submit</button>
   <button @click="form.reset()">Reset</button>
 </template>
 ```
@@ -390,12 +372,12 @@ Each field provides reactive state and helpers:
 ```typescript
 interface FormField<T> {
   // Reactive state
-  value: Ref<T>                    // Current field value
-  errors: Ref<string[]>            // Validation errors from server
-  errorMessage: Ref<string>        // First error message
-  isValid: Ref<boolean>            // No validation errors
-  isDirty: Ref<boolean>            // Value changed from initial
-  isTouched: Ref<boolean>          // Field has been interacted with
+  value: Ref<T> // Current field value
+  errors: Ref<string[]> // Validation errors from server
+  errorMessage: Ref<string> // First error message
+  isValid: Ref<boolean> // No validation errors
+  isDirty: Ref<boolean> // Value changed from initial
+  isTouched: Ref<boolean> // Field has been interacted with
 
   // Input binding helper (includes value, events, accessibility)
   inputAttrs: Ref<{
@@ -405,12 +387,12 @@ interface FormField<T> {
     onBlur: () => void
     name: string
     id: string
-    'aria-invalid': boolean
-    'aria-describedby'?: string
+    "aria-invalid": boolean
+    "aria-describedby"?: string
   }>
 
   // Navigation methods for nested structures
-  field(key): FormField           // Access nested object field
+  field(key): FormField // Access nested object field
   fieldArray(key): FormFieldArray // Access nested array field
 }
 
@@ -452,7 +434,7 @@ defmodule MyApp.Live.FormTest do
 
   def render(assigns) do
     ~H"""
-    <.vue form={@form} v-component="UserForm" v-socket={@socket} />
+    <.vue form={@form} v-component="UserForm" />
     """
   end
 
@@ -486,9 +468,10 @@ end
 **DO NOT** use Vue state stores (Pinia, Vuex) for application state:
 
 ```vue
-❌ <!-- WRONG: Using Pinia for app state -->
+❌
+<!-- WRONG: Using Pinia for app state -->
 <script setup>
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from "@/stores/user"
 const userStore = useUserStore()
 </script>
 ```

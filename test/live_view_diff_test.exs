@@ -172,7 +172,6 @@ defmodule LiveViewDiffTest do
         "v-on:click": JS.push("click"),
         "v-ssr": true,
         "v-component": "TestComponent",
-        "v-socket": %Phoenix.LiveView.Socket{transport_pid: self()},
         __changed__: %{}
       }
 

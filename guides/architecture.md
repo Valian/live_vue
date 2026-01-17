@@ -169,7 +169,7 @@ defmodule User do
 end
 
 # When passed as props:
-<.vue user={@current_user} v-component="Profile" v-socket={@socket} />
+<.vue user={@current_user} v-component="Profile" />
 
 # The encoder converts the struct to:
 %{

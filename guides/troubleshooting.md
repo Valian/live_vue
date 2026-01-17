@@ -11,33 +11,27 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 ### Component Not Rendering
 
 **Symptoms:**
+
 - Empty div where component should be
 - No errors in console
 - Component works in isolation
 
 **Possible Causes & Solutions:**
 
-1. **Missing `v-socket` attribute**
-   ```elixir
-   # ❌ Missing v-socket
-   <.vue v-component="Counter" count={@count} />
+1. **Component name mismatch**
 
-   # ✅ Correct
-   <.vue v-component="Counter" count={@count} v-socket={@socket} />
-   ```
-
-2. **Component name mismatch**
    ```elixir
    # ❌ File: Counter.vue, but using wrong name
-   <.vue v-component="counter" v-socket={@socket} />
+   <.vue v-component="counter" />
 
    # ✅ Correct - case sensitive
-   <.vue v-component="Counter" v-socket={@socket} />
+   <.vue v-component="Counter" />
    ```
 
    Check browser console for errors.
 
-3. **Component not found in resolution**
+2. **Component not found in resolution**
+
    ```javascript
    // Check your component resolution in assets/vue/index.js
    const components = {
@@ -51,6 +45,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 ### Component Renders But Doesn't Update
 
 **Symptoms:**
+
 - Component shows initial state
 - Props don't update when server state changes
 - No reactivity
@@ -58,21 +53,23 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 **Solutions:**
 
 1. **Check prop names match**
+
    ```elixir
    # Server side
-   <.vue user_name={@user.name} v-component="Profile" v-socket={@socket} />
+   <.vue user_name={@user.name} v-component="Profile" />
    ```
 
    ```html
    <!-- Client side - prop names must match exactly -->
    <script setup>
-   const props = defineProps<{
-     user_name: string  // Must match server prop name
-   }>()
+     const props = defineProps<{
+       user_name: string  // Must match server prop name
+     }>()
    </script>
    ```
 
 2. **Verify assigns are updating**
+
    ```elixir
    # Add debug logging
    def handle_event("update", _params, socket) do
@@ -92,6 +89,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 ### LiveVue.Encoder Protocol Issues
 
 **Symptoms:**
+
 - `Protocol.UndefinedError` when passing structs as props
 - Component doesn't render with custom struct props
 - Error mentions "LiveVue.Encoder protocol must always be explicitly implemented"
@@ -99,6 +97,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 **Solutions:**
 
 1. **Implement the encoder protocol for your structs**
+
    ```elixir
    defmodule User do
      @derive LiveVue.Encoder
@@ -107,6 +106,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
    ```
 
 2. **For third-party structs, use Protocol.derive/3**
+
    ```elixir
    # In your application.ex or relevant module
    Protocol.derive(LiveVue.Encoder, SomeLibrary.User, only: [:id, :name])
@@ -123,6 +123,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 For complete implementation details including field selection and custom implementations, see [Component Reference](component_reference.md#custom-structs-with-livevue-encoder).
 
 **Common Causes:**
+
 - Passing structs without implementing the encoder protocol
 - Nested structs where some don't have the protocol implemented
 - Third-party library structs that need protocol derivation
@@ -133,7 +134,7 @@ For complete implementation details including field selection and custom impleme
 
 ```typescript
 // Add to your env.d.ts or types.d.ts
-declare module 'live_vue' {
+declare module "live_vue" {
   export function useLiveVue(): any
   export function createLiveVue(config: any): any
   export function findComponent(components: any, name: string): any
@@ -161,6 +162,7 @@ const props = defineProps<Props>()
 ### Events Not Firing
 
 **Symptoms:**
+
 - Clicking buttons does nothing
 - No events reach LiveView
 - Console shows no errors
@@ -168,6 +170,7 @@ const props = defineProps<Props>()
 **Solutions:**
 
 1. **Check event handler syntax**
+
    ```elixir
    # ❌ Wrong syntax
    <.vue v-on-click={JS.push("increment")} />
@@ -177,6 +180,7 @@ const props = defineProps<Props>()
    ```
 
 2. **Verify event names match**
+
    ```html
    <!-- Vue component -->
    <button @click="$emit('increment', {amount: 1})">+1</button>
@@ -203,6 +207,7 @@ const props = defineProps<Props>()
 ### Events Fire But Handler Not Called
 
 **Check handler function exists:**
+
 ```elixir
 # Make sure you have the handler defined
 def handle_event("my_event", _params, socket) do
@@ -211,6 +216,7 @@ end
 ```
 
 **Verify event name spelling:**
+
 ```elixir
 # Event names are case-sensitive
 <.vue v-on:save-user={JS.push("save_user")} />  # save-user → save_user
@@ -258,18 +264,20 @@ npm run build
 ### Hot Reload Not Working
 
 1. **Check Vite configuration:**
+
    ```javascript
    // vite.config.js
    export default defineConfig({
      server: {
-       host: '0.0.0.0',  // Allow external connections
+       host: "0.0.0.0", // Allow external connections
        port: 5173,
-       hmr: true
-     }
+       hmr: true,
+     },
    })
    ```
 
 2. **Verify watcher configuration:**
+
    ```elixir
    # config/dev.exs
    config :my_app, MyAppWeb.Endpoint,
@@ -287,6 +295,7 @@ npm run build
 ### SSR Not Working
 
 **Check SSR configuration:**
+
 ```elixir
 # config/dev.exs
 config :live_vue,
@@ -298,6 +307,7 @@ config :live_vue,
 For complete SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr).
 
 **Verify Node.js version:**
+
 ```bash
 node --version  # Should be 19+
 ```
@@ -305,6 +315,7 @@ node --version  # Should be 19+
 ### SSR Errors in Production
 
 **Check NodeJS supervisor:**
+
 ```elixir
 # application.ex
 children = [
@@ -314,6 +325,7 @@ children = [
 ```
 
 **Verify server bundle exists:**
+
 ```bash
 ls priv/static/server.mjs  # Should exist after build
 ```
@@ -325,11 +337,12 @@ For production SSR setup details, see [Configuration](configuration.md#productio
 ### Slow Initial Load
 
 1. **Enable lazy loading:**
+
    ```javascript
    // assets/vue/index.js
    const components = {
-     Counter: () => import('./Counter.vue'),
-     Modal: () => import('./Modal.vue')
+     Counter: () => import("./Counter.vue"),
+     Modal: () => import("./Modal.vue"),
    }
    ```
 
@@ -342,33 +355,35 @@ For production SSR setup details, see [Configuration](configuration.md#productio
 ### Memory Leaks
 
 **Clean up event listeners:**
+
 ```html
 <script setup>
-import { onUnmounted } from 'vue'
-import { useLiveVue } from 'live_vue'
+  import { onUnmounted } from "vue"
+  import { useLiveVue } from "live_vue"
 
-const live = useLiveVue()
+  const live = useLiveVue()
 
-const cleanup = live.handleEvent('data_update', handleUpdate)
+  const cleanup = live.handleEvent("data_update", handleUpdate)
 
-onUnmounted(() => {
-  cleanup()  // Important: clean up listeners
-})
+  onUnmounted(() => {
+    cleanup() // Important: clean up listeners
+  })
 </script>
 ```
 
 **Clear timers and intervals:**
+
 ```html
 <script setup>
-import { onUnmounted } from 'vue'
+  import { onUnmounted } from "vue"
 
-const interval = setInterval(() => {
-  // Do something
-}, 1000)
+  const interval = setInterval(() => {
+    // Do something
+  }, 1000)
 
-onUnmounted(() => {
-  clearInterval(interval)
-})
+  onUnmounted(() => {
+    clearInterval(interval)
+  })
 </script>
 ```
 
@@ -385,15 +400,16 @@ window.liveVueDebug = true
 
 1. **Use Vue DevTools browser extension**
 2. **Add debug logging:**
+
    ```html
    <script setup>
-   import { watch } from 'vue'
+     import { watch } from 'vue'
 
-   const props = defineProps<{count: number}>()
+     const props = defineProps<{count: number}>()
 
-   watch(() => props.count, (newVal, oldVal) => {
-     console.log('Count changed:', oldVal, '→', newVal)
-   })
+     watch(() => props.count, (newVal, oldVal) => {
+       console.log('Count changed:', oldVal, '→', newVal)
+     })
    </script>
    ```
 
@@ -415,6 +431,7 @@ window.liveVueDebug = true
 **Cause:** Component resolution failed
 
 **Solution:** Check component name and file path
+
 ```javascript
 // Debug component resolution
 // find component does it by default, you might need to do it if you override it
@@ -427,13 +444,14 @@ console.log("Available components:", Object.keys(components))
 **Cause:** Node.js globals in browser code
 
 **Solution:** Add to Vite config:
+
 ```javascript
 // vite.config.js
 export default defineConfig({
   define: {
-    global: 'globalThis',
-    'process.env': {}
-  }
+    global: "globalThis",
+    "process.env": {},
+  },
 })
 ```
 
@@ -442,12 +460,13 @@ export default defineConfig({
 **Cause:** SSR configuration issue
 
 **Solution:** Check Vite SSR config:
+
 ```javascript
 // vite.config.js
 export default defineConfig({
   ssr: {
-    noExternal: ['live_vue']
-  }
+    noExternal: ["live_vue"],
+  },
 })
 ```
 
@@ -470,6 +489,7 @@ export default defineConfig({
 ### Creating Bug Reports
 
 Include:
+
 1. **LiveVue version**
 2. **Phoenix/LiveView versions**
 3. **Node.js version**

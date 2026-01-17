@@ -201,7 +201,7 @@ LiveVue provides seamless Vue.js integration with Phoenix LiveView.
 ```elixir
 <.vue
   v-component="Counter"
-  v-socket={@socket}
+ 
   count={@count}
   v-on:increment={JS.push("inc")}
 />

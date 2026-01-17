@@ -59,7 +59,7 @@ test/e2e/
 
      def render(assigns) do
        ~H"""
-       <LiveVue.vue data={@data} v-component="my_component" v-socket={@socket} />
+       <LiveVue.vue data={@data} v-component="my_component" />
        """
      end
    end

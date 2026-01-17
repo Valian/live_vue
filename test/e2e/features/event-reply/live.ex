@@ -16,7 +16,7 @@ defmodule LiveVue.E2E.EventReplyTestLive do
         id="event-reply-component"
         counter={@counter}
         v-component="event_reply_test"
-        v-socket={@socket}
+       
       />
     </div>
     """

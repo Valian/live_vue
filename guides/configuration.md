@@ -233,10 +233,10 @@ This generates shortcut functions for your components:
 
 ```elixir
 # Instead of
-<.vue v-component="Counter" v-socket={@socket} />
+<.vue v-component="Counter" />
 
 # You can use
-<.Counter v-socket={@socket} />
+<.Counter />
 ```
 
 ### Component Naming Conventions
@@ -310,13 +310,13 @@ Override global settings for specific components:
 
 ```elixir
 <!-- Force SSR for this component -->
-<.vue v-component="CriticalContent" v-ssr={true} v-socket={@socket} />
+<.vue v-component="CriticalContent" v-ssr={true} />
 
 <!-- Disable SSR for client-only widgets -->
-<.vue v-component="InteractiveChart" v-ssr={false} v-socket={@socket} />
+<.vue v-component="InteractiveChart" v-ssr={false} />
 
 <!-- Use global default -->
-<.vue v-component="RegularComponent" v-socket={@socket} />
+<.vue v-component="RegularComponent" />
 ```
 
 ## Testing Configuration
@@ -398,7 +398,7 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 >
 > **Workaround**: Pass props explicitly in your templates:
 > ```elixir
-> <.vue v-component="MyComponent" v-socket={@socket} flash={@flash} user={@current_user} />
+> <.vue v-component="MyComponent" flash={@flash} user={@current_user} />
 > ```
 >
 > This ensures LiveView's change tracking works correctly and your Vue components

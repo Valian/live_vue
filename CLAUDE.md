@@ -38,7 +38,7 @@ test/e2e/                    # Playwright E2E tests with Phoenix server
 ### Component Usage (Elixir)
 ```elixir
 # In LiveView template
-<.vue count={@count} v-component="Counter" v-socket={@socket} />
+<.vue count={@count} v-component="Counter" />
 
 # Or with ~VUE sigil
 ~VUE"""

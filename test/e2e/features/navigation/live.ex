@@ -15,7 +15,7 @@ defmodule LiveVue.E2E.NavigationLive do
   def render(assigns) do
     ~H"""
     <div id="navigation-test">
-      <LiveVue.vue params={@params} query_params={@query_params} v-component="navigation" v-socket={@socket} />
+      <LiveVue.vue params={@params} query_params={@query_params} v-component="navigation" />
     </div>
     """
   end

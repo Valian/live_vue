@@ -14,7 +14,7 @@ defmodule LiveVue.E2E.UploadTestLive do
         upload={@uploads.test_files}
         uploadedFiles={@uploaded_files}
         v-component="upload-test"
-        v-socket={@socket}
+       
       />
     </div>
     """

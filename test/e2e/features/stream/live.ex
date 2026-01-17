@@ -5,7 +5,7 @@ defmodule LiveVue.E2E.StreamLive do
   def render(assigns) do
     ~H"""
     <div id="stream-test">
-      <LiveVue.vue items={@streams.items} v-component="stream_test" v-socket={@socket} />
+      <LiveVue.vue items={@streams.items} v-component="stream_test" />
     </div>
     """
   end

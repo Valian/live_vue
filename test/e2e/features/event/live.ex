@@ -28,7 +28,7 @@ defmodule LiveVue.E2E.EventLive do
     <div id="event-test">
       <div id="message-display">Message: {@message}</div>
       <div id="event-count">Event Count: {@event_count}</div>
-      <LiveVue.vue message={@message} event_count={@event_count} v-component="event_test" v-socket={@socket} />
+      <LiveVue.vue message={@message} event_count={@event_count} v-component="event_test" />
     </div>
     """
   end

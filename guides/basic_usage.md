@@ -5,6 +5,7 @@ This guide covers the fundamental patterns for using Vue components within LiveV
 ## Component Organization
 
 By default, Vue components should be placed in either:
+
 - `assets/vue` directory
 - Colocated with your LiveView files in `lib/my_app_web`
 
@@ -20,32 +21,30 @@ To render a Vue component from HEEX, use the `<.vue>` function:
 <.vue
   count={@count}
   v-component="Counter"
-  v-socket={@socket}
   v-on:inc={JS.push("inc")}
 />
 ```
 
 ### Required Attributes
 
-| Attribute    | Example                | Required        | Description                                    |
-|--------------|------------------------|-----------------|------------------------------------------------|
-| v-component  | `v-component="Counter"`| Yes            | Component name or path relative to vue_root    |
-| v-socket     | `v-socket={@socket}`   | Yes in LiveView| Required for SSR and reactivity               |
+| Attribute   | Example                 | Required | Description                                 |
+| ----------- | ----------------------- | -------- | ------------------------------------------- |
+| v-component | `v-component="Counter"` | Yes      | Component name or path relative to vue_root |
 
 ### Optional Attributes
 
-| Attribute    | Example              | Description                                    |
-|--------------|----------------------|------------------------------------------------|
-| v-ssr        | `v-ssr={true}`      | Override default SSR setting                   |
-| v-on:event   | `v-on:inc={JS.push("inc")}` | Handle Vue component events           |
-| prop={@value}| `count={@count}`     | Pass props to the component                   |
+| Attribute     | Example                     | Description                  |
+| ------------- | --------------------------- | ---------------------------- |
+| v-ssr         | `v-ssr={true}`              | Override default SSR setting |
+| v-on:event    | `v-on:inc={JS.push("inc")}` | Handle Vue component events  |
+| prop={@value} | `count={@count}`            | Pass props to the component  |
 
 ### Component Shortcut
 
 Instead of writing `<.vue v-component="Counter">`, you can use the shortcut syntax:
 
 ```elixir
-<.Counter count={@count} v-socket={@socket} />
+<.Counter count={@count} />
 ```
 
 Function names are generated based on `.vue` file names. For files with identical names, use the full path:
@@ -60,13 +59,13 @@ Props can be passed in three equivalent ways:
 
 ```elixir
 # Individual props
-<.vue count={@count} max={123} v-component="Counter" v-socket={@socket} />
+<.vue count={@count} max={123} v-component="Counter" />
 
 # Map spread
-<.vue v-component="Counter" v-socket={@socket} {@props} />
+<.vue v-component="Counter" {@props} />
 
 # Using shortcut - you don't have to specify v-component
-<.Counter count={@count} max={123} v-socket={@socket} />
+<.Counter count={@count} max={123} />
 ```
 
 ### Custom Structs as Props
@@ -85,7 +84,7 @@ def render(assigns) do
   <.vue
     user={@current_user}
     v-component="UserProfile"
-    v-socket={@socket}
+
   />
   """
 end
@@ -104,6 +103,7 @@ For complete implementation details including field selection and custom impleme
 ### Phoenix Events
 
 All standard Phoenix event handlers work inside Vue components:
+
 - `phx-click`
 - `phx-change`
 - `phx-submit`
@@ -121,15 +121,15 @@ There are two ways to access the Phoenix LiveView hook instance from your Vue co
 
     ```html
     <script setup>
-    import { useLiveVue } from "live_vue"
-    import { ref } from "vue"
+      import { useLiveVue } from "live_vue"
+      import { ref } from "vue"
 
-    const live = useLiveVue()
-    const name = ref("")
+      const live = useLiveVue()
+      const name = ref("")
 
-    function save() {
-      live.pushEvent("save", { name: name.value })
-    }
+      function save() {
+        live.pushEvent("save", { name: name.value })
+      }
     </script>
     ```
 
@@ -137,10 +137,12 @@ There are two ways to access the Phoenix LiveView hook instance from your Vue co
 
     ```html
     <script setup>
-    import { useLiveEvent } from "live_vue"
+      import { useLiveEvent } from "live_vue"
 
-    // Example: listening for a server event
-    useLiveEvent("response", (payload) => { console.log(payload) })
+      // Example: listening for a server event
+      useLiveEvent("response", payload => {
+        console.log(payload)
+      })
     </script>
     ```
 
@@ -150,9 +152,7 @@ There are two ways to access the Phoenix LiveView hook instance from your Vue co
 
     ```html
     <template>
-      <button @click="$live.pushEvent('hello', { value: 'world' })">
-        Click me
-      </button>
+      <button @click="$live.pushEvent('hello', { value: 'world' })">Click me</button>
     </template>
     ```
 
@@ -192,11 +192,12 @@ If you want to create reusable Vue components where you'd like to define what ha
   v-on:submit={JS.push("submit")}
   v-on:close={JS.hide()}
   v-component="Form"
-  v-socket={@socket}
+
 />
 ```
 
 Special case: When using `JS.push()` without a value, it automatically uses the emit payload:
+
 ```elixir
 # In Vue
 emit('inc', {value: 5})
@@ -211,7 +212,7 @@ emit('inc', {value: 5})
 Vue components can receive slots from LiveView templates:
 
 ```elixir
-<.Card title="Example Card" v-socket={@socket}>
+<.Card title="Example Card">
   <p>This is the default slot content!</p>
   <p>Phoenix components work too: <.icon name="hero-info" /></p>
 
@@ -234,10 +235,10 @@ Vue components can receive slots from LiveView templates:
 ```
 
 Important notes about slots:
+
 - Each slot is wrapped in a div (technical limitation)
 - You can use HEEX components inside slots 🥳
 - Slots stay reactive and update when their content changes
-
 
 > #### Hooks inside slots are not supported {: .warning}
 >
@@ -293,7 +294,7 @@ defmodule MyAppWeb.UploadLive do
         upload={@uploads.documents}
         uploaded_files={@uploaded_files}
         v-component="FileUploader"
-        v-socket={@socket}
+
       />
     </div>
     """
@@ -308,61 +309,40 @@ Create a Vue component that uses `useLiveUpload()`:
 ```html
 <!-- assets/vue/FileUploader.vue -->
 <script setup lang="ts">
-import { useLiveUpload, UploadConfig } from 'live_vue'
+  import { useLiveUpload, UploadConfig } from "live_vue"
 
-interface Props {
-  upload: UploadConfig
-  uploadedFiles: { name: string; size: number }[]
-}
+  interface Props {
+    upload: UploadConfig
+    uploadedFiles: { name: string; size: number }[]
+  }
 
-const props = defineProps<Props>()
+  const props = defineProps<Props>()
 
-const {
-  entries,
-  showFilePicker,
-  submit,
-  cancel,
-  progress,
-  valid
-} = useLiveUpload(() => props.upload, {
-  changeEvent: "validate",  // Optional: for file validation
-  submitEvent: "save"       // Required: for processing uploads
-})
+  const { entries, showFilePicker, submit, cancel, progress, valid } = useLiveUpload(() => props.upload, {
+    changeEvent: "validate", // Optional: for file validation
+    submitEvent: "save", // Required: for processing uploads
+  })
 </script>
 
 <template>
   <div class="upload-container">
     <!-- Upload controls -->
     <div class="controls">
-      <button @click="showFilePicker" class="btn-primary">
-        Choose Files
-      </button>
+      <button @click="showFilePicker" class="btn-primary">Choose Files</button>
 
       <!-- Manual upload button - only shown when auto_upload is false -->
       <!-- In this example, auto_upload: true is set on the server, so this won't display -->
       <!-- Include this pattern when you want to support both auto and manual upload modes -->
-      <button
-        v-if="!props.upload.auto_upload && entries.length > 0"
-        @click="submit"
-        class="btn-success"
-      >
+      <button v-if="!props.upload.auto_upload && entries.length > 0" @click="submit" class="btn-success">
         Upload Files
       </button>
 
       <!-- Cancel all -->
-      <button
-        v-if="entries.length > 0"
-        @click="cancel()"
-        class="btn-danger"
-      >
-        Cancel All
-      </button>
+      <button v-if="entries.length > 0" @click="cancel()" class="btn-danger">Cancel All</button>
     </div>
 
     <!-- Progress indicator -->
-    <div v-if="entries.length > 0" class="progress">
-      Overall Progress: {{ progress }}%
-    </div>
+    <div v-if="entries.length > 0" class="progress">Overall Progress: {{ progress }}%</div>
 
     <!-- File list -->
     <div class="file-list">
@@ -371,9 +351,7 @@ const {
           <span class="name">{{ entry.client_name }}</span>
           <span class="size">{{ entry.client_size }} bytes</span>
           <span class="progress">{{ entry.progress }}%</span>
-          <span :class="entry.done ? 'done' : 'pending'">
-            {{ entry.done ? 'Complete' : 'Uploading...' }}
-          </span>
+          <span :class="entry.done ? 'done' : 'pending'"> {{ entry.done ? 'Complete' : 'Uploading...' }} </span>
         </div>
 
         <!-- Individual file errors -->
@@ -388,9 +366,7 @@ const {
     <!-- Uploaded files -->
     <div v-if="uploadedFiles.length" class="uploaded-files">
       <h3>Uploaded Files</h3>
-      <div v-for="file in uploadedFiles" :key="file.name">
-        {{ file.name }} ({{ file.size }} bytes)
-      </div>
+      <div v-for="file in uploadedFiles" :key="file.name">{{ file.name }} ({{ file.size }} bytes)</div>
     </div>
   </div>
 </template>
@@ -414,6 +390,7 @@ LiveVue provides full support for Phoenix LiveView's `stream()` operations. Sinc
 ### Why Use Streams?
 
 Streams are ideal for:
+
 - Lists with many items where you want to avoid keeping all data in memory
 - Real-time data like chat messages, notifications, or live feeds
 
@@ -429,7 +406,7 @@ defmodule MyAppWeb.ItemsLive do
 
   def render(assigns) do
     ~H"""
-    <.vue items={@streams.items} v-component="ItemList" v-socket={@socket} />
+    <.vue items={@streams.items} v-component="ItemList" />
     """
   end
 
@@ -463,26 +440,26 @@ Create a Vue component that receives and renders the stream:
 ```html
 <!-- assets/vue/ItemList.vue -->
 <script setup lang="ts">
-import { useLiveVue } from 'live_vue'
-import { ref } from 'vue'
+  import { useLiveVue } from "live_vue"
+  import { ref } from "vue"
 
-const props = defineProps<{
-  items: {
-    id: number
-    name: string
-  }[]
-}>()
+  const props = defineProps<{
+    items: {
+      id: number
+      name: string
+    }[]
+  }>()
 
-const live = useLiveVue()
-const newName = ref('')
+  const live = useLiveVue()
+  const newName = ref("")
 
-function addItem() {
-  if (newName.value) {
-    // Use $live to push events to LiveView
-    live.pushEvent('add_item', { name: newName.value })
-    newName.value = ''
+  function addItem() {
+    if (newName.value) {
+      // Use $live to push events to LiveView
+      live.pushEvent("add_item", { name: newName.value })
+      newName.value = ""
+    }
   }
-}
 </script>
 
 <template>
@@ -495,14 +472,12 @@ function addItem() {
 
     <!-- Items list -->
     <div>
-      <div v-for="item in items" :key="item.id" >
+      <div v-for="item in items" :key="item.id">
         <h3>{{ item.name }}</h3>
-        <button @click="$live.pushEvent('remove_item', { id: item.id })">
-          Remove
-        </button>
+        <button @click="$live.pushEvent('remove_item', { id: item.id })">Remove</button>
       </div>
     </div>
-    <div v-if="items.length === 0" >No items yet.</div>
+    <div v-if="items.length === 0">No items yet.</div>
   </div>
 </template>
 ```
@@ -538,9 +513,9 @@ The Vue component will automatically receive these updates and maintain its loca
 ## Dead Views vs Live Views
 
 Components can be used in both contexts:
+
 - Live Views: Full reactivity with WebSocket updates
 - Dead Views: Static rendering, no reactivity
-  - `v-socket={@socket}` not required
   - SSR still works for initial render
 
 ## Using ~VUE Sigil
@@ -589,15 +564,15 @@ The `~VUE` sigil is a powerful macro that compiles the string content into a ful
 
 **When to use the `~VUE` sigil:**
 
-*   **Prototyping:** Quickly build and iterate on new components without creating new files.
-*   **Single-use components:** Ideal for components that are tightly coupled to a specific LiveView and won't be reused.
-*   **Co-location:** Keep server-side and client-side logic for a piece of functionality within a single file.
+- **Prototyping:** Quickly build and iterate on new components without creating new files.
+- **Single-use components:** Ideal for components that are tightly coupled to a specific LiveView and won't be reused.
+- **Co-location:** Keep server-side and client-side logic for a piece of functionality within a single file.
 
 **When to use `.vue` files instead:**
 
-*   **Reusability:** When you need to use the same component in multiple LiveViews.
-*   **Large components:** For complex components, a dedicated file improves organization and editor support.
-*   **Collaboration:** Separate files are often easier for teams to work on simultaneously.
+- **Reusability:** When you need to use the same component in multiple LiveViews.
+- **Large components:** For complex components, a dedicated file improves organization and editor support.
+- **Collaboration:** Separate files are often easier for teams to work on simultaneously.
 
 ## Next Steps
 
