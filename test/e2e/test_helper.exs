@@ -52,10 +52,6 @@ defmodule LiveVue.E2E.Layout do
 
   def render("live.html", assigns) do
     ~H"""
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.21/priv/static/phoenix.min.js">
-    </script>
     <script src="/assets/app.js">
     </script>
     <link rel="stylesheet" href="/assets/app.css" />
@@ -133,6 +129,7 @@ defmodule LiveVue.E2E.Router do
       live "/form-test", FormTestLive
       live "/event-reply-test", EventReplyTestLive
       live "/slot-test", SlotTestLive
+      live "/memory-benchmark", MemoryBenchmarkLive
     end
   end
 
@@ -140,6 +137,7 @@ defmodule LiveVue.E2E.Router do
     pipe_through(:browser)
 
     get "/health", HealthController, :index
+    get "/dead-view", DeadViewController, :show
   end
 end
 
