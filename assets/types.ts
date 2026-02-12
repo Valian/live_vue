@@ -40,7 +40,10 @@ export type VueArgs = {
 }
 
 // all the functions and additional properties that are available on the LiveHook
-export type LiveHook = ViewHook & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
+// We use a mapped type to extract only public members from ViewHook (stripping private fields),
+// and omit lifecycle methods (required on ViewHook but optional on HookInterface where `this` lives)
+type ViewHookLifecycle = 'mounted' | 'beforeUpdate' | 'updated' | 'destroyed' | 'disconnected' | 'reconnected'
+export type LiveHook = Omit<{ [K in keyof ViewHook]: ViewHook[K] }, ViewHookLifecycle> & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
 
 // Phoenix LiveView Upload types for client-side use
 export interface UploadEntry {

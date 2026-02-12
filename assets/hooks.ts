@@ -1,6 +1,6 @@
 import { createApp, createSSRApp, h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
-import type { ComponentMap, LiveVueApp, LiveVueOptions, Hook } from "./types.js"
+import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
 import { mapValues, fromUtf8Base64 } from "./utils.js"
 import { applyPatch, type Operation } from "./jsonPatch.js"
@@ -93,8 +93,8 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
       slots,
       plugin: {
         install: (app: App) => {
-          app.provide(liveInjectKey, this)
-          app.config.globalProperties.$live = this
+          app.provide(liveInjectKey, this as LiveHook)
+          app.config.globalProperties.$live = this as LiveHook
         },
       },
       el: this.el,

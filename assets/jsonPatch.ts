@@ -77,39 +77,6 @@ function unescapePathComponent(path: string): string {
   return path.replace(/~1/g, "/").replace(/~0/g, "~")
 }
 
-function areEquals(a: any, b: any): boolean {
-  if (a === b) return true
-  if (a && b && typeof a == "object" && typeof b == "object") {
-    const arrA = Array.isArray(a)
-    const arrB = Array.isArray(b)
-
-    if (arrA && arrB) {
-      const length = a.length
-      if (length != b.length) return false
-      for (let i = length; i-- !== 0; ) {
-        if (!areEquals(a[i], b[i])) return false
-      }
-      return true
-    }
-    if (arrA != arrB) return false
-
-    const keys = Object.keys(a)
-    const length = keys.length
-    if (length !== Object.keys(b).length) return false
-
-    for (let i = length; i-- !== 0; ) {
-      if (!b.hasOwnProperty(keys[i])) return false
-    }
-
-    for (let i = length; i-- !== 0; ) {
-      const key = keys[i]
-      if (!areEquals(a[key], b[key])) return false
-    }
-    return true
-  }
-  return a !== a && b !== b
-}
-
 /**
  * Resolves a path component that may use special syntax for finding items by ID.
  * If the component starts with $$, it tries to find an array element with matching id.
