@@ -46,7 +46,7 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
       plugin: {
         install: (app: App) => {
           // we don't want to mount the app in SSR
-          app.mount = (...args: unknown[]): any => undefined
+          app.mount = (..._args: unknown[]): any => undefined
           // we don't have hook instance in SSR, so we need to mock it
           app.provide("_live_vue", Object.assign({}, mockLive))
         },
