@@ -547,6 +547,33 @@ defmodule LiveVue.EncoderTest do
     end
   end
 
+  describe "form error translation with compound types" do
+    test "translates errors with compound type opts without crashing" do
+      # Ecto compound types like {:array, :map} end up in error opts as tuples,
+      # which aren't handled by to_string/1
+      form = %Phoenix.HTML.Form{
+        source: nil,
+        impl: nil,
+        id: "test",
+        name: "test",
+        data: %{},
+        action: nil,
+        hidden: [],
+        params: %{},
+        errors: [
+          items: {"is invalid", [type: {:array, :map}, validation: :cast]},
+          tags: {"is invalid", [type: {:array, :integer}, validation: :cast]}
+        ],
+        options: []
+      }
+
+      encoded = Encoder.encode(form)
+
+      assert encoded.errors[:items] == ["is invalid"]
+      assert encoded.errors[:tags] == ["is invalid"]
+    end
+  end
+
   describe "Phoenix.LiveView.AsyncResult" do
     test "encodes AsyncResult in loading state" do
       async_result = AsyncResult.loading()

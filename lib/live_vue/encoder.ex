@@ -319,7 +319,10 @@ defimpl LiveVue.Encoder, for: Phoenix.HTML.Form do
 
       true ->
         Enum.reduce(opts, msg, fn {key, value}, acc ->
-          String.replace(acc, "%{#{key}}", value |> List.wrap() |> Enum.map_join(", ", &to_string/1))
+          String.replace(acc, "%{#{key}}", value |> List.wrap() |> Enum.map_join(", ", fn
+            v when is_binary(v) or is_atom(v) or is_number(v) -> to_string(v)
+            v -> inspect(v)
+          end))
         end)
     end
   end
