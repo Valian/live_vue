@@ -88,7 +88,9 @@ defmodule LiveVue.MixProject do
           "GitHub" => @repo_url
         }
       ],
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      test_paths: ["test"],
+      test_ignore_filters: [~r"/e2e/"]
     ]
   end
 
