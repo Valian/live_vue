@@ -20,23 +20,25 @@ To render a Vue component from HEEX, use the `<.vue>` function:
 <.vue
   count={@count}
   v-component="Counter"
-  v-socket={@socket}
   v-on:inc={JS.push("inc")}
 />
 ```
 
+In the default installer setup, `LiveVue.SharedPropsView` injects `v-socket` automatically for
+literal `<.vue>` tags, so you usually don't need to write it yourself.
+
 ### Required Attributes
 
-| Attribute    | Example                | Required        | Description                                    |
-|--------------|------------------------|-----------------|------------------------------------------------|
-| v-component  | `v-component="Counter"`| Yes            | Component name or path relative to vue_root    |
-| v-socket     | `v-socket={@socket}`   | Yes in LiveView| Required for SSR and reactivity               |
+| Attribute    | Example                | Required | Description                                 |
+|--------------|------------------------|----------|---------------------------------------------|
+| v-component  | `v-component="Counter"`| Yes      | Component name or path relative to vue_root |
 
 ### Optional Attributes
 
 | Attribute    | Example              | Description                                    |
 |--------------|----------------------|------------------------------------------------|
 | v-ssr        | `v-ssr={true}`      | Override default SSR setting                   |
+| v-socket     | `v-socket={@socket}` | Usually injected automatically in standard `~H`; pass manually only when bypassing that setup |
 | v-on:event   | `v-on:inc={JS.push("inc")}` | Handle Vue component events           |
 | prop={@value}| `count={@count}`     | Pass props to the component                   |
 
@@ -60,12 +62,13 @@ Props can be passed in three equivalent ways:
 
 ```elixir
 # Individual props
-<.vue count={@count} max={123} v-component="Counter" v-socket={@socket} />
+<.vue count={@count} max={123} v-component="Counter" />
 
 # Map spread
-<.vue v-component="Counter" v-socket={@socket} {@props} />
+<.vue v-component="Counter" {@props} />
 
-# Using shortcut - you don't have to specify v-component
+# Using shortcut - you don't have to specify v-component.
+# Shortcut helpers call `LiveVue.vue/1` directly, so keep passing `v-socket`.
 <.Counter count={@count} max={123} v-socket={@socket} />
 ```
 
@@ -85,7 +88,6 @@ def render(assigns) do
   <.vue
     user={@current_user}
     v-component="UserProfile"
-    v-socket={@socket}
   />
   """
 end
@@ -192,7 +194,6 @@ If you want to create reusable Vue components where you'd like to define what ha
   v-on:submit={JS.push("submit")}
   v-on:close={JS.hide()}
   v-component="Form"
-  v-socket={@socket}
 />
 ```
 
@@ -211,14 +212,14 @@ emit('inc', {value: 5})
 Vue components can receive slots from LiveView templates:
 
 ```elixir
-<.Card title="Example Card" v-socket={@socket}>
+<.vue v-component="Card" title="Example Card">
   <p>This is the default slot content!</p>
   <p>Phoenix components work too: <.icon name="hero-info" /></p>
 
   <:footer>
     This is a named slot
   </:footer>
-</.Card>
+</.vue>
 ```
 
 ```html
@@ -293,7 +294,6 @@ defmodule MyAppWeb.UploadLive do
         upload={@uploads.documents}
         uploaded_files={@uploaded_files}
         v-component="FileUploader"
-        v-socket={@socket}
       />
     </div>
     """
@@ -429,7 +429,7 @@ defmodule MyAppWeb.ItemsLive do
 
   def render(assigns) do
     ~H"""
-    <.vue items={@streams.items} v-component="ItemList" v-socket={@socket} />
+    <.vue items={@streams.items} v-component="ItemList" />
     """
   end
 
@@ -540,7 +540,7 @@ The Vue component will automatically receive these updates and maintain its loca
 Components can be used in both contexts:
 - Live Views: Full reactivity with WebSocket updates
 - Dead Views: Static rendering, no reactivity
-  - `v-socket={@socket}` not required
+  - No manual `v-socket` needed
   - SSR still works for initial render
 
 ## Using ~VUE Sigil

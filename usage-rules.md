@@ -43,22 +43,21 @@ assets/
 ❌ shopping_cart.vue
 ```
 
-**Use** the same name in the `v-component` attribute (match case exactly, without the extension). **Always** pass the socket to the component:
+**Use** the same name in the `v-component` attribute (match case exactly, without the extension). In the standard `~H` setup, `v-socket` is injected automatically for `<.vue>` tags:
 
 ```elixir
-<.vue v-component="UserProfile" user={@user} v-socket={@socket} />
+<.vue v-component="UserProfile" user={@user} />
 ```
 
 ## Props and Data Flow
 
 ### Props Passing
 
-**DO** pass all necessary data as props from LiveView. Always pass the socket to the component:
+**DO** pass all necessary data as props from LiveView:
 
 ```elixir
 <.vue
   v-component="ShoppingCart"
-  v-socket={@socket}
   cartItems={@cart_items}
   cartTotal={@cart_total}
   currency={@currency}
@@ -171,7 +170,6 @@ By default, live_vue uses SSR.**DO** disable SSR for components with client-only
 ```elixir
 <.vue
   v-component="ClientOnlyMap"
-  v-socket={@socket}
   v-ssr={false}
 />
 ```
@@ -452,7 +450,7 @@ defmodule MyApp.Live.FormTest do
 
   def render(assigns) do
     ~H"""
-    <.vue form={@form} v-component="UserForm" v-socket={@socket} />
+    <.vue form={@form} v-component="UserForm" />
     """
   end
 

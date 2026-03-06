@@ -398,7 +398,6 @@ defmodule Mix.Tasks.LiveVue.Install do
               todos={@todos}
               form={@form}
               v-component="VueDemo"
-              v-socket={@socket}
             />
           </Layouts.app>
           \"\"\"

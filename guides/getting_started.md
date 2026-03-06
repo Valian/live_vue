@@ -38,7 +38,7 @@ defmodule MyAppWeb.CounterLive do
 
   def render(assigns) do
     ~H"""
-    <.vue count={@count} v-component="Counter" v-socket={@socket} />
+    <.vue count={@count} v-component="Counter" />
     """
   end
 
@@ -135,7 +135,7 @@ def render(assigns) do
   ~H"""
   <div class="max-w-sm mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
     <h1 class="text-2xl font-bold mb-6 text-center">Animated Counter</h1>
-    <.vue count={@count} v-component="AnimatedCounter" v-socket={@socket} />
+    <.vue count={@count} v-component="AnimatedCounter" />
   </div>
   """
 end
@@ -173,7 +173,7 @@ end
 # Use in your LiveView
 def render(assigns) do
   ~H"""
-  <.vue user={@current_user} v-component="UserProfile" v-socket={@socket} />
+  <.vue user={@current_user} v-component="UserProfile" />
   """
 end
 ```

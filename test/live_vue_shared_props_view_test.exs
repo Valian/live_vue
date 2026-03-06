@@ -85,12 +85,36 @@ defmodule LiveVue.SharedPropsViewTest do
       assert output =~ "flash={get_in(assigns, [:flash])}"
     end
 
-    test "returns template unchanged when shared_props is empty" do
+    test "injects v-socket automatically" do
+      input = """
+      <.vue v-component="A" />
+      """
+
+      output = SharedPropsView.inject_shared_props_in_vue(input, [])
+
+      assert output =~ "v-socket={get_in(assigns, [:socket])}"
+    end
+
+    test "does not duplicate v-socket when already present" do
       input = """
       <.vue v-component="A" v-socket={@socket} />
       """
 
-      assert SharedPropsView.inject_shared_props_in_vue(input, []) == input
+      output = SharedPropsView.inject_shared_props_in_vue(input, [])
+
+      refute output =~ "get_in(assigns, [:socket])"
+      assert output |> String.split("v-socket") |> length() == 2
+    end
+
+    test "injects both v-socket and shared props" do
+      input = """
+      <.vue v-component="A" />
+      """
+
+      output = SharedPropsView.inject_shared_props_in_vue(input, [:flash])
+
+      assert output =~ "v-socket={get_in(assigns, [:socket])}"
+      assert output =~ "flash={get_in(assigns, [:flash])}"
     end
   end
 

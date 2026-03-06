@@ -234,11 +234,13 @@ This generates shortcut functions for your components:
 
 ```elixir
 # Instead of
-<.vue v-component="Counter" v-socket={@socket} />
+<.vue v-component="Counter" />
 
 # You can use
 <.Counter v-socket={@socket} />
 ```
+
+Shortcut helpers call `LiveVue.vue/1` directly, so they still need `v-socket` in live views.
 
 ### Component Naming Conventions
 
@@ -322,13 +324,13 @@ Override global settings for specific components:
 
 ```elixir
 <!-- Force SSR for this component -->
-<.vue v-component="CriticalContent" v-ssr={true} v-socket={@socket} />
+<.vue v-component="CriticalContent" v-ssr={true} />
 
 <!-- Disable SSR for client-only widgets -->
-<.vue v-component="InteractiveChart" v-ssr={false} v-socket={@socket} />
+<.vue v-component="InteractiveChart" v-ssr={false} />
 
 <!-- Use global default -->
-<.vue v-component="RegularComponent" v-socket={@socket} />
+<.vue v-component="RegularComponent" />
 ```
 
 ## Testing Configuration
@@ -400,7 +402,7 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 
 ## Shared Props
 
-Shared props let you automatically inject common assigns (flash, current user, etc.) into every `<.vue>` tag without repeating them in every template.
+Shared props let you automatically inject common assigns (flash, current user, etc.) into every `<.vue>` tag without repeating them in every template. The same `~H` override also injects `v-socket` automatically.
 
 This works by overriding the `~H` sigil to rewrite HEEX templates at compile time, injecting the configured props as explicit attributes. Because the props appear as regular template expressions, LiveView's change tracking works correctly.
 
@@ -439,7 +441,7 @@ defp html_helpers do
 
     use LiveVue.Components, vue_root: ["./assets/vue", "./lib/my_app_web"]
 
-    # Override ~H to inject shared props into <.vue> tags
+    # Override ~H to inject shared props and v-socket into <.vue> tags
     import Phoenix.Component, except: [sigil_H: 2]
     import LiveVue.SharedPropsView, only: [sigil_H: 2]
   end
@@ -454,7 +456,7 @@ When you write:
 
 ```elixir
 ~H"""
-<.vue v-component="MyComponent" v-socket={@socket} posts={@posts} />
+<.vue v-component="MyComponent" posts={@posts} />
 """
 ```
 
@@ -462,13 +464,16 @@ With `shared_props: [:flash, {:current_user, :user}]`, the sigil rewrites the te
 
 ```elixir
 ~H"""
-<.vue v-component="MyComponent" v-socket={@socket} posts={@posts}
+<.vue v-component="MyComponent" posts={@posts}
+      v-socket={get_in(assigns, [:socket])}
       flash={get_in(assigns, [:flash])}
       user={get_in(assigns, [:current_user])} />
 """
 ```
 
-Props explicitly passed on a tag are never duplicated — if you already pass `flash={@flash}`, the shared prop injection skips it.
+Props explicitly passed on a tag are never duplicated. That applies both to user-configured shared props and to the builtin `v-socket` injection.
+
+Only literal `<.vue>` tags are rewritten. If you call `LiveVue.vue/1` directly or use shortcut helpers like `<.Counter />`, pass `v-socket` explicitly there.
 
 
 ## Troubleshooting Configuration

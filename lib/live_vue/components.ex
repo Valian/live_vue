@@ -7,6 +7,9 @@ defmodule LiveVue.Components do
   Generates functions local to your current module that can be used to render Vue components.
   TODO: This could perhaps be optimized to only read the files once per compilation.
 
+  Generated shortcut components call `LiveVue.vue/1` directly. In live views, pass
+  `v-socket` explicitly to them, for example: `<.Counter v-socket={@socket} />`.
+
   ## Examples
 
   ```elixir

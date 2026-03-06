@@ -1,10 +1,12 @@
 defmodule LiveVue.SharedPropsView do
   @moduledoc """
-  HEEX sigil override that injects LiveVue shared props into every `<.vue ...>` tag.
+  HEEX sigil override that injects LiveVue shared props and `v-socket` into every `<.vue ...>` tag.
 
   Shared props are configured via `config :live_vue, :shared_props` and automatically
-  injected into all `<.vue>` tags at compile time, so LiveView's change tracking
-  works correctly (unlike the old runtime-based shared_props which was removed in v1.0).
+  injected into all literal `<.vue>` tags at compile time, together with a builtin
+  `v-socket={get_in(assigns, [:socket])}` attribute when one is not already present.
+  That keeps LiveView's change tracking working correctly (unlike the old runtime-based
+  shared_props which was removed in v1.0).
 
   ## Configuration
 
@@ -31,21 +33,21 @@ defmodule LiveVue.SharedPropsView do
           # ... existing imports ...
           use LiveVue
 
-          # Override ~H to inject shared props into <.vue> tags
+          # Override ~H to inject shared props and v-socket into <.vue> tags
           import Phoenix.Component, except: [sigil_H: 2]
           import LiveVue.SharedPropsView, only: [sigil_H: 2]
         end
       end
 
   This works by rewriting the HEEX template string at compile time, injecting shared props
-  as explicit attributes before the template is compiled by Phoenix. This preserves
-  LiveView's reactivity since the props appear as regular template expressions.
+  and `v-socket` as explicit attributes before the template is compiled by Phoenix.
+  This preserves LiveView's reactivity since the props appear as regular template expressions.
   """
 
   @shared_props_config Application.compile_env(:live_vue, :shared_props, [])
 
   @doc """
-  Override for `~H` that injects shared attrs into every `<.vue ...>` tag.
+  Override for `~H` that injects shared attrs and `v-socket` into every `<.vue ...>` tag.
   """
   defmacro sigil_H({:<<>>, meta, [expr]}, modifiers) when modifiers == [] or modifiers == ~c"noformat" do
     ensure_assigns!(__CALLER__, :H)
@@ -58,7 +60,7 @@ defmodule LiveVue.SharedPropsView do
   end
 
   @doc """
-  Rewrites a HEEX template string, injecting shared props into `<.vue>` tags.
+  Rewrites a HEEX template string, injecting shared props and `v-socket` into `<.vue>` tags.
 
   Props already present on a tag are not duplicated.
   """
@@ -67,9 +69,12 @@ defmodule LiveVue.SharedPropsView do
   def inject_shared_props_in_vue(template, shared_props) when is_binary(template) do
     shared_vue_attrs = Enum.map(shared_props, &shared_prop_to_attr!/1)
 
+    # Always inject v-socket if not already present
+    builtin_attrs = [{"v-socket", "get_in(assigns, [:socket])"}]
+
     Regex.replace(~r/<\.vue\b(.*?)(\/?>)/s, template, fn _full, attrs, close ->
       missing_attrs =
-        Enum.reject(shared_vue_attrs, fn {name, _expr} ->
+        Enum.reject(builtin_attrs ++ shared_vue_attrs, fn {name, _expr} ->
           Regex.match?(~r/\b#{Regex.escape(name)}\s*=/, attrs)
         end)
 

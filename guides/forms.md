@@ -73,7 +73,7 @@ defmodule MyAppWeb.UserFormLive do
 
   def render(assigns) do
     ~H"""
-    <.vue form={@form} v-component="UserForm" v-socket={@socket} />
+    <.vue form={@form} v-component="UserForm" />
     """
   end
 
@@ -125,7 +125,7 @@ defmodule MyAppWeb.ContactFormLive do
 
   def render(assigns) do
     ~H"""
-    <.vue form={@form} v-component="ContactForm" v-socket={@socket} />
+    <.vue form={@form} v-component="ContactForm" />
     """
   end
 
@@ -1417,7 +1417,7 @@ defmodule MyAppWeb.UserFormLive do
     ~H"""
     <div class="user-form">
       <h1>User Profile</h1>
-      <.vue form={@form} v-component="UserForm" v-socket={@socket} />
+      <.vue form={@form} v-component="UserForm" />
     </div>
     """
   end
