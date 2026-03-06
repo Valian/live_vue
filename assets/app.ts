@@ -15,6 +15,9 @@ export const migrateToLiveVueApp = (
   if ("resolve" in components && "setup" in components) {
     return components as LiveVueApp
   } else {
+    if (!options.initializeApp) {
+      throw new Error("LiveVue: setup function is required. See https://docs.live-vue.com for setup examples.")
+    }
     console.warn("deprecation warning:\n\nInstead of passing components, use createLiveVue({resolve, setup})")
     return createLiveVue({
       resolve: (name: string) => {
