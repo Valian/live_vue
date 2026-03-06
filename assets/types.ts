@@ -92,7 +92,7 @@ export interface SetupContext {
 
 export type LiveVueOptions = {
   resolve: (path: string) => ComponentOrComponentPromise | undefined | null
-  setup?: (context: SetupContext) => App
+  setup: (context: SetupContext) => App
 }
 
 export type LiveVueApp = {

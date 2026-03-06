@@ -373,7 +373,7 @@ defmodule Mix.Tasks.LiveVue.Install do
 
     defp vue_index_content do
       """
-      import { createApp, h, type Component } from "vue"
+      import { createApp, createSSRApp, h, type Component } from "vue"
       import { createLiveVue, findComponent, type LiveHook, type ComponentMap } from "live_vue"
 
       // needed to make $live available in the Vue component
@@ -401,8 +401,9 @@ defmodule Mix.Tasks.LiveVue.Install do
         },
         // it's a default implementation of creating and mounting vue app, you can easily extend it to add your own plugins, directives etc.
         // to enable Vue Vapor mode, add: import { vaporInteropPlugin } from "@vue/runtime-vapor" and app.use(vaporInteropPlugin)
-        setup: ({ component, props, slots, plugin, el }) => {
-          const app = createApp({ render: () => h(component as Component, props, slots) })
+        setup: ({ component, props, slots, plugin, el, ssr }) => {
+          const factory = ssr ? createSSRApp : createApp
+          const app = factory({ render: () => h(component as Component, props, slots) })
           app.use(plugin)
           // add your own plugins here
           // app.use(pinia)

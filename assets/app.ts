@@ -1,4 +1,4 @@
-import { type App, type Component, createApp, createSSRApp, h } from "vue"
+import type { App, Component } from "vue"
 import type {
   ComponentOrComponentModule,
   ComponentOrComponentPromise,
@@ -7,19 +7,6 @@ import type {
   ComponentMap,
   LiveVueApp,
 } from "./types.js"
-
-/**
- * Initializes a Vue app with the given options and mounts it to the specified element.
- * It's a default implementation of the `setup` option, which can be overridden.
- * If you want to override it, simply provide your own implementation of the `setup` option.
- */
-export const defaultSetup = ({ component, props, slots, plugin, el, ssr }: SetupContext) => {
-  const factory = ssr ? createSSRApp : createApp
-  const app = factory({ render: () => h(component, props, slots) })
-  app.use(plugin)
-  app.mount(el)
-  return app
-}
 
 export const migrateToLiveVueApp = (
   components: ComponentMap,
@@ -59,8 +46,9 @@ const resolveComponent = async (component: ComponentOrComponentModule): Promise<
 }
 
 export const createLiveVue = ({ resolve, setup }: LiveVueOptions) => {
+  if (!setup) throw new Error("LiveVue: setup function is required. See https://docs.live-vue.com for setup examples.")
   return {
-    setup: setup || defaultSetup,
+    setup,
     resolve: async (path: string): Promise<Component> => {
       let component = resolve(path)
       if (!component) throw new Error(`Component ${path} not found!`)
