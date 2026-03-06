@@ -25,7 +25,7 @@ To render a Vue component from HEEX, use the `<.vue>` function:
 ```
 
 In the default installer setup, `LiveVue.SharedPropsView` injects `v-socket` automatically for
-literal `<.vue>` tags, so you usually don't need to write it yourself.
+LiveVue component tags, so you usually don't need to write it yourself.
 
 ### Required Attributes
 
@@ -47,7 +47,7 @@ literal `<.vue>` tags, so you usually don't need to write it yourself.
 Instead of writing `<.vue v-component="Counter">`, you can use the shortcut syntax:
 
 ```elixir
-<.Counter count={@count} v-socket={@socket} />
+<.Counter count={@count} />
 ```
 
 Function names are generated based on `.vue` file names. For files with identical names, use the full path:
@@ -67,9 +67,8 @@ Props can be passed in three equivalent ways:
 # Map spread
 <.vue v-component="Counter" {@props} />
 
-# Using shortcut - you don't have to specify v-component.
-# Shortcut helpers call `LiveVue.vue/1` directly, so keep passing `v-socket`.
-<.Counter count={@count} max={123} v-socket={@socket} />
+# Using shortcut - you don't have to specify v-component
+<.Counter count={@count} max={123} />
 ```
 
 ### Custom Structs as Props

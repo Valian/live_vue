@@ -20,7 +20,7 @@ The `.vue` component is the primary way to render Vue components in LiveView tem
 ```
 
 In the standard installer setup, `LiveVue.SharedPropsView` injects `v-socket` automatically for
-literal `<.vue>` tags. Pass it manually only when you bypass that `~H` rewrite.
+LiveVue component tags. Pass it manually only when you bypass that `~H` rewrite.
 
 For practical examples of different rendering patterns, see [Basic Usage](basic_usage.md#rendering-components).
 
@@ -88,10 +88,8 @@ end
 <.vue v-component="Counter" count={@count} />
 
 # You can use
-<.Counter v-socket={@socket} count={@count} />
+<.Counter count={@count} />
 ```
-
-Shortcut helpers call `LiveVue.vue/1` directly, so keep passing `v-socket` there in live views.
 
 ### Component Resolution
 

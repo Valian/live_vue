@@ -43,7 +43,7 @@ assets/
 ❌ shopping_cart.vue
 ```
 
-**Use** the same name in the `v-component` attribute (match case exactly, without the extension). In the standard `~H` setup, `v-socket` is injected automatically for `<.vue>` tags:
+**Use** the same name in the `v-component` attribute (match case exactly, without the extension). In the standard `~H` setup, `v-socket` is injected automatically for LiveVue component tags:
 
 ```elixir
 <.vue v-component="UserProfile" user={@user} />

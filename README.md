@@ -77,7 +77,7 @@ defmodule MyAppWeb.CounterLive do
 end
 ```
 
-In the default `~H` setup from `mix live_vue.install`, `<.vue>` tags get `v-socket` injected automatically.
+In the default `~H` setup from `mix live_vue.install`, LiveVue component tags get `v-socket` injected automatically.
 
 ## Why?
 
