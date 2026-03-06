@@ -398,23 +398,77 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 - Consider adjusting the NodeJS pool size based on your server capacity
 - Disable SSR for components that don't benefit from it
 
-## Shared Props (Removed)
+## Shared Props
 
-> **Note**: The `shared_props` configuration option was removed in v1.0.0.
->
-> This feature allowed automatic injection of socket assigns into all Vue components.
-> However, it had a fundamental flaw: LiveView only re-renders components when their
-> explicitly-passed assigns change. Since shared props were injected at render time
-> (not passed explicitly in the template), changes to shared props would not trigger
-> component re-renders.
->
-> **Workaround**: Pass props explicitly in your templates:
-> ```elixir
-> <.vue v-component="MyComponent" v-socket={@socket} flash={@flash} user={@current_user} />
-> ```
->
-> This ensures LiveView's change tracking works correctly and your Vue components
-> receive updates when the data changes.
+Shared props let you automatically inject common assigns (flash, current user, etc.) into every `<.vue>` tag without repeating them in every template.
+
+This works by overriding the `~H` sigil to rewrite HEEX templates at compile time, injecting the configured props as explicit attributes. Because the props appear as regular template expressions, LiveView's change tracking works correctly.
+
+> **History**: The runtime-based `shared_props` option was removed in v1.0.0 because it bypassed LiveView's change tracking. This compile-time approach replaces it.
+
+### Configuration
+
+Define shared props in `config/config.exs`:
+
+```elixir
+config :live_vue,
+  shared_props: [
+    :flash,
+    {:current_user, :user},
+    {[:current_scope, :workspace], :workspace}
+  ]
+```
+
+Three formats are supported:
+
+| Format | Example | Behavior |
+|--------|---------|----------|
+| `:atom` | `:flash` | Maps `assigns[:flash]` to prop `flash` |
+| `{:source, :target}` | `{:current_user, :user}` | Maps `assigns[:current_user]` to prop `user` |
+| `{[:path], :target}` | `{[:current_scope, :workspace], :workspace}` | Maps `get_in(assigns, [:current_scope, :workspace])` to prop `workspace` |
+
+### Setup
+
+In your `lib/my_app_web.ex`, override the `~H` sigil in `html_helpers`:
+
+```elixir
+defp html_helpers do
+  quote do
+    # ... existing imports ...
+    use LiveVue
+
+    use LiveVue.Components, vue_root: ["./assets/vue", "./lib/my_app_web"]
+
+    # Override ~H to inject shared props into <.vue> tags
+    import Phoenix.Component, except: [sigil_H: 2]
+    import LiveVue.SharedPropsView, only: [sigil_H: 2]
+  end
+end
+```
+
+New projects get this automatically via `mix live_vue.install`.
+
+### How It Works
+
+When you write:
+
+```elixir
+~H"""
+<.vue v-component="MyComponent" v-socket={@socket} posts={@posts} />
+"""
+```
+
+With `shared_props: [:flash, {:current_user, :user}]`, the sigil rewrites the template to:
+
+```elixir
+~H"""
+<.vue v-component="MyComponent" v-socket={@socket} posts={@posts}
+      flash={get_in(assigns, [:flash])}
+      user={get_in(assigns, [:current_user])} />
+"""
+```
+
+Props explicitly passed on a tag are never duplicated — if you already pass `flash={@flash}`, the shared prop injection skips it.
 
 
 ## Troubleshooting Configuration
