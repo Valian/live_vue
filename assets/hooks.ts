@@ -1,4 +1,4 @@
-import { createApp, createSSRApp, h, reactive, type App } from "vue"
+import { h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
 import { liveInjectKey } from "./use.js"
@@ -78,7 +78,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     const componentName = this.el.getAttribute("data-name") as string
     const component = await resolve(componentName)
 
-    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+    const ssr = this.el.getAttribute("data-ssr") === "true"
 
     const props = reactive(getProps(this.el, this.liveSocket))
     const slots = reactive(getSlots(this.el))
@@ -87,7 +87,6 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
 
     this.vue = { props, slots, app: null }
     const app = setup({
-      createApp: makeApp,
       component,
       props,
       slots,
@@ -98,7 +97,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
         },
       },
       el: this.el,
-      ssr: false,
+      ssr,
     })
 
     if (!app) throw new Error("Setup function did not return a Vue app!")

@@ -1,4 +1,4 @@
-import { type App, type Component, h } from "vue"
+import { type App, type Component, createApp, createSSRApp, h } from "vue"
 import type {
   ComponentOrComponentModule,
   ComponentOrComponentPromise,
@@ -13,8 +13,9 @@ import type {
  * It's a default implementation of the `setup` option, which can be overridden.
  * If you want to override it, simply provide your own implementation of the `setup` option.
  */
-export const defaultSetup = ({ createApp, component, props, slots, plugin, el }: SetupContext) => {
-  const app = createApp({ render: () => h(component, props, slots) })
+export const defaultSetup = ({ component, props, slots, plugin, el, ssr }: SetupContext) => {
+  const factory = ssr ? createSSRApp : createApp
+  const app = factory({ render: () => h(component, props, slots) })
   app.use(plugin)
   app.mount(el)
   return app
