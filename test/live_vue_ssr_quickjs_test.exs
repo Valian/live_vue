@@ -63,9 +63,11 @@ defmodule LiveVue.SSR.QuickJSTest do
   end
 
   describe "bundle adaptation" do
+    alias LiveVue.SSR.QuickJS.BundleAdapter
+
     test "stubs fs import" do
       code = ~s[import fs from "fs";\nconsole.log("ok");]
-      adapted = apply_adapt(code)
+      adapted = BundleAdapter.adapt(code)
 
       refute adapted =~ "import fs"
       assert adapted =~ "readFileSync"
@@ -73,7 +75,7 @@ defmodule LiveVue.SSR.QuickJSTest do
 
     test "stubs path import" do
       code = ~s[import { resolve, basename } from "path";\nconsole.log("ok");]
-      adapted = apply_adapt(code)
+      adapted = BundleAdapter.adapt(code)
 
       refute adapted =~ ~s[from "path"]
       assert adapted =~ "resolve"
@@ -82,7 +84,7 @@ defmodule LiveVue.SSR.QuickJSTest do
 
     test "stubs node:stream import" do
       code = ~s[import require$$3 from "node:stream";\nconsole.log("ok");]
-      adapted = apply_adapt(code)
+      adapted = BundleAdapter.adapt(code)
 
       refute adapted =~ ~s[from "node:stream"]
       assert adapted =~ "require$$3"
@@ -90,7 +92,7 @@ defmodule LiveVue.SSR.QuickJSTest do
 
     test "converts single export to globalThis" do
       code = "const render = () => {};\nexport { render };"
-      adapted = apply_adapt(code)
+      adapted = BundleAdapter.adapt(code)
 
       refute adapted =~ "export"
       assert adapted =~ "globalThis.render = render;"
@@ -98,7 +100,7 @@ defmodule LiveVue.SSR.QuickJSTest do
 
     test "converts multiple exports to globalThis" do
       code = "const a = 1;\nconst b = 2;\nexport { a, b };"
-      adapted = apply_adapt(code)
+      adapted = BundleAdapter.adapt(code)
 
       assert adapted =~ "globalThis.a = a;"
       assert adapted =~ "globalThis.b = b;"
@@ -106,13 +108,7 @@ defmodule LiveVue.SSR.QuickJSTest do
 
     test "preserves non-Node.js code" do
       code = "function hello() { return 'world'; }"
-      assert apply_adapt(code) == code
+      assert BundleAdapter.adapt(code) == code
     end
-  end
-
-  defp apply_adapt(code) do
-    code
-    |> QuickJSRenderer.__stub_node_imports__()
-    |> QuickJSRenderer.__expose_exports__()
   end
 end

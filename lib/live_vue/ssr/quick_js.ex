@@ -151,42 +151,6 @@ defmodule LiveVue.SSR.QuickJS do
   end
 
   defp adapt_for_quickjs(code) do
-    code
-    |> __stub_node_imports__()
-    |> __expose_exports__()
-  end
-
-  @doc false
-  def __stub_node_imports__(code) do
-    code
-    |> String.replace(
-      ~r/^import\s+\S+\s+from\s+["']fs["'];?\s*$/m,
-      "const fs = { readFileSync: function() { return '{}'; } };"
-    )
-    |> String.replace(
-      ~r/^import\s+\{[^}]+\}\s+from\s+["']path["'];?\s*$/m,
-      ~s[const resolve = function() { return Array.from(arguments).join('/'); };\n] <>
-        ~s[const basename = function(p) { return p.split('/').pop(); };]
-    )
-    |> String.replace(
-      ~r/^import\s+\S+\s+from\s+["']node:stream["'];?\s*$/m,
-      "const require$$3 = { Readable: function() {} };"
-    )
-  end
-
-  @doc false
-  def __expose_exports__(code) do
-    Regex.replace(
-      ~r/^export\s*\{([^}]+)\};?\s*$/m,
-      code,
-      fn _, captures ->
-        captures
-        |> String.split(",")
-        |> Enum.map_join("\n", fn name ->
-          name = String.trim(name)
-          "globalThis.#{name} = #{name};"
-        end)
-      end
-    )
+    LiveVue.SSR.QuickJS.BundleAdapter.adapt(code)
   end
 end
