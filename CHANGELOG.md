@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## UNRELEASED
+
+### Features
+
+- Added `LiveVue.SSR.QuickJS` — embedded SSR via [quickjs_ex](https://hex.pm/packages/quickjs_ex), no Node.js required in production
+
 ## 1.0.1 - 2026-02-19
 
 ### Bug Fixes

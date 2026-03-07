@@ -1,10 +1,14 @@
 # Deployment
 
-Deploying a LiveVue app is similar to deploying a regular Phoenix app, with one key requirement: **Node.js version 19 or later must be installed** in your production environment.
+Deploying a LiveVue app is similar to deploying a regular Phoenix app.
 
-> #### SSR Configuration {: .tip}
+> #### No Node.js? {: .tip}
 >
-> For detailed SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr). This guide focuses on deployment-specific setup.
+> If you'd rather not install Node.js in production, you can use `LiveVue.SSR.QuickJS` which
+> runs JavaScript inside the BEAM. See `LiveVue.SSR.QuickJS` module docs and
+> [Configuration](configuration.md#server-side-rendering-ssr) for details.
+
+The instructions below cover the default `LiveVue.SSR.NodeJS` setup, which requires **Node.js 19+** in production.
 
 ## General Requirements
 

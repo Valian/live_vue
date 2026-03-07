@@ -58,10 +58,11 @@ config :live_vue,
   ssr_module: LiveVue.SSR.NodeJS,
   ssr: true
 
-# or if you don't want to use SSR
-config :live_vue,
-  ssr_module: nil,
-  ssr: false
+# or use embedded QuickJS (no Node.js needed in production):
+# ssr_module: LiveVue.SSR.QuickJS
+
+# or disable SSR entirely:
+# ssr_module: nil, ssr: false
 ```
 
 ## Vue Application Setup
@@ -267,7 +268,7 @@ config :live_vue,
 Uses Vite's `ssrLoadModule` for efficient development compilation with instant updates.
 
 #### NodeJS (Production)
-Optimized for production with an in-memory server bundle:
+Uses elixir-nodejs with a pre-built server bundle. Requires Node.js 19+ in production:
 
 ```elixir
 # config/prod.exs
@@ -276,7 +277,18 @@ config :live_vue,
   ssr: true
 ```
 
-Uses elixir-nodejs with a pre-built server bundle for optimal performance.
+#### QuickJS (Production)
+Runs JavaScript inside the BEAM via an embedded [QuickJS-NG](https://quickjs-ng.github.io/quickjs/) engine.
+No external Node.js installation required. Requires [`quickjs_ex`](https://hex.pm/packages/quickjs_ex):
+
+```elixir
+# config/prod.exs
+config :live_vue,
+  ssr_module: LiveVue.SSR.QuickJS,
+  ssr: true
+```
+
+See `LiveVue.SSR.QuickJS` module docs for setup instructions.
 
 ### SSR Configuration
 
