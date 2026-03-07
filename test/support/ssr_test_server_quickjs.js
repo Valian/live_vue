@@ -1,7 +1,4 @@
-// Test SSR server for QuickJS SSR tests
-// Plain script (no ESM) since QuickJS doesn't support import/export in eval
-
-globalThis.render = function render(name, props, slots) {
+export function render(name, props, slots) {
   if (name === "WithPreloadLinks") {
     return '<link rel="stylesheet" href="/app.css" /><!-- preload --><div class="ssr-rendered">' + name + '</div>';
   }
@@ -17,4 +14,4 @@ globalThis.render = function render(name, props, slots) {
     ' Props: ' + propsStr +
     ' Slots: ' + slotsStr +
     '</div>';
-};
+}

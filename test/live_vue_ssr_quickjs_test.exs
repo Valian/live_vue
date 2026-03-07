@@ -11,11 +11,7 @@ defmodule LiveVue.SSR.QuickJSTest do
       {:ok, rt} = QuickJSEx.start(name: QuickJSRenderer)
 
       bundle = File.read!(@test_server_path)
-
-      case QuickJSEx.eval(rt, bundle) do
-        {:ok, _} -> :ok
-        {:error, "Value is not JSON-serializable"} -> :ok
-      end
+      :ok = QuickJSEx.load_module(rt, "server", bundle)
 
       on_exit(fn ->
         try do
