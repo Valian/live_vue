@@ -152,7 +152,7 @@ defmodule LiveVue.MixProject do
       {:igniter, "~> 0.6", optional: true},
       {:phoenix_vite, "~> 0.4"},
       {:lazy_html, ">= 0.1.0", optional: true},
-      {:quickjs_ex, "~> 0.1.1", optional: true},
+      {:quickjs_ex, "~> 0.2.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
 

@@ -10,7 +10,7 @@ defmodule LiveVue.SSR.QuickJS do
   1. Add `quickjs_ex` to your dependencies:
 
       ```elixir
-      {:quickjs_ex, "~> 0.1.1"}
+      {:quickjs_ex, "~> 0.2"}
       ```
 
   2. Add the `stubNodeBuiltins` Vite plugin to your `vite.config`:
@@ -49,16 +49,6 @@ defmodule LiveVue.SSR.QuickJS do
 
   @behaviour LiveVue.SSR
 
-  @polyfills """
-  globalThis.process = { env: { NODE_ENV: 'production' } };
-  globalThis.URL = globalThis.URL || function(url) { this.href = url; };
-  globalThis.window = globalThis;
-  globalThis.document = { querySelector: function() { return null; }, createElement: function() { return {}; } };
-  globalThis.navigator = { userAgent: '' };
-  globalThis.self = globalThis;
-  undefined;
-  """
-
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -68,7 +58,7 @@ defmodule LiveVue.SSR.QuickJS do
   end
 
   def start_link(_opts \\ []) do
-    {:ok, rt} = QuickJSEx.start(name: __MODULE__)
+    {:ok, rt} = QuickJSEx.start(name: __MODULE__, browser_stubs: true)
     load_bundle(rt)
     {:ok, rt}
   end
@@ -85,8 +75,6 @@ defmodule LiveVue.SSR.QuickJS do
   end
 
   defp load_bundle(rt) do
-    eval!(rt, @polyfills)
-
     ssr_filepath()
     |> File.read!()
     |> then(&eval!(rt, &1))
