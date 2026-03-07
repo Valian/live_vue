@@ -2,88 +2,55 @@ defmodule LiveVue.SSR.QuickJS do
   @moduledoc """
   Implements SSR using an embedded QuickJS-NG JavaScript engine via `quickjs_ex`.
 
-  Unlike `LiveVue.SSR.NodeJS`, this module runs JavaScript inside the BEAM process
-  via a NIF — no external Node.js installation required. This simplifies deployment
-  (no Node.js in Docker images) while keeping SSR fully functional.
+  Unlike `LiveVue.SSR.NodeJS`, this module runs JavaScript inside the BEAM
+  process via a NIF — no external Node.js installation required.
 
   ## Setup
 
-  Add `quickjs_ex` to your dependencies:
+  1. Add `quickjs_ex` to your dependencies:
 
-      {:quickjs_ex, "~> 0.1.0"}
+      ```elixir
+      {:quickjs_ex, "~> 0.1.1"}
+      ```
 
-  Configure your application:
+  2. Add the `stubNodeBuiltins` Vite plugin to your `vite.config`:
 
+      ```javascript
+      import stubNodeBuiltins from "live_vue/stubNodeBuiltins"
+
+      export default defineConfig({
+        plugins: [vue(), liveVuePlugin(), stubNodeBuiltins()],
+      })
+      ```
+
+     This replaces Node.js built-in imports (`fs`, `path`, `node:stream`) with
+     stubs at build time, producing a self-contained SSR bundle.
+
+  3. Configure production SSR:
+
+      ```elixir
       # config/prod.exs
       config :live_vue,
         ssr_module: LiveVue.SSR.QuickJS
+      ```
 
-  Add the module to your supervision tree in `application.ex`:
+  4. Add to your supervision tree in `application.ex`:
 
+      ```elixir
       children = [
         LiveVue.SSR.QuickJS,
         # ...
       ]
+      ```
 
   The module loads the SSR bundle from the path configured via `:ssr_filepath`
   (default `"./static/server.mjs"`), relative to the application's `priv` directory.
-
-  ## How It Works
-
-  On startup, the module:
-
-  1. Starts a QuickJS-NG runtime on a dedicated OS thread
-  2. Installs polyfills for globals that the Vite SSR bundle expects
-     (`process`, `Buffer`, `atob`/`btoa`, `window`, `document`, etc.)
-  3. Rewrites Node.js-style `import`/`export` statements in the bundle
-     to work in a plain script context
-  4. Evaluates the adapted bundle, making the `render` function available
-
-  Each `render/3` call invokes the JS `render` function. Promises returned
-  by `renderToString` are automatically awaited by `quickjs_ex`.
   """
 
   @behaviour LiveVue.SSR
 
   @polyfills """
   globalThis.process = { env: { NODE_ENV: 'production' } };
-
-  (function() {
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-    globalThis.btoa = function(input) {
-      var str = String(input);
-      var output = '';
-      for (var block, charCode, idx = 0, map = chars;
-           str.charAt(idx | 0) || (map = '=', idx % 1);
-           output += map.charAt(63 & block >> 8 - idx % 1 * 8)) {
-        charCode = str.charCodeAt(idx += 3/4);
-        block = block << 8 | charCode;
-      }
-      return output;
-    };
-    globalThis.atob = function(input) {
-      var str = String(input).replace(/=+$/, '');
-      var output = '';
-      for (var bs = 0, buffer, bc = 0;
-           buffer = str.charAt(bc++);
-           ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc % 4) ?
-             output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
-        buffer = chars.indexOf(buffer);
-      }
-      return output;
-    };
-  })();
-
-  globalThis.Buffer = {
-    from: function(str, encoding) {
-      if (encoding === 'base64') {
-        var decoded = atob(str);
-        return { toString: function() { return decoded; } };
-      }
-      return { toString: function() { return String(str); } };
-    }
-  };
-
   globalThis.URL = globalThis.URL || function(url) { this.href = url; };
   globalThis.window = globalThis;
   globalThis.document = { querySelector: function() { return null; }, createElement: function() { return {}; } };
@@ -120,12 +87,9 @@ defmodule LiveVue.SSR.QuickJS do
   defp load_bundle(rt) do
     eval!(rt, @polyfills)
 
-    bundle =
-      ssr_filepath()
-      |> File.read!()
-      |> adapt_for_quickjs()
-
-    eval!(rt, bundle)
+    ssr_filepath()
+    |> File.read!()
+    |> then(&eval!(rt, &1))
   end
 
   defp eval!(rt, code) do
@@ -148,9 +112,5 @@ defmodule LiveVue.SSR.QuickJS do
     {:ok, app} = :application.get_application()
     filepath = Application.get_env(:live_vue, :ssr_filepath, "./static/server.mjs")
     Application.app_dir(app, Path.join("priv", filepath))
-  end
-
-  defp adapt_for_quickjs(code) do
-    LiveVue.SSR.QuickJS.BundleAdapter.adapt(code)
   end
 end
