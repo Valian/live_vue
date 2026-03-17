@@ -1,4 +1,4 @@
-import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, type ComputedRef, type Ref } from "vue"
+import { inject, onMounted, onUnmounted, ref, computed, watch, watchEffect, toValue, type ComputedRef, type Ref } from "vue"
 import type { MaybeRefOrGetter } from "vue"
 import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types.js"
 
@@ -109,74 +109,84 @@ export const useLiveUpload = (
   const live = useLiveVue()
   const inputEl = ref<HTMLInputElement | null>(null)
 
-  // Create and manage the hidden file input element with Phoenix upload attributes
-  onMounted(() => {
-    if (!inputEl.value) {
-      // Create a form to wrap the input, with phx-change="validate"
-      const uploadConfigValue = toValue(uploadConfig)
-      const form = document.createElement("form")
-      if (options.changeEvent) form.setAttribute("phx-change", options.changeEvent)
-      form.setAttribute("phx-submit", options.submitEvent)
-      form.style.display = "none"
+  const removeInput = () => {
+    if (!inputEl.value) return
+    ;(inputEl.value as any).__unwatchConfig?.()
+    inputEl.value.form?.remove()
+    inputEl.value.remove()
+    inputEl.value = null
+  }
 
-      const input = document.createElement("input")
-      input.type = "file"
-      input.id = uploadConfigValue.ref
-      input.name = uploadConfigValue.name
+  const createInput = (config: UploadConfig) => {
+    const form = document.createElement("form")
+    if (options.changeEvent) form.setAttribute("phx-change", options.changeEvent)
+    form.setAttribute("phx-submit", options.submitEvent)
+    form.style.display = "none"
 
-      // Phoenix LiveView upload attributes - these are critical for Phoenix to find and manage the input
-      input.setAttribute("data-phx-hook", "Phoenix.LiveFileUpload")
-      input.setAttribute("data-phx-update", "ignore")
-      input.setAttribute("data-phx-upload-ref", uploadConfigValue.ref)
-      form.appendChild(input)
+    const input = document.createElement("input")
+    input.type = "file"
+    input.id = config.ref
+    input.name = config.name
 
-      // Set accept attribute if specified
-      if (uploadConfigValue.accept && typeof uploadConfigValue.accept === "string") {
-        input.accept = uploadConfigValue.accept
-      }
+    // Phoenix LiveView upload attributes - these are critical for Phoenix to find and manage the input
+    input.setAttribute("data-phx-hook", "Phoenix.LiveFileUpload")
+    input.setAttribute("data-phx-update", "ignore")
+    input.setAttribute("data-phx-upload-ref", config.ref)
+    form.appendChild(input)
 
-      // Set auto_upload attribute if specified
-      if (uploadConfigValue.auto_upload) {
-        input.setAttribute("data-phx-auto-upload", "true")
-      }
-
-      // Set multiple attribute based on max_entries
-      if (uploadConfigValue.max_entries > 1) {
-        input.multiple = true
-      }
-
-      // Update entry refs attributes based on current entries
-      const updateEntryRefs = () => {
-        const config = toValue(uploadConfig)
-        const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(",")
-
-        input.setAttribute("data-phx-active-refs", joinEntries(config.entries))
-        input.setAttribute("data-phx-done-refs", joinEntries(config.entries.filter(e => e.done)))
-        input.setAttribute("data-phx-preflighted-refs", joinEntries(config.entries.filter(e => e.preflighted)))
-      }
-
-      const unwatchConfig = watchEffect(() => updateEntryRefs())
-
-      // Store unwatch function for cleanup
-      ;(input as any).__unwatchConfig = unwatchConfig
-
-      // Append to the LiveView element so Phoenix can find it
-      // Phoenix searches for upload inputs within the LiveView element
-      live.el.appendChild(form)
-      inputEl.value = input
+    // Set accept attribute if specified
+    if (config.accept && typeof config.accept === "string") {
+      input.accept = config.accept
     }
+
+    // Set auto_upload attribute if specified
+    if (config.auto_upload) {
+      input.setAttribute("data-phx-auto-upload", "true")
+    }
+
+    // Set multiple attribute based on max_entries
+    if (config.max_entries > 1) {
+      input.multiple = true
+    }
+
+    // Update entry refs attributes based on current entries
+    const unwatchConfig = watchEffect(() => {
+      const current = toValue(uploadConfig)
+      const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(",")
+
+      input.setAttribute("data-phx-active-refs", joinEntries(current.entries))
+      input.setAttribute("data-phx-done-refs", joinEntries(current.entries.filter(e => e.done)))
+      input.setAttribute("data-phx-preflighted-refs", joinEntries(current.entries.filter(e => e.preflighted)))
+    })
+
+    // Store unwatch function for cleanup
+    ;(input as any).__unwatchConfig = unwatchConfig
+
+    // Append to the LiveView element so Phoenix can find it
+    live.el.appendChild(form)
+    inputEl.value = input
+  }
+
+  // Create hidden input on mount
+  onMounted(() => {
+    if (!inputEl.value) createInput(toValue(uploadConfig))
   })
+
+  // Rebuild hidden input when upload config identity changes
+  watch(
+    () => {
+      const c = toValue(uploadConfig)
+      return `${c.ref}|${c.name}|${c.accept}|${c.auto_upload}|${c.max_entries}`
+    },
+    (next, prev) => {
+      if (!inputEl.value || next === prev) return
+      removeInput()
+      createInput(toValue(uploadConfig))
+    }
+  )
 
   // Clean up the input element when component unmounts
-  onUnmounted(() => {
-    if (inputEl.value) {
-      // Clean up the watcher
-      ;(inputEl.value as any).__unwatchConfig?.()
-      inputEl.value.form?.remove()
-      inputEl.value.remove()
-      inputEl.value = null
-    }
-  })
+  onUnmounted(removeInput)
 
   // Reactive entries from the upload config
   const entries = computed(() => {
