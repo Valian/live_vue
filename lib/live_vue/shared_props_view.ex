@@ -78,23 +78,7 @@ defmodule LiveVue.SharedPropsView do
     # Always inject v-socket if not already present
     builtin_attrs = [{"v-socket", "get_in(assigns, [:socket])"}]
 
-    Regex.replace(~r/<\.([[:alnum:]_?!]+)\b(.*?)(\/?>)/s, template, fn full, tag_name, attrs, close ->
-      if live_vue_tag?(tag_name, caller) do
-        missing_attrs =
-          Enum.reject(builtin_attrs ++ shared_vue_attrs, fn {name, _expr} ->
-            Regex.match?(~r/\b#{Regex.escape(name)}\s*=/, attrs)
-          end)
-
-        injected =
-          Enum.map_join(missing_attrs, "", fn {name, expr} ->
-            "\n      #{name}={#{expr}}"
-          end)
-
-        "<.#{tag_name}#{attrs}#{injected}#{close}"
-      else
-        full
-      end
-    end)
+    rewrite_live_vue_tags(template, builtin_attrs ++ shared_vue_attrs, caller)
   end
 
   @doc false
@@ -123,6 +107,107 @@ defmodule LiveVue.SharedPropsView do
 
   defp path_expr(path) do
     "get_in(assigns, #{inspect(path)})"
+  end
+
+  defp rewrite_live_vue_tags(template, attrs_to_inject, caller) do
+    do_rewrite_live_vue_tags(template, attrs_to_inject, caller, [])
+  end
+
+  defp do_rewrite_live_vue_tags(template, attrs_to_inject, caller, acc) do
+    case :binary.match(template, "<.") do
+      :nomatch ->
+        IO.iodata_to_binary(Enum.reverse([template | acc]))
+
+      {index, 2} ->
+        <<prefix::binary-size(index), rest::binary>> = template
+
+        case parse_local_component_tag(rest) do
+          {:ok, tag_name, attrs, close, remainder} ->
+            tag =
+              if live_vue_tag?(tag_name, caller) do
+                inject_missing_attrs(tag_name, attrs, close, attrs_to_inject)
+              else
+                ["<.", tag_name, attrs, close]
+              end
+
+            do_rewrite_live_vue_tags(remainder, attrs_to_inject, caller, [tag, prefix | acc])
+
+          :error ->
+            <<tag_start::binary-size(2), remainder::binary>> = rest
+            do_rewrite_live_vue_tags(remainder, attrs_to_inject, caller, [tag_start, prefix | acc])
+        end
+    end
+  end
+
+  defp parse_local_component_tag(<<"<.", rest::binary>>) do
+    case take_tag_name(rest, []) do
+      {"", _rest} ->
+        :error
+
+      {tag_name, rest} ->
+        case take_tag_attrs(rest, [], nil, 0) do
+          {:ok, attrs, close, remainder} -> {:ok, tag_name, attrs, close, remainder}
+          :error -> :error
+        end
+    end
+  end
+
+  defp take_tag_name(<<char::utf8, rest::binary>>, acc)
+       when char in ?0..?9 or char in ?A..?Z or char in ?a..?z or char in [?_, ??, ?!] do
+    take_tag_name(rest, [<<char::utf8>> | acc])
+  end
+
+  defp take_tag_name(rest, acc) do
+    {IO.iodata_to_binary(Enum.reverse(acc)), rest}
+  end
+
+  defp take_tag_attrs(<<>>, _acc, _quote, _brace_depth), do: :error
+
+  defp take_tag_attrs(<<"/", ">", rest::binary>>, acc, nil, 0) do
+    {:ok, IO.iodata_to_binary(Enum.reverse(acc)), "/>", rest}
+  end
+
+  defp take_tag_attrs(<<">", rest::binary>>, acc, nil, 0) do
+    {:ok, IO.iodata_to_binary(Enum.reverse(acc)), ">", rest}
+  end
+
+  defp take_tag_attrs(<<?\\, escaped::utf8, rest::binary>>, acc, {:expr, quote_char}, brace_depth) do
+    take_tag_attrs(rest, [<<escaped::utf8>>, <<?\\>> | acc], {:expr, quote_char}, brace_depth)
+  end
+
+  defp take_tag_attrs(<<quote_char::utf8, rest::binary>>, acc, {_kind, quote_char}, brace_depth) do
+    take_tag_attrs(rest, [<<quote_char::utf8>> | acc], nil, brace_depth)
+  end
+
+  defp take_tag_attrs(<<char::utf8, rest::binary>>, acc, nil, brace_depth) when char in [?", ?'] do
+    quote_kind = if brace_depth > 0, do: :expr, else: :html
+    take_tag_attrs(rest, [<<char::utf8>> | acc], {quote_kind, char}, brace_depth)
+  end
+
+  defp take_tag_attrs(<<?{, rest::binary>>, acc, nil, brace_depth) do
+    take_tag_attrs(rest, [<<?{>> | acc], nil, brace_depth + 1)
+  end
+
+  defp take_tag_attrs(<<?}, rest::binary>>, acc, nil, brace_depth) when brace_depth > 0 do
+    take_tag_attrs(rest, [<<?}>> | acc], nil, brace_depth - 1)
+  end
+
+  defp take_tag_attrs(<<char::utf8, rest::binary>>, acc, quote, brace_depth) do
+    take_tag_attrs(rest, [<<char::utf8>> | acc], quote, brace_depth)
+  end
+
+  defp inject_missing_attrs(tag_name, attrs, close, attrs_to_inject) do
+    missing_attrs =
+      Enum.reject(attrs_to_inject, fn {name, _expr} ->
+        Regex.match?(~r/\b#{Regex.escape(name)}\s*=/, attrs)
+      end)
+
+    injected =
+      Enum.map(missing_attrs, fn {name, expr} ->
+        ["\n      ", name, "={", expr, "}"]
+      end)
+
+    ["<.", tag_name, attrs, injected, close]
   end
 
   defp live_vue_tag?("vue", _caller), do: true

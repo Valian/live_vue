@@ -1,4 +1,5 @@
 defmodule LiveVue.SharedPropsImportedComponent do
+  @moduledoc false
   @live_vue_shortcuts ["counter"]
 
   def __live_vue_shortcuts__, do: @live_vue_shortcuts
@@ -6,10 +7,12 @@ defmodule LiveVue.SharedPropsImportedComponent do
 end
 
 defmodule LiveVue.SharedPropsRegularComponent do
+  @moduledoc false
   def counter(assigns), do: assigns
 end
 
 defmodule LiveVue.SharedPropsImportedCaller do
+  @moduledoc false
   import LiveVue.SharedPropsImportedComponent
 
   def env, do: __ENV__
@@ -17,6 +20,7 @@ defmodule LiveVue.SharedPropsImportedCaller do
 end
 
 defmodule LiveVue.SharedPropsRegularCaller do
+  @moduledoc false
   import LiveVue.SharedPropsRegularComponent
 
   def env, do: __ENV__
@@ -24,9 +28,10 @@ defmodule LiveVue.SharedPropsRegularCaller do
 end
 
 defmodule LiveVue.SharedPropsSameModuleCaller do
-  import LiveVue.SharedPropsView, only: [sigil_H: 2]
-
+  @moduledoc false
   use LiveVue.Components, vue_root: ["./test/e2e/features/basic"]
+
+  import LiveVue.SharedPropsView, only: [sigil_H: 2]
 
   def env, do: __ENV__
 
@@ -152,6 +157,31 @@ defmodule LiveVue.SharedPropsViewTest do
 
       output = SharedPropsView.inject_shared_props_in_vue(input, [:flash])
 
+      assert output =~ "v-socket={get_in(assigns, [:socket])}"
+      assert output =~ "flash={get_in(assigns, [:flash])}"
+    end
+
+    test "preserves > inside quoted attrs" do
+      input = """
+      <.vue v-component="A" label="a > b" />
+      """
+
+      output = SharedPropsView.inject_shared_props_in_vue(input, [:flash])
+
+      assert output =~ ~s(label="a > b")
+      assert output =~ "v-socket={get_in(assigns, [:socket])}"
+      assert output =~ "flash={get_in(assigns, [:flash])}"
+    end
+
+    test "preserves > inside expressions" do
+      input = """
+      <.vue v-component="A" cond={1 > 0} message={if true, do: "a > b", else: "c"} />
+      """
+
+      output = SharedPropsView.inject_shared_props_in_vue(input, [:flash])
+
+      assert output =~ "cond={1 > 0}"
+      assert output =~ ~s(message={if true, do: "a > b", else: "c"})
       assert output =~ "v-socket={get_in(assigns, [:socket])}"
       assert output =~ "flash={get_in(assigns, [:flash])}"
     end

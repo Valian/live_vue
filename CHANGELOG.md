@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - Added `LiveVue.SSR.QuickJS` — embedded SSR via [quickjs_ex](https://hex.pm/packages/quickjs_ex), no Node.js required in production
+- Added `LiveVue.SharedPropsView` — a `~H` sigil override that injects shared props and `v-socket` into all `<.vue>` and LiveVue shortcut component tags at compile time, restoring shared props support with proper LiveView change tracking ([#123](https://github.com/Valian/live_vue/pull/123))
 
 ## 1.0.1 - 2026-02-19
 
