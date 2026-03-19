@@ -63,7 +63,7 @@ defmodule MyAppWeb.CounterLive do
 
   def render(assigns) do
     ~H"""
-    <.vue count={@count} v-component="Counter" v-socket={@socket} />
+    <.vue count={@count} v-component="Counter" />
     """
   end
 
@@ -76,6 +76,8 @@ defmodule MyAppWeb.CounterLive do
   end
 end
 ```
+
+In the default `~H` setup from `mix live_vue.install`, LiveVue component tags get `v-socket` injected automatically.
 
 ## Why?
 

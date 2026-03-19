@@ -17,22 +17,23 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 
 **Possible Causes & Solutions:**
 
-1. **Missing `v-socket` attribute**
+1. **Missing `LiveVue.SharedPropsView` import or manual `v-socket`**
    ```elixir
-   # ❌ Missing v-socket
-   <.vue v-component="Counter" count={@count} />
+   # ✅ Standard setup: <.vue> gets v-socket injected automatically
+   import Phoenix.Component, except: [sigil_H: 2]
+   import LiveVue.SharedPropsView, only: [sigil_H: 2]
 
-   # ✅ Correct
-   <.vue v-component="Counter" count={@count} v-socket={@socket} />
+   # ✅ If you bypass that rewrite, pass v-socket manually
+   <LiveVue.vue v-component="Counter" count={@count} v-socket={@socket} />
    ```
 
 2. **Component name mismatch**
    ```elixir
    # ❌ File: Counter.vue, but using wrong name
-   <.vue v-component="counter" v-socket={@socket} />
+   <.vue v-component="counter" />
 
    # ✅ Correct - case sensitive
-   <.vue v-component="Counter" v-socket={@socket} />
+   <.vue v-component="Counter" />
    ```
 
    Check browser console for errors.
@@ -60,7 +61,7 @@ This guide helps you diagnose and fix common issues when working with LiveVue.
 1. **Check prop names match**
    ```elixir
    # Server side
-   <.vue user_name={@user.name} v-component="Profile" v-socket={@socket} />
+   <.vue user_name={@user.name} v-component="Profile" />
    ```
 
    ```html

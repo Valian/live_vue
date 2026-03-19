@@ -60,6 +60,7 @@ defmodule Mix.Tasks.LiveVue.Install do
     defp configure_environments(igniter, _app_name) do
       igniter
       |> Config.configure("config.exs", :live_vue, [:ssr], true)
+      |> Config.configure("config.exs", :live_vue, [:shared_props], {:code, Sourceror.parse_string!("[]")})
       |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
       |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})
       |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.NodeJS")})
@@ -87,7 +88,7 @@ defmodule Mix.Tasks.LiveVue.Install do
             String.replace(
               content,
               ~r/(defp html_helpers do\s+quote do\s+# Translation\s+use Gettext, backend: #{Regex.escape(web_module_name)}\.Gettext)/,
-              "\\1\n\n      # Add support for Vue components\n      use LiveVue\n\n      # Generate component for each vue file, so you can use <.ComponentName> syntax\n      # instead of <.vue v-component=\"ComponentName\">\n      use LiveVue.Components, vue_root: [\"./assets/vue\", \"./lib/#{web_folder}\"]"
+              "\\1\n\n      # Add support for Vue components\n      use LiveVue\n\n      # Generate component for each vue file, so you can use <.ComponentName> syntax\n      # instead of <.vue v-component=\"ComponentName\">\n      use LiveVue.Components, vue_root: [\"./assets/vue\", \"./lib/#{web_folder}\"]\n\n      # Override ~H sigil to inject shared props into <.vue> tags\n      # Configure shared props in config :live_vue, :shared_props\n      import Phoenix.Component, except: [sigil_H: 2]\n      import LiveVue.SharedPropsView, only: [sigil_H: 2]"
             )
           end
         end)
@@ -397,7 +398,6 @@ defmodule Mix.Tasks.LiveVue.Install do
               todos={@todos}
               form={@form}
               v-component="VueDemo"
-              v-socket={@socket}
             />
           </Layouts.app>
           \"\"\"
