@@ -49,38 +49,48 @@ defmodule LiveVue.SSR.QuickJS do
 
   @behaviour LiveVue.SSR
 
-  def child_spec(opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker
-    }
-  end
-
-  def start_link(_opts \\ []) do
-    {:ok, rt} = QuickJSEx.start(name: __MODULE__, browser_stubs: true)
-    load_bundle(rt)
-    {:ok, rt}
-  end
-
-  @impl true
-  def render(name, props, slots) do
-    case QuickJSEx.call(__MODULE__, "render", [name, props, slots]) do
-      {:ok, html} ->
-        html
-
-      {:error, reason} ->
-        raise "QuickJS SSR render failed for #{name}: #{reason}"
+  if Code.ensure_loaded?(QuickJSEx) do
+    def child_spec(opts) do
+      %{
+        id: __MODULE__,
+        start: {__MODULE__, :start_link, [opts]},
+        type: :worker
+      }
     end
-  end
 
-  defp load_bundle(rt) do
-    code = ssr_filepath() |> File.read!()
-
-    case QuickJSEx.load_module(rt, "server", code) do
-      :ok -> :ok
-      {:error, reason} -> raise "QuickJS SSR bundle evaluation failed: #{reason}"
+    def start_link(_opts \\ []) do
+      {:ok, rt} = QuickJSEx.start(name: __MODULE__, browser_stubs: true)
+      load_bundle(rt)
+      {:ok, rt}
     end
+
+    @impl true
+    def render(name, props, slots) do
+      case QuickJSEx.call(__MODULE__, "render", [name, props, slots]) do
+        {:ok, html} ->
+          html
+
+        {:error, reason} ->
+          raise "QuickJS SSR render failed for #{name}: #{reason}"
+      end
+    end
+
+    defp load_bundle(rt) do
+      code = File.read!(ssr_filepath())
+
+      case QuickJSEx.load_module(rt, "server", code) do
+        :ok -> :ok
+        {:error, reason} -> raise "QuickJS SSR bundle evaluation failed: #{reason}"
+      end
+    end
+  else
+    @quickjs_missing "QuickJSEx is required for LiveVue.SSR.QuickJS. Add {:quickjs_ex, \"~> 0.2\"} to your dependencies."
+
+    def child_spec(_opts), do: raise(@quickjs_missing)
+    def start_link(_opts \\ []), do: raise(@quickjs_missing)
+
+    @impl true
+    def render(_name, _props, _slots), do: raise(@quickjs_missing)
   end
 
   defp ssr_filepath do
