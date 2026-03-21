@@ -1,4 +1,4 @@
-import { type App, type Component, h } from "vue"
+import type { App, Component } from "vue"
 import type {
   ComponentOrComponentModule,
   ComponentOrComponentPromise,
@@ -8,18 +8,6 @@ import type {
   LiveVueApp,
 } from "./types.js"
 
-/**
- * Initializes a Vue app with the given options and mounts it to the specified element.
- * It's a default implementation of the `setup` option, which can be overridden.
- * If you want to override it, simply provide your own implementation of the `setup` option.
- */
-export const defaultSetup = ({ createApp, component, props, slots, plugin, el }: SetupContext) => {
-  const app = createApp({ render: () => h(component, props, slots) })
-  app.use(plugin)
-  app.mount(el)
-  return app
-}
-
 export const migrateToLiveVueApp = (
   components: ComponentMap,
   options: { initializeApp?: (context: SetupContext) => App } = {}
@@ -27,6 +15,9 @@ export const migrateToLiveVueApp = (
   if ("resolve" in components && "setup" in components) {
     return components as LiveVueApp
   } else {
+    if (!options.initializeApp) {
+      throw new Error("LiveVue: setup function is required. See https://docs.live-vue.com for setup examples.")
+    }
     console.warn("deprecation warning:\n\nInstead of passing components, use createLiveVue({resolve, setup})")
     return createLiveVue({
       resolve: (name: string) => {
@@ -58,8 +49,9 @@ const resolveComponent = async (component: ComponentOrComponentModule): Promise<
 }
 
 export const createLiveVue = ({ resolve, setup }: LiveVueOptions) => {
+  if (!setup) throw new Error("LiveVue: setup function is required. See https://docs.live-vue.com for setup examples.")
   return {
-    setup: setup || defaultSetup,
+    setup,
     resolve: async (path: string): Promise<Component> => {
       let component = resolve(path)
       if (!component) throw new Error(`Component ${path} not found!`)
