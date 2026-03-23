@@ -5,11 +5,21 @@ import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types
 export const liveInjectKey = "_live_vue"
 
 /**
- * Returns the LiveVue instance.
+ * Returns the LiveVue hook instance.
  * Can be used to access the LiveVue instance from within a LiveVue component.
  * It allows to e.g. push events to the LiveView.
+ *
+ * When called with an element ID, returns the hook attached to that element,
+ * giving access to another component's reactive props, slots, and LiveView connection.
+ *
+ * @param elementId - Optional ID of a LiveVue element to look up.
  */
-export const useLiveVue = (): LiveHook => {
+export function useLiveVue(): LiveHook
+export function useLiveVue(elementId: string): LiveHook | null
+export function useLiveVue(elementId?: string): LiveHook | null {
+  if (elementId) {
+    return (document.getElementById(elementId) as any)?.__liveVueHook ?? null
+  }
   const live = inject<LiveHook>(liveInjectKey)
   if (!live) throw new Error("LiveVue not provided. Are you using this inside a LiveVue component?")
   return live

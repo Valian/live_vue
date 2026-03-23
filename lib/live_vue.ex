@@ -112,6 +112,14 @@ defmodule LiveVue do
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
+      |> then(fn assigns ->
+        # require explicit id when no component is specified (headless mode)
+        if is_nil(assigns[:__component_name]) and is_nil(assigns[:id]) do
+          raise ArgumentError, "<.vue> without v-component requires an explicit id"
+        else
+          assigns
+        end
+      end)
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
       |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
@@ -121,7 +129,7 @@ defmodule LiveVue do
       |> Map.put(:use_diff, use_diff)
 
     assigns =
-      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns)))
+      Map.put(assigns, :ssr_render, if(render_ssr? && assigns[:__component_name], do: ssr_render(assigns)))
 
     computed_changed =
       %{
@@ -156,6 +164,9 @@ defmodule LiveVue do
       data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
+      data-inject={inject_target(assigns)}
+      data-inject-slot={inject_slot(assigns)}
+      style={if(inject_target(assigns), do: "display:none")}
       phx-update="ignore"
       phx-hook="VueHook"
       phx-no-format
@@ -272,11 +283,12 @@ defmodule LiveVue do
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket __changed__ __given__"a,
+  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket v-inject __changed__ __given__"a,
     do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
+  defp normalize_key("v-inject:" <> _slot, _val), do: :special
   defp normalize_key("v-on:" <> key, _val), do: {:handlers, key}
   defp normalize_key(_key, %LiveStream{}), do: :streams
   defp normalize_key(_key, _val), do: :props
@@ -299,6 +311,38 @@ defmodule LiveVue do
   rescue
     SSR.NotConfigured ->
       nil
+  end
+
+  defp inject_config(assigns) do
+    # Check for v-inject (default slot) or v-inject:slotname (named slot)
+    case Map.get(assigns, :"v-inject") do
+      nil -> find_named_inject(assigns)
+      true -> {"default", nil}
+      target when is_binary(target) -> {target, nil}
+    end
+  end
+
+  defp find_named_inject(assigns) do
+    Enum.find_value(assigns, {nil, nil}, fn
+      {key, value} when is_atom(key) ->
+        case Atom.to_string(key) do
+          "v-inject:" <> slot when is_binary(value) -> {value, slot}
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end)
+  end
+
+  defp inject_target(assigns) do
+    {target, _slot} = inject_config(assigns)
+    target
+  end
+
+  defp inject_slot(assigns) do
+    {_target, slot} = inject_config(assigns)
+    slot
   end
 
   defp json(data), do: Jason.encode!(data, escape: :html_safe)
