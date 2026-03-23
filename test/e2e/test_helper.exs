@@ -32,6 +32,7 @@ end
 defmodule LiveVue.E2E.Layout do
   @moduledoc false
   use Phoenix.Component
+  use LiveVue
 
   def render("root.html", assigns) do
     ~H"""
@@ -58,6 +59,7 @@ defmodule LiveVue.E2E.Layout do
     {@inner_content}
     """
   end
+
 end
 
 defmodule LiveVue.E2E.Hooks do
@@ -103,6 +105,7 @@ defmodule LiveVue.E2E.Router do
 
   import Phoenix.LiveView.Router
 
+  alias LiveVue.E2E.Hooks
   alias LiveVue.E2E.Layout
 
   pipeline :browser do
@@ -115,7 +118,7 @@ defmodule LiveVue.E2E.Router do
 
   live_session :default,
     layout: {Layout, :live},
-    on_mount: {LiveVue.E2E.Hooks, :default} do
+    on_mount: {Hooks, :default} do
     scope "/", LiveVue.E2E do
       pipe_through(:browser)
 
@@ -131,7 +134,7 @@ defmodule LiveVue.E2E.Router do
       live "/slot-test", SlotTestLive
       live "/memory-benchmark", MemoryBenchmarkLive
       live "/reconnect", ReconnectLive
-      live "/headless", HeadlessLive
+      live "/persistent-layout/:page", PersistentLayoutLive
     end
   end
 

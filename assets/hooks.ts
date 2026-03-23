@@ -1,4 +1,4 @@
-import { createApp, createSSRApp, h, reactive, type App } from "vue"
+import { createApp, createSSRApp, h, reactive, provide, defineComponent, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
 import { liveInjectKey, hooksById } from "./use.js"
@@ -83,30 +83,54 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     applyPatch(props, getDiff(this.el, "data-streams-diff"))
 
     this.vue = { props, slots, app: null }
-    hooksById.set(this.el.id, this as LiveHook)
+    ;(this.el as any).__liveVueHook = this
 
-    if (!component) return
+    const injectTarget = this.el.getAttribute("data-inject")
+    if (injectTarget) {
+      const targetHook = (document.getElementById(injectTarget) as any)?.__liveVueHook
+      if (!targetHook) {
+        throw new Error(`v-inject target element #${injectTarget} not found or not a Vue component`)
+      }
+      if (!component) {
+        throw new Error(`v-inject requires a v-component to inject`)
+      }
 
-    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+      const pageHook = this as LiveHook
+      const target = targetHook.vue
+      const slotName = this.el.getAttribute("data-inject-slot") || "default"
+      target.slots[slotName] = (slotProps: Record<string, any>) =>
+        h(
+          defineComponent({
+            setup(_, { slots: ws }) {
+              provide(liveInjectKey, pageHook)
+              return () => ws.default?.()
+            },
+          }),
+          null,
+          { default: () => h(component, { ...slotProps, ...props }, slots) }
+        )
+    } else if (component) {
+      const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
 
-    const app = setup({
-      createApp: makeApp,
-      component,
-      props,
-      slots,
-      plugin: {
-        install: (app: App) => {
-          app.provide(liveInjectKey, this as LiveHook)
-          app.config.globalProperties.$live = this as LiveHook
+      const app = setup({
+        createApp: makeApp,
+        component,
+        props,
+        slots,
+        plugin: {
+          install: (app: App) => {
+            app.provide(liveInjectKey, this as LiveHook)
+            app.config.globalProperties.$live = this as LiveHook
+          },
         },
-      },
-      el: this.el,
-      ssr: false,
-    })
+        el: this.el,
+        ssr: false,
+      })
 
-    if (!app) throw new Error("Setup function did not return a Vue app!")
+      if (!app) throw new Error("Setup function did not return a Vue app!")
 
-    this.vue.app = app
+      this.vue.app = app
+    }
   },
   updated() {
     if (this.el.getAttribute("data-use-diff") === "true") {
