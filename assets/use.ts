@@ -1,4 +1,4 @@
-import { inject, onMounted, onUnmounted, ref, computed, watch, watchEffect, toValue, type ComputedRef, type Ref } from "vue"
+import { inject, onMounted, onUnmounted, ref, computed, watchEffect, toValue, type ComputedRef, type Ref } from "vue"
 import type { MaybeRefOrGetter } from "vue"
 import type { LiveHook, UploadConfig, UploadEntry, UploadOptions } from "./types.js"
 
@@ -108,10 +108,12 @@ export const useLiveUpload = (
 ): UseLiveUploadReturn => {
   const live = useLiveVue()
   const inputEl = ref<HTMLInputElement | null>(null)
+  let stopSyncInput: (() => void) | null = null
 
   const removeInput = () => {
     if (!inputEl.value) return
-    ;(inputEl.value as any).__unwatchConfig?.()
+    stopSyncInput?.()
+    stopSyncInput = null
     inputEl.value.form?.remove()
     inputEl.value.remove()
     inputEl.value = null
@@ -134,33 +136,37 @@ export const useLiveUpload = (
     input.setAttribute("data-phx-upload-ref", config.ref)
     form.appendChild(input)
 
-    // Set accept attribute if specified
-    if (config.accept && typeof config.accept === "string") {
-      input.accept = config.accept
-    }
-
-    // Set auto_upload attribute if specified
-    if (config.auto_upload) {
-      input.setAttribute("data-phx-auto-upload", "true")
-    }
-
-    // Set multiple attribute based on max_entries
-    if (config.max_entries > 1) {
-      input.multiple = true
-    }
-
-    // Update entry refs attributes based on current entries
-    const unwatchConfig = watchEffect(() => {
+    stopSyncInput = watchEffect(() => {
       const current = toValue(uploadConfig)
       const joinEntries = (entries: UploadEntry[]) => entries.map(e => e.ref).join(",")
+      const previousRef = input.getAttribute("data-phx-upload-ref")
+
+      input.id = current.ref
+      input.name = current.name
+      input.setAttribute("data-phx-upload-ref", current.ref)
+
+      if (current.accept && typeof current.accept === "string") {
+        input.accept = current.accept
+      } else {
+        input.removeAttribute("accept")
+      }
+
+      if (current.auto_upload) {
+        input.setAttribute("data-phx-auto-upload", "true")
+      } else {
+        input.removeAttribute("data-phx-auto-upload")
+      }
+
+      input.multiple = current.max_entries > 1
+
+      if (previousRef && previousRef !== current.ref) {
+        input.value = ""
+      }
 
       input.setAttribute("data-phx-active-refs", joinEntries(current.entries))
       input.setAttribute("data-phx-done-refs", joinEntries(current.entries.filter(e => e.done)))
       input.setAttribute("data-phx-preflighted-refs", joinEntries(current.entries.filter(e => e.preflighted)))
     })
-
-    // Store unwatch function for cleanup
-    ;(input as any).__unwatchConfig = unwatchConfig
 
     // Append to the LiveView element so Phoenix can find it
     live.el.appendChild(form)
@@ -171,19 +177,6 @@ export const useLiveUpload = (
   onMounted(() => {
     if (!inputEl.value) createInput(toValue(uploadConfig))
   })
-
-  // Rebuild hidden input when upload config identity changes
-  watch(
-    () => {
-      const c = toValue(uploadConfig)
-      return `${c.ref}|${c.name}|${c.accept}|${c.auto_upload}|${c.max_entries}`
-    },
-    (next, prev) => {
-      if (!inputEl.value || next === prev) return
-      removeInput()
-      createInput(toValue(uploadConfig))
-    }
-  )
 
   // Clean up the input element when component unmounts
   onUnmounted(removeInput)

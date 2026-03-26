@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { syncLV } from "../../utils.js"
+import { evalLV, syncLV } from "../../utils.js"
 import { readFileSync } from "fs"
 import { join } from "path"
 
@@ -316,5 +316,79 @@ test.describe("useLiveUpload", () => {
     await expect(page.locator("#uploaded-count")).toContainText("1")
     await expect(page.locator(".uploaded-file")).toHaveCount(1)
     await expect(page.locator(".uploaded-name")).toContainText("drag-drop-test.txt")
+  })
+
+  test("should keep the original upload input usable across a simulated reconnect ref rotation", async ({ page }) => {
+    await page.goto("/upload/manual")
+    await syncLV(page)
+
+    const originalRef = await page.evaluate(() => {
+      const input = document.querySelector('input[type="file"]')
+      if (!input) throw new Error("Upload input not found")
+      window.__originalUploadInput = input
+      return input.getAttribute("data-phx-upload-ref")
+    })
+
+    await evalLV(
+      page,
+      `
+      socket
+      |> Phoenix.LiveView.disallow_upload(:test_files)
+      |> Phoenix.LiveView.allow_upload(:test_files,
+        accept: ~w(.txt .pdf .jpg .png),
+        max_entries: 3,
+        max_file_size: 1_000_000,
+        auto_upload: false
+      )
+      `
+    )
+
+    await page.waitForFunction(previousRef => {
+      const input = document.querySelector('input[type="file"]')
+      return !!input && input.getAttribute("data-phx-upload-ref") !== previousRef
+    }, originalRef)
+
+    await syncLV(page)
+
+    const reconnectState = await page.evaluate(() => {
+      const currentInput = document.querySelector('input[type="file"]')
+      const originalInput = window.__originalUploadInput
+
+      return {
+        originalStillAttached: !!originalInput?.isConnected,
+        sameNode: originalInput === currentInput,
+        currentRef: currentInput?.getAttribute("data-phx-upload-ref"),
+      }
+    })
+
+    expect(reconnectState.originalStillAttached).toBe(true)
+    expect(reconnectState.sameNode).toBe(true)
+    expect(reconnectState.currentRef).not.toBe(originalRef)
+
+    const testContent = "Upload after reconnect through original input handle"
+
+    await page.evaluate(content => {
+      const input = window.__originalUploadInput
+      if (!input) throw new Error("Saved upload input not found")
+
+      const file = new File([content], "reconnect-race.txt", { type: "text/plain" })
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(file)
+      input.files = dataTransfer.files
+      input.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }))
+    }, testContent)
+
+    await syncLV(page)
+
+    await expect(page.locator("#selected-count")).toContainText("1")
+    await expect(page.locator(".file-entry")).toHaveCount(1)
+    await expect(page.locator(".file-name")).toContainText("reconnect-race.txt")
+
+    await page.click("#upload-btn")
+    await syncLV(page)
+
+    await expect(page.locator("#uploaded-count")).toContainText("1")
+    await expect(page.locator(".uploaded-file")).toHaveCount(1)
+    await expect(page.locator(".uploaded-name")).toContainText("reconnect-race.txt")
   })
 })

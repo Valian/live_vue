@@ -106,52 +106,63 @@ describe("useLiveUpload", () => {
     triggerUnmount()
   })
 
-  it("should rebuild hidden input when uploadConfig.ref changes", async () => {
+  it("should retain the hidden input when uploadConfig.ref changes", async () => {
     const configRef = ref(createUploadConfig({ ref: "phx-old" }))
     const result = useLiveUpload(configRef, defaultOptions)
 
-    const oldInput = result.inputEl.value as HTMLInputElement
-    expect(oldInput.getAttribute("data-phx-upload-ref")).toBe("phx-old")
+    const originalInput = result.inputEl.value as HTMLInputElement
+    let currentValue = "C:\\fakepath\\photo.png"
+    Object.defineProperty(originalInput, "value", {
+      configurable: true,
+      get: () => currentValue,
+      set: value => {
+        currentValue = value
+      },
+    })
+
+    expect(originalInput.getAttribute("data-phx-upload-ref")).toBe("phx-old")
 
     // Update the ref — simulates server sending a new upload config
     configRef.value = createUploadConfig({ ref: "phx-new" })
     await nextTick()
 
-    const newInput = result.inputEl.value as HTMLInputElement
-    expect(newInput).not.toBeNull()
-    expect(newInput.getAttribute("data-phx-upload-ref")).toBe("phx-new")
-    expect(newInput.id).toBe("phx-new")
-
-    // Old input should be removed from the DOM
-    expect(oldInput.parentElement).toBeNull()
-    expect(mockEl.querySelector('[data-phx-upload-ref="phx-old"]')).toBeNull()
+    const updatedInput = result.inputEl.value as HTMLInputElement
+    expect(updatedInput).toBe(originalInput)
+    expect(updatedInput.getAttribute("data-phx-upload-ref")).toBe("phx-new")
+    expect(updatedInput.id).toBe("phx-new")
+    expect(currentValue).toBe("")
+    expect(mockEl.querySelectorAll("form")).toHaveLength(1)
 
     triggerUnmount()
   })
 
-  it("should rebuild hidden input when accept changes", async () => {
+  it("should update accept in place when it changes", async () => {
     const configRef = ref(createUploadConfig({ ref: "phx-1", accept: ".png" }))
     const result = useLiveUpload(configRef, defaultOptions)
+    const originalInput = result.inputEl.value
 
     expect(result.inputEl.value!.accept).toBe(".png")
 
     configRef.value = createUploadConfig({ ref: "phx-1", accept: ".gif,.webp" })
     await nextTick()
 
+    expect(result.inputEl.value).toBe(originalInput)
     expect(result.inputEl.value!.accept).toBe(".gif,.webp")
 
     triggerUnmount()
   })
 
-  it("should rebuild hidden input when max_entries changes", async () => {
+  it("should update multiple in place when max_entries changes", async () => {
     const configRef = ref(createUploadConfig({ ref: "phx-1", max_entries: 1 }))
     const result = useLiveUpload(configRef, defaultOptions)
+    const originalInput = result.inputEl.value
 
     expect(result.inputEl.value!.multiple).toBe(false)
 
     configRef.value = createUploadConfig({ ref: "phx-1", max_entries: 3 })
     await nextTick()
 
+    expect(result.inputEl.value).toBe(originalInput)
     expect(result.inputEl.value!.multiple).toBe(true)
 
     triggerUnmount()
@@ -175,18 +186,19 @@ describe("useLiveUpload", () => {
     triggerUnmount()
   })
 
-  it("should clean up old input when rebuilding", async () => {
+  it("should keep a single hidden form when config changes", async () => {
     const configRef = ref(createUploadConfig({ ref: "phx-old" }))
-    useLiveUpload(configRef, defaultOptions)
+    const result = useLiveUpload(configRef, defaultOptions)
+    const originalInput = result.inputEl.value
 
     expect(mockEl.querySelectorAll("form").length).toBe(1)
 
     configRef.value = createUploadConfig({ ref: "phx-new" })
     await nextTick()
 
-    // Still only one form after rebuild
-    expect(mockEl.querySelectorAll("form").length).toBe(1)
-    expect(mockEl.querySelector('[data-phx-upload-ref="phx-new"]')).not.toBeNull()
+    expect(result.inputEl.value).toBe(originalInput)
+    expect(mockEl.querySelectorAll("form")).toHaveLength(1)
+    expect(mockEl.querySelector('[data-phx-upload-ref="phx-new"]')).toBe(result.inputEl.value)
 
     triggerUnmount()
   })
