@@ -46,11 +46,9 @@ defmodule LiveVue do
 
   use Phoenix.Component
 
-  import Phoenix.HTML
-
   alias LiveVue.Encoder
+  alias LiveVue.InjectedSSR
   alias LiveVue.Slots
-  alias LiveVue.SSR
   alias Phoenix.LiveView
   alias Phoenix.LiveView.LiveStream
 
@@ -112,6 +110,15 @@ defmodule LiveVue do
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
+      |> then(fn assigns ->
+        # require explicit id when no component is specified (headless mode)
+        if is_nil(assigns[:__component_name]) and is_nil(assigns[:id]) do
+          raise ArgumentError, "<.vue> without v-component requires an explicit id"
+        else
+          assigns
+        end
+      end)
+      |> then(fn assigns -> Map.put_new_lazy(assigns, :id, fn -> id(assigns.__component_name) end) end)
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
       |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
@@ -121,13 +128,13 @@ defmodule LiveVue do
       |> Map.put(:use_diff, use_diff)
 
     assigns =
-      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns)))
+      Map.put(assigns, :ssr_render, if(render_ssr? && assigns[:__component_name], do: ssr_render(assigns)))
 
     computed_changed =
       %{
         # we send initial props only on initial render, later we send only changed props
         props: init or dead or not use_diff,
-        ssr_render: render_ssr?,
+        ssr_render: assigns[:ssr_render] != nil,
         slots: slots != %{},
         handlers: handlers != %{},
         # we want to send props_diff always but not on initial render
@@ -145,9 +152,11 @@ defmodule LiveVue do
     # optimizing diffs by using string interpolation
     # https://elixirforum.com/t/heex-attribute-value-in-quotes-send-less-data-than-values-in-braces/63274
     ~H"""
-    {raw(@ssr_render[:preloadLinks])}
+    <%= if @ssr_render do %>
+      {@ssr_render[:preloadLinks]}
+    <% end %>
     <div
-      id={assigns[:id] || id(@__component_name)}
+      id={@id}
       data-name={@__component_name}
       data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
@@ -156,11 +165,14 @@ defmodule LiveVue do
       data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
+      data-inject={inject_target(assigns)}
+      data-inject-slot={inject_slot(assigns)}
+      style={if(inject_target(assigns), do: "display:none")}
       phx-update="ignore"
       phx-hook="VueHook"
       phx-no-format
       class={@class}
-    ><%= raw(@ssr_render[:html]) %></div>
+    ><%= if @ssr_render, do: @ssr_render[:html] %></div>
     """
   end
 
@@ -272,11 +284,12 @@ defmodule LiveVue do
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket __changed__ __given__"a,
-    do: :special
+  defp normalize_key(key, _val)
+       when key in ~w"id class v-ssr v-diff v-component v-socket v-inject __changed__ __given__"a, do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
+  defp normalize_key("v-inject:" <> _slot, _val), do: :special
   defp normalize_key("v-on:" <> key, _val), do: {:handlers, key}
   defp normalize_key(_key, %LiveStream{}), do: :streams
   defp normalize_key(_key, _val), do: :props
@@ -285,20 +298,58 @@ defmodule LiveVue do
   defp key_changed(%{__changed__: changed}, key), do: changed[key] != nil
 
   defp ssr_render(assigns) do
-    name = assigns[:"v-component"]
-    encoded_props = Encoder.encode(assigns.props)
+    component = %{
+      id: assigns.id,
+      name: assigns[:"v-component"],
+      props: Encoder.encode(assigns.props),
+      slots: assigns.slots
+    }
 
-    case SSR.render(name, encoded_props, assigns.slots) do
-      {:error, message} ->
-        Logger.error("Vue SSR error: #{message}")
+    case inject_target(assigns) do
+      nil ->
+        InjectedSSR.fragment(component)
+
+      target ->
+        InjectedSSR.register_injection(%{
+          target: target,
+          slot: inject_slot(assigns) || "default",
+          component: component
+        })
+
         nil
-
-      %{preloadLinks: links, html: html} ->
-        %{preloadLinks: links, html: html}
     end
-  rescue
-    SSR.NotConfigured ->
-      nil
+  end
+
+  defp inject_config(assigns) do
+    # Check for v-inject (default slot) or v-inject:slotname (named slot)
+    case Map.get(assigns, :"v-inject") do
+      nil -> find_named_inject(assigns)
+      true -> {"default", nil}
+      target when is_binary(target) -> {target, nil}
+    end
+  end
+
+  defp find_named_inject(assigns) do
+    Enum.find_value(assigns, {nil, nil}, fn
+      {key, value} when is_atom(key) ->
+        case Atom.to_string(key) do
+          "v-inject:" <> slot when is_binary(value) -> {value, slot}
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end)
+  end
+
+  defp inject_target(assigns) do
+    {target, _slot} = inject_config(assigns)
+    target
+  end
+
+  defp inject_slot(assigns) do
+    {_target, slot} = inject_config(assigns)
+    slot
   end
 
   defp json(data), do: Jason.encode!(data, escape: :html_safe)

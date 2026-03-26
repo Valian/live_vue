@@ -8,6 +8,27 @@ defmodule LiveVueTest do
   alias LiveVue.Test
   alias Phoenix.LiveView.JS
 
+  defmodule InjectedSSRRenderer do
+    @moduledoc false
+    @behaviour LiveVue.SSR
+
+    def render(name, props, slots) do
+      page = props |> Map.get("page", "") |> to_string()
+      message = props |> Map.get("message", "") |> to_string()
+      label = props |> Map.get("label", "") |> to_string()
+
+      """
+      <section data-ssr-name="#{name}">
+        <span data-ssr-page>#{page}</span>
+        <span data-ssr-message>#{message}</span>
+        <span data-ssr-label>#{label}</span>
+        <div data-ssr-slot="default">#{Map.get(slots, "default", "")}</div>
+        <div data-ssr-slot="sidebar">#{Map.get(slots, "sidebar", "")}</div>
+      </section>
+      """
+    end
+  end
+
   doctest LiveVue
 
   describe "basic component rendering" do
@@ -138,6 +159,43 @@ defmodule LiveVueTest do
       vue = Test.get_vue(html)
 
       assert vue.ssr == false
+    end
+
+    def injected_ssr_component(assigns) do
+      ~H"""
+      <div>
+        <.vue v-component="Layout" id="vue-layout" v-ssr={true} />
+        <.vue page="page-1" v-component="Page" id="page-component" v-inject="vue-layout" v-ssr={true} />
+        <.vue message="nested" v-component="Nested" id="nested-component" v-inject="page-component" v-ssr={true} />
+        <.vue label="Sidebar" v-component="Sidebar" v-inject:sidebar="vue-layout" v-ssr={true} />
+      </div>
+      """
+    end
+
+    test "SSR-composes injected content into the visible target tree" do
+      previous = Application.get_env(:live_vue, :ssr_module)
+      Application.put_env(:live_vue, :ssr_module, InjectedSSRRenderer)
+      on_exit(fn -> Application.put_env(:live_vue, :ssr_module, previous) end)
+
+      html = render_component(&injected_ssr_component/1)
+
+      layout = Test.get_vue(html, id: "vue-layout")
+      page = Test.get_vue(html, id: "page-component")
+      nested = Test.get_vue(html, id: "nested-component")
+
+      assert layout.ssr == true
+      assert page.ssr == false
+      assert nested.ssr == false
+
+      assert html =~ ~s(<section data-ssr-name="Layout">)
+      assert html =~ ~s(<section data-ssr-name="Page">)
+      assert html =~ ~s(<section data-ssr-name="Nested">)
+      assert html =~ ~s(<section data-ssr-name="Sidebar">)
+
+      assert html =~
+               ~r/<section data-ssr-name="Layout">[\s\S]*<section data-ssr-name="Page">[\s\S]*<section data-ssr-name="Nested">/
+
+      assert html =~ ~r/<section data-ssr-name="Layout">[\s\S]*<section data-ssr-name="Sidebar">/
     end
   end
 
