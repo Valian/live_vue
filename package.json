@@ -12,10 +12,10 @@
     "test:ui": "vitest --ui",
     "e2e:install": "npx playwright install --with-deps chromium",
     "e2e:server": "MIX_ENV=e2e mix run test/e2e/test_helper.exs",
-    "e2e:build": "npx vite build --config test/e2e/vite.config.js",
-    "e2e:test": "npx vite build --config test/e2e/vite.config.js && npx playwright test --config test/e2e/playwright.config.js",
-    "e2e:test:headed": "npx vite build --config test/e2e/vite.config.js && npx playwright test --config test/e2e/playwright.config.js --headed",
-    "e2e:test:debug": "npx vite build --config test/e2e/vite.config.js && npx playwright test --config test/e2e/playwright.config.js --debug"
+    "e2e:build": "npx vite build --config test/e2e/vite.config.js && npx vite build --config test/e2e/vite.config.js --ssr test/e2e/js/server.js",
+    "e2e:test": "npm run e2e:build && npx playwright test --config test/e2e/playwright.config.js",
+    "e2e:test:headed": "npm run e2e:build && npx playwright test --config test/e2e/playwright.config.js --headed",
+    "e2e:test:debug": "npm run e2e:build && npx playwright test --config test/e2e/playwright.config.js --debug"
   },
   "devDependencies": {
     "phoenix": "file:deps/phoenix",
