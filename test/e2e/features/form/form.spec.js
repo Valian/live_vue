@@ -451,6 +451,10 @@ test.describe("useLiveForm E2E Tests", () => {
     const emailPrefCheckbox = page.locator("[data-pw-preferences-email]")
     const smsPrefCheckbox = page.locator("[data-pw-preferences-sms]")
     const pushPrefCheckbox = page.locator("[data-pw-preferences-push]")
+    const syncDebouncedForm = async () => {
+      await page.waitForTimeout(350)
+      await syncLV(page)
+    }
 
     // Fill required fields
     await nameInput.fill("John Doe")
@@ -465,7 +469,7 @@ test.describe("useLiveForm E2E Tests", () => {
 
     // Check email preference
     await emailPrefCheckbox.check()
-    await syncLV(page)
+    await syncDebouncedForm()
 
     await expect(emailPrefCheckbox).toBeChecked()
     await expect(smsPrefCheckbox).not.toBeChecked()
@@ -473,7 +477,7 @@ test.describe("useLiveForm E2E Tests", () => {
 
     // Check SMS preference as well
     await smsPrefCheckbox.check()
-    await syncLV(page)
+    await syncDebouncedForm()
 
     await expect(emailPrefCheckbox).toBeChecked()
     await expect(smsPrefCheckbox).toBeChecked()
@@ -481,7 +485,7 @@ test.describe("useLiveForm E2E Tests", () => {
 
     // Check all preferences
     await pushPrefCheckbox.check()
-    await syncLV(page)
+    await syncDebouncedForm()
 
     await expect(emailPrefCheckbox).toBeChecked()
     await expect(smsPrefCheckbox).toBeChecked()
@@ -489,7 +493,7 @@ test.describe("useLiveForm E2E Tests", () => {
 
     // Uncheck middle one (SMS)
     await smsPrefCheckbox.uncheck()
-    await syncLV(page)
+    await syncDebouncedForm()
 
     await expect(emailPrefCheckbox).toBeChecked()
     await expect(smsPrefCheckbox).not.toBeChecked()
@@ -498,7 +502,7 @@ test.describe("useLiveForm E2E Tests", () => {
     // Uncheck all
     await emailPrefCheckbox.uncheck()
     await pushPrefCheckbox.uncheck()
-    await syncLV(page)
+    await syncDebouncedForm()
 
     await expect(emailPrefCheckbox).not.toBeChecked()
     await expect(smsPrefCheckbox).not.toBeChecked()
