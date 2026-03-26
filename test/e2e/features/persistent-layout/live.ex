@@ -14,6 +14,7 @@ defmodule LiveVue.E2E.PersistentLayoutLive do
       v-component="persistent-layout/layout"
       v-socket={@socket}
       id="vue-layout"
+      v-ssr={true}
     />
     <LiveVue.vue
       page={@page}
@@ -21,6 +22,7 @@ defmodule LiveVue.E2E.PersistentLayoutLive do
       v-inject="vue-layout"
       v-socket={@socket}
       id="page-component"
+      v-ssr={true}
     />
     <LiveVue.vue
       v-component="persistent-layout/nested"
@@ -28,12 +30,14 @@ defmodule LiveVue.E2E.PersistentLayoutLive do
       v-socket={@socket}
       message="I'm nested!"
       id="nested-component"
+      v-ssr={true}
     />
     <LiveVue.vue
       v-component="persistent-layout/sidebar"
       v-inject:sidebar="vue-layout"
       v-socket={@socket}
       label="Sidebar"
+      v-ssr={true}
     />
     """
   end

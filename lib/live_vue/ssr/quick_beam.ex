@@ -99,8 +99,18 @@ defmodule LiveVue.SSR.QuickBEAM do
   end
 
   defp ssr_filepath do
-    {:ok, app} = :application.get_application()
+    app =
+      case :application.get_application(__MODULE__) do
+        {:ok, app} -> app
+        :undefined -> :live_vue
+      end
+
     filepath = Application.get_env(:live_vue, :ssr_filepath, "./static/server.mjs")
-    Application.app_dir(app, Path.join("priv", filepath))
+
+    if Path.type(filepath) == :absolute do
+      filepath
+    else
+      Application.app_dir(app, Path.join("priv", filepath))
+    end
   end
 end

@@ -21,7 +21,8 @@ Application.put_env(:live_vue, LiveVue.E2E.Endpoint,
 )
 
 Application.put_env(:live_vue, :enable_props_diff, true)
-Application.put_env(:live_vue, :ssr_default, false)
+Application.put_env(:live_vue, :ssr_module, LiveVue.SSR.QuickJS)
+Application.put_env(:live_vue, :ssr_filepath, Path.expand("priv/static/server.mjs"))
 
 Process.register(self(), :e2e_helper)
 
@@ -201,6 +202,7 @@ end
 {:ok, _} =
   Supervisor.start_link(
     [
+      LiveVue.SSR.QuickJS,
       LiveVue.E2E.Endpoint,
       {Phoenix.PubSub, name: LiveVue.E2E.PubSub}
     ],
