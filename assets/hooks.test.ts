@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { ref, reactive, type App } from "vue"
+import { createApp, ref, reactive, type App } from "vue"
 import { getVueHook } from "./hooks"
 import type { LiveVueApp, Hook } from "./types"
 import { toUtf8Base64 } from "./utils"
@@ -35,7 +35,7 @@ const createMockLiveViewHook = (elementAttributes: Record<string, string> = {}) 
 // Mock LiveVue app configuration
 const createMockLiveVueApp = (component = MockComponent): LiveVueApp => ({
   resolve: vi.fn().mockResolvedValue(component),
-  setup: vi.fn(({ createApp, component, props, slots, plugin, el }) => {
+  setup: vi.fn(({ component, props, slots, plugin, el }) => {
     const app = createApp({
       render: () => null, // simplified for testing
     })
@@ -85,7 +85,7 @@ describe("getVueHook", () => {
       expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
         expect.objectContaining({
           component: MockComponent,
-          ssr: false,
+          ssr: true,
         })
       )
     })

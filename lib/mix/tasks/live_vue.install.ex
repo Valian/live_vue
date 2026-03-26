@@ -208,10 +208,22 @@ defmodule Mix.Tasks.LiveVue.Install do
       if String.contains?(content, "noExternal") do
         content
       else
+        ssr_config = """
+        ssr: {
+            noExternal: process.env.NODE_ENV === "production"
+              ? true
+              : ["vue", "@vue/runtime-dom", "@vue/runtime-core", "@vue/runtime-vapor", "@vue/shared", "@vue/reactivity"],
+            resolve: {
+              conditions: ["import", "module", "default"],
+            },
+          },
+          build: {\
+        """
+
         String.replace(
           content,
           ~r/build: {/s,
-          "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },\n    build: {"
+          ssr_config
         )
       end
     end
@@ -248,11 +260,29 @@ defmodule Mix.Tasks.LiveVue.Install do
               "phoenix_html": "file:./deps/phoenix_html",
               "phoenix_live_view": "file:./deps/phoenix_live_view",
               "topbar": "^3.0.0",
-              "vue": "^3.4.21"
+              "vue": "3.6.0-beta.7",
+              "@vue/runtime-dom": "3.6.0-beta.7",
+              "@vue/runtime-core": "3.6.0-beta.7",
+              "@vue/runtime-vapor": "3.6.0-beta.7",
+              "@vue/compiler-sfc": "3.6.0-beta.7",
+              "@vue/compiler-dom": "3.6.0-beta.7",
+              "@vue/compiler-core": "3.6.0-beta.7",
+              "@vue/reactivity": "3.6.0-beta.7",
+              "@vue/shared": "3.6.0-beta.7"
+            },
+            "overrides": {
+              "vue": "$vue",
+              "@vue/runtime-dom": "$@vue/runtime-dom",
+              "@vue/runtime-core": "$@vue/runtime-core",
+              "@vue/compiler-sfc": "$@vue/compiler-sfc",
+              "@vue/compiler-dom": "$@vue/compiler-dom",
+              "@vue/compiler-core": "$@vue/compiler-core",
+              "@vue/reactivity": "$@vue/reactivity",
+              "@vue/shared": "$@vue/shared"
             },
             "devDependencies": {
               "@tailwindcss/vite": "^4.1.0",
-              "@vitejs/plugin-vue": "^5.0.4",
+              "@vitejs/plugin-vue": "^6.0.4",
               "daisyui": "^5.0.0",
               "phoenix_vite": "file:./deps/phoenix_vite",
               "tailwindcss": "^4.1.0",
@@ -344,7 +374,7 @@ defmodule Mix.Tasks.LiveVue.Install do
 
     defp vue_index_content do
       """
-      import { h, type Component } from "vue"
+      import { createApp, createSSRApp, h, type Component } from "vue"
       import { createLiveVue, findComponent, type LiveHook, type ComponentMap } from "live_vue"
 
       // needed to make $live available in the Vue component
@@ -371,8 +401,10 @@ defmodule Mix.Tasks.LiveVue.Install do
           return findComponent(components as ComponentMap, name)
         },
         // it's a default implementation of creating and mounting vue app, you can easily extend it to add your own plugins, directives etc.
-        setup: ({ createApp, component, props, slots, plugin, el }) => {
-          const app = createApp({ render: () => h(component as Component, props, slots) })
+        // to enable Vue Vapor mode, add: import { vaporInteropPlugin } from "@vue/runtime-vapor" and app.use(vaporInteropPlugin)
+        setup: ({ component, props, slots, plugin, el, ssr }) => {
+          const factory = ssr ? createSSRApp : createApp
+          const app = factory({ render: () => h(component as Component, props, slots) })
           app.use(plugin)
           // add your own plugins here
           // app.use(pinia)

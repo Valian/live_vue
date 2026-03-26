@@ -1,7 +1,7 @@
 import fs from "fs"
 import { basename, resolve } from "path"
 import type { ViewHook } from "phoenix_live_view"
-import { type App, type Component, createSSRApp, h } from "vue"
+import { type App, type Component, h } from "vue"
 import { renderToString, type SSRContext } from "vue/server-renderer"
 import { migrateToLiveVueApp } from "./app.js"
 import type { LiveVueOptions, VueArgs } from "./types.js"
@@ -39,7 +39,6 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
     const component = await resolve(name)
     const slotComponents = mapValues(slots, html => () => h("div", { innerHTML: html }))
     const app = setup({
-      createApp: createSSRApp,
       component,
       props,
       slots: slotComponents,
