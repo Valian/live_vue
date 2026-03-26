@@ -46,11 +46,9 @@ defmodule LiveVue do
 
   use Phoenix.Component
 
-  import Phoenix.HTML
-
   alias LiveVue.Encoder
+  alias LiveVue.InjectedSSR
   alias LiveVue.Slots
-  alias LiveVue.SSR
   alias Phoenix.LiveView
   alias Phoenix.LiveView.LiveStream
 
@@ -120,6 +118,7 @@ defmodule LiveVue do
           assigns
         end
       end)
+      |> then(fn assigns -> Map.put_new_lazy(assigns, :id, fn -> id(assigns.__component_name) end) end)
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
       |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
@@ -135,7 +134,7 @@ defmodule LiveVue do
       %{
         # we send initial props only on initial render, later we send only changed props
         props: init or dead or not use_diff,
-        ssr_render: render_ssr?,
+        ssr_render: assigns[:ssr_render] != nil,
         slots: slots != %{},
         handlers: handlers != %{},
         # we want to send props_diff always but not on initial render
@@ -153,9 +152,11 @@ defmodule LiveVue do
     # optimizing diffs by using string interpolation
     # https://elixirforum.com/t/heex-attribute-value-in-quotes-send-less-data-than-values-in-braces/63274
     ~H"""
-    {raw(@ssr_render[:preloadLinks])}
+    <%= if @ssr_render do %>
+      {@ssr_render[:preloadLinks]}
+    <% end %>
     <div
-      id={assigns[:id] || id(@__component_name)}
+      id={@id}
       data-name={@__component_name}
       data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
@@ -171,7 +172,7 @@ defmodule LiveVue do
       phx-hook="VueHook"
       phx-no-format
       class={@class}
-    ><%= raw(@ssr_render[:html]) %></div>
+    ><%= if @ssr_render, do: @ssr_render[:html] %></div>
     """
   end
 
@@ -283,8 +284,8 @@ defmodule LiveVue do
     end)
   end
 
-  defp normalize_key(key, _val) when key in ~w"id class v-ssr v-diff v-component v-socket v-inject __changed__ __given__"a,
-    do: :special
+  defp normalize_key(key, _val)
+       when key in ~w"id class v-ssr v-diff v-component v-socket v-inject __changed__ __given__"a, do: :special
 
   defp normalize_key(_key, [%{__slot__: _}]), do: :slots
   defp normalize_key(key, val) when is_atom(key), do: key |> to_string() |> normalize_key(val)
@@ -297,20 +298,26 @@ defmodule LiveVue do
   defp key_changed(%{__changed__: changed}, key), do: changed[key] != nil
 
   defp ssr_render(assigns) do
-    name = assigns[:"v-component"]
-    encoded_props = Encoder.encode(assigns.props)
+    component = %{
+      id: assigns.id,
+      name: assigns[:"v-component"],
+      props: Encoder.encode(assigns.props),
+      slots: assigns.slots
+    }
 
-    case SSR.render(name, encoded_props, assigns.slots) do
-      {:error, message} ->
-        Logger.error("Vue SSR error: #{message}")
+    case inject_target(assigns) do
+      nil ->
+        InjectedSSR.fragment(component)
+
+      target ->
+        InjectedSSR.register_injection(%{
+          target: target,
+          slot: inject_slot(assigns) || "default",
+          component: component
+        })
+
         nil
-
-      %{preloadLinks: links, html: html} ->
-        %{preloadLinks: links, html: html}
     end
-  rescue
-    SSR.NotConfigured ->
-      nil
   end
 
   defp inject_config(assigns) do

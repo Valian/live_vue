@@ -5,6 +5,23 @@ import { liveInjectKey } from "./use.js"
 import { mapValues, fromUtf8Base64 } from "./utils.js"
 import { applyPatch, type Operation } from "./jsonPatch.js"
 
+type InjectionState = {
+  component: any
+  componentPromise: Promise<any> | null
+  hook: LiveHook | null
+  liveProxy: LiveHook
+  props: Record<string, any>
+  slots: SlotMap
+  slotName: string
+  targetId: string
+}
+
+type SlotMap = Record<string, (slotProps?: Record<string, any>) => any>
+
+const targetHooks = new Map<string, LiveHook>()
+const targetInjections = new Map<string, Map<string, Map<HTMLElement, InjectionState>>>()
+const injectionStateByElement = new WeakMap<HTMLElement, InjectionState>()
+
 /**
  * Parses the JSON object from the element's attribute and returns them as an object.
  */
@@ -18,7 +35,7 @@ const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string
  * The slots are parsed from the "data-slots" attribute.
  * The slots are converted to a function that returns a div with the innerHTML set to the base64 decoded slot.
  */
-const getSlots = (el: HTMLElement): Record<string, () => any> => {
+const getSlots = (el: HTMLElement): SlotMap => {
   const dataSlots = getAttributeJson(el, "data-slots") || {}
   return mapValues(dataSlots, base64 => () => h("div", { innerHTML: fromUtf8Base64(base64).trim() }))
 }
@@ -73,44 +90,208 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
   ...getHandlers(el, liveSocket),
 })
 
+const getElementId = (el: HTMLElement): string | null => el.id || el.getAttribute("id")
+const replaceSlotMap = (target: SlotMap, next: SlotMap) => {
+  for (const key of Object.keys(target)) {
+    if (!(key in next)) delete target[key]
+  }
+
+  Object.assign(target, next)
+}
+
+const getHookSlots = (hook: LiveHook): SlotMap => (hook.vue.slots || {}) as SlotMap
+
+const latestInjection = (states: Map<HTMLElement, InjectionState>) => Array.from(states.values()).at(-1) || null
+
+const renderInjectionSlot = (state: InjectionState) => (slotProps: Record<string, any> = {}) =>
+  h(
+    defineComponent({
+      setup(_, { slots: wrappedSlots }) {
+        provide(liveInjectKey, state.liveProxy)
+        return () => wrappedSlots.default?.()
+      },
+    }),
+    null,
+    { default: () => h(state.component, { ...slotProps, ...state.props }, state.slots) }
+  )
+
+const syncTargetChain = (targetId: string | null) => {
+  const seen = new Set<string>()
+  let currentId = targetId
+
+  while (currentId && !seen.has(currentId)) {
+    seen.add(currentId)
+    syncTargetSlots(currentId)
+    currentId = targetHooks.get(currentId)?.el.getAttribute("data-inject") || null
+  }
+}
+
+const syncTargetSlots = (targetId: string) => {
+  const targetHook = targetHooks.get(targetId)
+  if (!targetHook) return
+
+  const injectionsBySlot = targetInjections.get(targetId) || new Map()
+  const baseSlots = getSlots(targetHook.el as HTMLElement)
+  const activeSlots = new Set<string>()
+
+  replaceSlotMap(getHookSlots(targetHook), baseSlots)
+
+  for (const [slotName, injections] of injectionsBySlot.entries()) {
+    const state = latestInjection(injections)
+    if (!state) continue
+    getHookSlots(targetHook)[slotName] = renderInjectionSlot(state)
+    activeSlots.add(slotName)
+  }
+
+  for (const slotName of Object.keys(getHookSlots(targetHook))) {
+    if (!activeSlots.has(slotName) && !(slotName in baseSlots)) {
+      delete getHookSlots(targetHook)[slotName]
+    }
+  }
+}
+
+const ensureInjectionState = async (
+  el: HTMLElement,
+  liveSocket: any,
+  resolve: LiveVueApp["resolve"],
+  hook: LiveHook | null = null
+): Promise<InjectionState> => {
+  const targetId = el.getAttribute("data-inject")
+  const componentName = el.getAttribute("data-name")
+
+  if (!targetId) {
+    throw new Error("v-inject target id is required")
+  }
+
+  if (!componentName) {
+    throw new Error("v-inject requires a v-component to inject")
+  }
+
+  let state = injectionStateByElement.get(el)
+
+  if (!state) {
+    const props = reactive(getProps(el, liveSocket))
+    const slots = reactive(getSlots(el))
+    applyPatch(props, getDiff(el, "data-streams-diff"))
+
+    state = {
+      component: null,
+      componentPromise: null,
+      hook,
+      liveProxy: new Proxy({} as LiveHook, {
+        get(_, key) {
+          if (key === "el") return el
+          if (key === "liveSocket") return hook?.liveSocket || liveSocket
+          if (key === "vue") return hook?.vue || { props, slots, app: null }
+
+          const liveHook = state?.hook
+          const value = liveHook?.[key as keyof LiveHook]
+          return typeof value === "function" ? value.bind(liveHook) : value
+        },
+      }),
+      props,
+      slots,
+      slotName: el.getAttribute("data-inject-slot") || "default",
+      targetId,
+    }
+
+    injectionStateByElement.set(el, state)
+  } else {
+    state.hook = hook
+  }
+
+  if (!state.componentPromise) {
+    state.componentPromise = Promise.resolve(resolve(componentName)).then(component => {
+      state!.component = component
+      return component
+    })
+  }
+
+  await state.componentPromise
+  return state
+}
+
+const registerInjectionState = (el: HTMLElement, state: InjectionState) => {
+  const slotInjections = targetInjections.get(state.targetId) || new Map()
+  const states = slotInjections.get(state.slotName) || new Map()
+  states.delete(el)
+  states.set(el, state)
+  slotInjections.set(state.slotName, states)
+  targetInjections.set(state.targetId, slotInjections)
+  syncTargetChain(state.targetId)
+}
+
+const unregisterInjectionState = (el: HTMLElement) => {
+  const state = injectionStateByElement.get(el)
+  if (!state) return
+
+  const slotInjections = targetInjections.get(state.targetId)
+  const states = slotInjections?.get(state.slotName)
+  states?.delete(el)
+
+  if (states && states.size === 0) {
+    slotInjections?.delete(state.slotName)
+  }
+
+  if (slotInjections && slotInjections.size === 0) {
+    targetInjections.delete(state.targetId)
+  }
+
+  syncTargetChain(state.targetId)
+  injectionStateByElement.delete(el)
+}
+
+const primeTargetInjections = async (
+  targetId: string | null,
+  liveSocket: any,
+  resolve: LiveVueApp["resolve"]
+) => {
+  if (!targetId) return
+
+  const injections = Array.from(document.querySelectorAll<HTMLElement>("[data-inject]")).filter(
+    el => el.getAttribute("data-inject") === targetId
+  )
+
+  await Promise.all(
+    injections.map(async el => {
+      const state = await ensureInjectionState(el, liveSocket, resolve)
+      registerInjectionState(el, state)
+    })
+  )
+}
+
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
     const componentName = this.el.getAttribute("data-name")
-    const component = componentName ? await resolve(componentName) : null
+    const injectTarget = this.el.getAttribute("data-inject")
+    const componentPromise = Promise.resolve(componentName ? resolve(componentName) : null)
+    let props = reactive(getProps(this.el, this.liveSocket))
+    let slots = reactive(getSlots(this.el))
 
-    const props = reactive(getProps(this.el, this.liveSocket))
-    const slots = reactive(getSlots(this.el))
-    // let's apply initial stream diff here, since all stream changes are sent in that attribute
-    applyPatch(props, getDiff(this.el, "data-streams-diff"))
+    if (injectTarget) {
+      const state = await ensureInjectionState(this.el as HTMLElement, this.liveSocket, resolve, this as LiveHook)
+      props = state.props
+      slots = state.slots
+    } else {
+      // let's apply initial stream diff here, since all stream changes are sent in that attribute
+      applyPatch(props, getDiff(this.el, "data-streams-diff"))
+    }
 
     this.vue = { props, slots, app: null }
     ;(this.el as any).__liveVueHook = this
+    const elementId = getElementId(this.el as HTMLElement)
+    if (elementId) {
+      targetHooks.set(elementId, this as LiveHook)
+    }
 
-    const injectTarget = this.el.getAttribute("data-inject")
+    await primeTargetInjections(elementId, this.liveSocket, resolve)
+
     if (injectTarget) {
-      const targetHook = (document.getElementById(injectTarget) as any)?.__liveVueHook
-      if (!targetHook) {
-        throw new Error(`v-inject target element #${injectTarget} not found or not a Vue component`)
-      }
-      if (!component) {
-        throw new Error(`v-inject requires a v-component to inject`)
-      }
-
-      const pageHook = this as LiveHook
-      const target = targetHook.vue
-      const slotName = this.el.getAttribute("data-inject-slot") || "default"
-      target.slots[slotName] = (slotProps: Record<string, any>) =>
-        h(
-          defineComponent({
-            setup(_, { slots: ws }) {
-              provide(liveInjectKey, pageHook)
-              return () => ws.default?.()
-            },
-          }),
-          null,
-          { default: () => h(component, { ...slotProps, ...props }, slots) }
-        )
-    } else if (component) {
+      const state = await ensureInjectionState(this.el as HTMLElement, this.liveSocket, resolve, this as LiveHook)
+      registerInjectionState(this.el as HTMLElement, state)
+    } else {
+      const component = await componentPromise
+      if (!component) return
       const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
 
       const app = setup({
@@ -141,9 +322,28 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     }
     // we're always applying streams diff, since all stream changes are sent in that attribute
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+    replaceSlotMap((this.vue.slots || {}) as SlotMap, getSlots(this.el))
+    const elementId = getElementId(this.el as HTMLElement)
+
+    if (elementId) {
+      syncTargetChain(elementId)
+    }
+
+    if (this.el.getAttribute("data-inject")) {
+      const state = injectionStateByElement.get(this.el as HTMLElement)
+      if (state) {
+        syncTargetChain(state.targetId)
+      }
+    }
   },
   destroyed() {
+    unregisterInjectionState(this.el as HTMLElement)
+    const elementId = getElementId(this.el as HTMLElement)
+    if (elementId) {
+      targetHooks.delete(elementId)
+    }
+    delete (this.el as any).__liveVueHook
+
     const instance = this.vue.app
     // TODO - is there maybe a better way to cleanup the app?
     if (instance) {
