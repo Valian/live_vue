@@ -130,6 +130,7 @@ defmodule LiveVue.E2E.Router do
       live "/event-reply-test", EventReplyTestLive
       live "/slot-test", SlotTestLive
       live "/memory-benchmark", MemoryBenchmarkLive
+      live "/reconnect", ReconnectLive
     end
   end
 
