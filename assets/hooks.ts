@@ -118,11 +118,8 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   reconnected() {
     // after reconnect, server sends full props in data-props (not diffs)
     // read them directly instead of relying on stale data-props-diff
-    const freshProps = getProps(this.el, this.liveSocket)
-    for (const key of Object.keys(this.vue.props)) {
-      if (!(key in freshProps)) delete this.vue.props[key]
-    }
-    Object.assign(this.vue.props, freshProps)
+    // we don't delete old keys — streams live in props too and are handled by data-streams-diff
+    Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
