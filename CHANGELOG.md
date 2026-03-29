@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 - Fixed `useLiveUpload()` sending stale upload refs after reconnect or remount by preserving the hidden file input across upload ref rotations and updating its attributes in place
+- Fixed Vue components not refreshing props and streams after LiveSocket reconnect — added `reconnected()` hook that reads full props from `data-props` instead of relying on stale `data-props-diff` ([#134](https://github.com/Valian/live_vue/pull/134))
 
 ## 1.0.1 - 2026-02-19
 

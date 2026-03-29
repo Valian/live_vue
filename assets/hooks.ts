@@ -115,6 +115,14 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
+  reconnected() {
+    // after reconnect, server sends full props in data-props (not diffs)
+    // read them directly instead of relying on stale data-props-diff
+    // we don't delete old keys — streams live in props too and are handled by data-streams-diff
+    Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
+    applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
+    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+  },
   destroyed() {
     const instance = this.vue.app
     // TODO - is there maybe a better way to cleanup the app?
