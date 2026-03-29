@@ -1,16 +1,16 @@
-defmodule LiveVue.SSR.QuickJS do
+defmodule LiveVue.SSR.QuickBEAM do
   @moduledoc """
-  Implements SSR using an embedded QuickJS-NG JavaScript engine via `quickjs_ex`.
+  Implements SSR using an embedded [QuickBEAM](https://hex.pm/packages/quickbeam) JavaScript runtime.
 
   Unlike `LiveVue.SSR.NodeJS`, this module runs JavaScript inside the BEAM
-  process via a NIF — no external Node.js installation required.
+  process — no external Node.js installation required.
 
   ## Setup
 
-  1. Add `quickjs_ex` to your dependencies:
+  1. Add `quickbeam` to your dependencies:
 
       ```elixir
-      {:quickjs_ex, "~> 0.2"}
+      {:quickbeam, "~> 0.8"}
       ```
 
   2. Add the `stubNodeBuiltins` Vite plugin to your `vite.config`:
@@ -31,14 +31,14 @@ defmodule LiveVue.SSR.QuickJS do
       ```elixir
       # config/prod.exs
       config :live_vue,
-        ssr_module: LiveVue.SSR.QuickJS
+        ssr_module: LiveVue.SSR.QuickBEAM
       ```
 
   4. Add to your supervision tree in `application.ex`:
 
       ```elixir
       children = [
-        LiveVue.SSR.QuickJS,
+        LiveVue.SSR.QuickBEAM,
         # ...
       ]
       ```
@@ -49,7 +49,7 @@ defmodule LiveVue.SSR.QuickJS do
 
   @behaviour LiveVue.SSR
 
-  if Code.ensure_loaded?(QuickJSEx) do
+  if Code.ensure_loaded?(QuickBEAM) do
     def child_spec(opts) do
       %{
         id: __MODULE__,
@@ -59,38 +59,43 @@ defmodule LiveVue.SSR.QuickJS do
     end
 
     def start_link(_opts \\ []) do
-      {:ok, rt} = QuickJSEx.start(name: __MODULE__, browser_stubs: true)
+      {:ok, rt} = QuickBEAM.start(name: __MODULE__)
       load_bundle(rt)
       {:ok, rt}
     end
 
     @impl true
     def render(name, props, slots) do
-      case QuickJSEx.call(__MODULE__, "render", [name, props, slots]) do
+      case QuickBEAM.call(__MODULE__, "render", [name, props, slots]) do
         {:ok, html} ->
           html
 
         {:error, reason} ->
-          raise "QuickJS SSR render failed for #{name}: #{reason}"
+          raise "QuickBEAM SSR render failed for #{name}: #{inspect(reason)}"
       end
     end
 
     defp load_bundle(rt) do
       code = File.read!(ssr_filepath())
 
-      case QuickJSEx.load_module(rt, "server", code) do
+      # QuickBEAM's load_module evaluates ES module code but doesn't expose
+      # exports as globals. Append a bridge line that assigns the render export
+      # to globalThis so it's callable via QuickBEAM.call/3.
+      bridged = code <> "\nglobalThis.render = render;\n"
+
+      case QuickBEAM.load_module(rt, "server", bridged) do
         :ok -> :ok
-        {:error, reason} -> raise "QuickJS SSR bundle evaluation failed: #{reason}"
+        {:error, reason} -> raise "QuickBEAM SSR bundle evaluation failed: #{inspect(reason)}"
       end
     end
   else
-    @quickjs_missing "QuickJSEx is required for LiveVue.SSR.QuickJS. Add {:quickjs_ex, \"~> 0.2\"} to your dependencies."
+    @quickbeam_missing "QuickBEAM is required for LiveVue.SSR.QuickBEAM. Add {:quickbeam, \"~> 0.8\"} to your dependencies."
 
-    def child_spec(_opts), do: raise(@quickjs_missing)
-    def start_link(_opts \\ []), do: raise(@quickjs_missing)
+    def child_spec(_opts), do: raise(@quickbeam_missing)
+    def start_link(_opts \\ []), do: raise(@quickbeam_missing)
 
     @impl true
-    def render(_name, _props, _slots), do: raise(@quickjs_missing)
+    def render(_name, _props, _slots), do: raise(@quickbeam_missing)
   end
 
   defp ssr_filepath do

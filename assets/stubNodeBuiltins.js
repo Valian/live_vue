@@ -1,7 +1,7 @@
 /**
  * Vite plugin that replaces Node.js built-in imports with stubs.
  *
- * Use in vite.config when building SSR bundles for non-Node runtimes (e.g. QuickJS).
+ * Use in vite.config when building SSR bundles for non-Node runtimes (e.g. QuickBEAM).
  * This makes the output self-contained with no `import` statements for `fs`, `path`, etc.
  *
  * @example
