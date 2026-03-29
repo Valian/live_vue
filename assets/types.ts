@@ -1,5 +1,5 @@
 // Conditional imports with fallback types for phoenix_live_view < 1.1
-import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
+import type { App, Component, h, Plugin } from "vue"
 
 // Try to import from phoenix_live_view first, fallback to our definitions if not available
 import type {
@@ -82,7 +82,6 @@ export interface AsyncResult<T = unknown> {
 }
 
 export interface SetupContext {
-  createApp: typeof createSSRApp | typeof createApp
   component: VueComponentInternal
   props: Record<string, unknown>
   slots: Record<string, () => unknown>
@@ -93,7 +92,7 @@ export interface SetupContext {
 
 export type LiveVueOptions = {
   resolve: (path: string) => ComponentOrComponentPromise | undefined | null
-  setup?: (context: SetupContext) => App
+  setup: (context: SetupContext) => App
 }
 
 export type LiveVueApp = {
