@@ -58,8 +58,8 @@ config :live_vue,
   ssr_module: LiveVue.SSR.NodeJS,
   ssr: true
 
-# or use embedded QuickJS (no Node.js needed in production):
-# ssr_module: LiveVue.SSR.QuickJS
+# or use embedded QuickBEAM (no Node.js needed in production):
+# ssr_module: LiveVue.SSR.QuickBEAM
 
 # or disable SSR entirely:
 # ssr_module: nil, ssr: false
@@ -277,18 +277,18 @@ config :live_vue,
   ssr: true
 ```
 
-#### QuickJS (Production)
-Runs JavaScript inside the BEAM via an embedded [QuickJS-NG](https://quickjs-ng.github.io/quickjs/) engine.
-No external Node.js installation required. Requires [`quickjs_ex`](https://hex.pm/packages/quickjs_ex):
+#### QuickBEAM (Production)
+Runs JavaScript inside the BEAM via an embedded [QuickBEAM](https://hex.pm/packages/quickbeam) runtime.
+No external Node.js installation required. Requires [`quickbeam`](https://hex.pm/packages/quickbeam):
 
 ```elixir
 # config/prod.exs
 config :live_vue,
-  ssr_module: LiveVue.SSR.QuickJS,
+  ssr_module: LiveVue.SSR.QuickBEAM,
   ssr: true
 ```
 
-See `LiveVue.SSR.QuickJS` module docs for setup instructions.
+See `LiveVue.SSR.QuickBEAM` module docs for setup instructions.
 
 ### SSR Configuration
 
