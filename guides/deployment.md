@@ -4,8 +4,8 @@ Deploying a LiveVue app is similar to deploying a regular Phoenix app.
 
 > #### No Node.js? {: .tip}
 >
-> If you'd rather not install Node.js in production, you can use `LiveVue.SSR.QuickJS` which
-> runs JavaScript inside the BEAM. See `LiveVue.SSR.QuickJS` module docs and
+> If you'd rather not install Node.js in production, you can use `LiveVue.SSR.QuickBEAM` which
+> runs JavaScript inside the BEAM. See `LiveVue.SSR.QuickBEAM` module docs and
 > [Configuration](configuration.md#server-side-rendering-ssr) for details.
 
 The instructions below cover the default `LiveVue.SSR.NodeJS` setup, which requires **Node.js 19+** in production.
