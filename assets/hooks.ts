@@ -1,7 +1,7 @@
 import { createApp, createSSRApp, h, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
-import { liveInjectKey } from "./use.js"
+import { liveInjectKey, hooksById } from "./use.js"
 import { mapValues, fromUtf8Base64 } from "./utils.js"
 import { applyPatch, type Operation } from "./jsonPatch.js"
 
@@ -75,17 +75,20 @@ const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
 
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
-    const componentName = this.el.getAttribute("data-name") as string
-    const component = await resolve(componentName)
-
-    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+    const componentName = this.el.getAttribute("data-name")
+    const component = componentName ? await resolve(componentName) : null
 
     const props = reactive(getProps(this.el, this.liveSocket))
     const slots = reactive(getSlots(this.el))
-    // let's apply initial stream diff here, since all stream changes are sent in that attribute
     applyPatch(props, getDiff(this.el, "data-streams-diff"))
 
     this.vue = { props, slots, app: null }
+    hooksById.set(this.el.id, this as LiveHook)
+
+    if (!component) return
+
+    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+
     const app = setup({
       createApp: makeApp,
       component,
@@ -124,6 +127,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     Object.assign(this.vue.slots ?? {}, getSlots(this.el))
   },
   destroyed() {
+    hooksById.delete(this.el.id)
     const instance = this.vue.app
     // TODO - is there maybe a better way to cleanup the app?
     if (instance) {
