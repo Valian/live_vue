@@ -135,6 +135,7 @@ defmodule LiveVue.E2E.Router do
       live "/slot-test", SlotTestLive
       live "/memory-benchmark", MemoryBenchmarkLive
       live "/reconnect", ReconnectLive
+      live "/headless", HeadlessLive
       live "/persistent-layout/:page", PersistentLayoutLive
     end
   end

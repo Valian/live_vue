@@ -47,8 +47,6 @@ test("layout state persists across push_patch navigation", async ({ page }) => {
 })
 
 test("nested injection: component injected into an injected component", async ({ page }) => {
-  test.fail(true, "Nested injected content is currently lost after push_patch when SSR is enabled")
-
   await page.goto("/persistent-layout/page1")
   await syncLV(page)
   await waitForPage(page, "page1")

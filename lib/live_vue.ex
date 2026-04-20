@@ -90,6 +90,7 @@ defmodule LiveVue do
     use_diff = Map.get(assigns, :"v-diff", @diff_default)
     use_streams_diff = Enum.any?(assigns, fn {_k, v} -> match?(%LiveStream{}, v) end)
     render_ssr? = init and dead and Map.get(assigns, :"v-ssr", @ssr_default)
+    {inject_target, inject_slot} = inject_config(assigns)
 
     # if we enable diffs, we use only changed props for all the remaining calculations
     base_assigns =
@@ -126,6 +127,8 @@ defmodule LiveVue do
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
+      |> Map.put(:inject_target, inject_target)
+      |> Map.put(:inject_slot, inject_slot)
 
     assigns =
       Map.put(assigns, :ssr_render, if(render_ssr? && assigns[:__component_name], do: ssr_render(assigns)))
@@ -165,9 +168,9 @@ defmodule LiveVue do
       data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
       data-slots={"#{@slots |> Slots.base_encode_64() |> json}"}
-      data-inject={inject_target(assigns)}
-      data-inject-slot={inject_slot(assigns)}
-      style={if(inject_target(assigns), do: "display:none")}
+      data-inject={@inject_target}
+      data-inject-slot={@inject_slot}
+      style={if(@inject_target, do: "display:none")}
       phx-update="ignore"
       phx-hook="VueHook"
       phx-no-format
@@ -305,19 +308,7 @@ defmodule LiveVue do
       slots: assigns.slots
     }
 
-    case inject_target(assigns) do
-      nil ->
-        InjectedSSR.fragment(component)
-
-      target ->
-        InjectedSSR.register_injection(%{
-          target: target,
-          slot: inject_slot(assigns) || "default",
-          component: component
-        })
-
-        nil
-    end
+    InjectedSSR.prepare(component, assigns.inject_target, assigns.inject_slot)
   end
 
   defp inject_config(assigns) do
@@ -340,16 +331,6 @@ defmodule LiveVue do
       _ ->
         nil
     end)
-  end
-
-  defp inject_target(assigns) do
-    {target, _slot} = inject_config(assigns)
-    target
-  end
-
-  defp inject_slot(assigns) do
-    {_target, slot} = inject_config(assigns)
-    slot
   end
 
   defp json(data), do: Jason.encode!(data, escape: :html_safe)

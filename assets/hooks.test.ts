@@ -1,53 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { ref, reactive, type App } from "vue"
 import { getVueHook } from "./hooks"
 import type { LiveVueApp, Hook } from "./types"
 import { toUtf8Base64 } from "./utils"
-
-// Mock Vue component for testing
-const MockComponent = {
-  template: "<div>{{ message }}</div>",
-  props: ["message", "count"],
-  setup(props: any) {
-    return { props }
-  },
-}
-
-// Mock LiveView hook context
-const createMockLiveViewHook = (elementAttributes: Record<string, string> = {}) => {
-  const mockElement = {
-    id: elementAttributes.id || "",
-    getAttribute: vi.fn((name: string) => elementAttributes[name] || null),
-    setAttribute: vi.fn(),
-    removeAttribute: vi.fn(),
-  } as any
-
-  const mockLiveSocket = {
-    execJS: vi.fn(),
-  }
-
-  return {
-    el: mockElement,
-    liveSocket: mockLiveSocket,
-    vue: undefined as any,
-  } as any // Type assertion to avoid strict type checking for test mocks
-}
-
-// Mock LiveVue app configuration
-const createMockLiveVueApp = (component = MockComponent): LiveVueApp => ({
-  resolve: vi.fn().mockResolvedValue(component),
-  setup: vi.fn(({ createApp, component, props, slots, plugin, el }) => {
-    const app = createApp({
-      render: () => null, // simplified for testing
-    })
-    app.use(plugin)
-
-    // Mock mount method to avoid DOM operations
-    app.mount = vi.fn().mockReturnValue(app)
-
-    return app
-  }),
-})
+import { createMockLiveViewHook, createMockLiveVueApp, MockComponent } from "./tests/helpers"
 
 describe("getVueHook", () => {
   let mockLiveVueApp: LiveVueApp
@@ -190,59 +145,6 @@ describe("getVueHook", () => {
       expect(mockHookContext.vue.app).toBeDefined()
       expect(mockHookContext.vue.props).toBeDefined()
       expect(mockHookContext.vue.slots).toBeDefined()
-    })
-
-    it("should register injected content even when the target mounts first", async () => {
-      const targetContext = createMockLiveViewHook({
-        id: "layout-root",
-        "data-name": "LayoutComponent",
-        "data-ssr": "true",
-      })
-
-      const injectorContext = createMockLiveViewHook({
-        id: "page-component",
-        "data-name": "PageComponent",
-        "data-inject": "layout-root",
-      })
-
-      vi.spyOn(document, "querySelectorAll").mockReturnValue([injectorContext.el] as any)
-
-      await vueHook.mounted!.call(targetContext)
-
-      expect(targetContext.vue.slots.default).toBeDefined()
-
-      await vueHook.mounted!.call(injectorContext)
-
-      expect(mockLiveVueApp.setup).toHaveBeenCalledTimes(1)
-
-      vueHook.destroyed!.call(injectorContext)
-      vueHook.destroyed!.call(targetContext)
-    })
-
-    it("should keep pending injections until the target mounts", async () => {
-      const injectorContext = createMockLiveViewHook({
-        id: "page-component-late",
-        "data-name": "PageComponent",
-        "data-inject": "layout-root-late",
-      })
-
-      const targetContext = createMockLiveViewHook({
-        id: "layout-root-late",
-        "data-name": "LayoutComponent",
-      })
-
-      await vueHook.mounted!.call(injectorContext)
-
-      expect(mockLiveVueApp.setup).not.toHaveBeenCalled()
-
-      vi.spyOn(document, "querySelectorAll").mockReturnValue([injectorContext.el] as any)
-      await vueHook.mounted!.call(targetContext)
-
-      expect(targetContext.vue.slots.default).toBeDefined()
-      expect(mockLiveVueApp.setup).toHaveBeenCalledTimes(1)
-
-      vueHook.destroyed!.call(injectorContext)
-      vueHook.destroyed!.call(targetContext)
     })
   })
 
@@ -404,7 +306,6 @@ describe("getVueHook", () => {
     })
 
     it("should set up unmount listener for Vue app", () => {
-      const mockApp = mockHookContext.vue.app
       const addEventListenerSpy = vi.spyOn(window, "addEventListener")
 
       vueHook.destroyed!.call(mockHookContext)
@@ -417,7 +318,7 @@ describe("getVueHook", () => {
       mockApp.unmount = vi.fn()
 
       let eventHandler: () => void
-      const addEventListenerSpy = vi.spyOn(window, "addEventListener").mockImplementation((event, handler) => {
+      vi.spyOn(window, "addEventListener").mockImplementation((event, handler) => {
         if (event === "phx:page-loading-stop") {
           eventHandler = handler as () => void
         }
@@ -429,30 +330,6 @@ describe("getVueHook", () => {
       eventHandler!()
 
       expect(mockApp.unmount).toHaveBeenCalled()
-    })
-
-    it("should remove injected slots when an injector is destroyed", async () => {
-      const targetContext = createMockLiveViewHook({
-        id: "layout-root-cleanup",
-        "data-name": "LayoutComponent",
-      })
-
-      const injectorContext = createMockLiveViewHook({
-        id: "page-component-cleanup",
-        "data-name": "PageComponent",
-        "data-inject": "layout-root-cleanup",
-      })
-
-      await vueHook.mounted!.call(targetContext)
-      await vueHook.mounted!.call(injectorContext)
-
-      expect(targetContext.vue.slots.default).toBeDefined()
-
-      vueHook.destroyed!.call(injectorContext)
-
-      expect(targetContext.vue.slots.default).toBeUndefined()
-
-      vueHook.destroyed!.call(targetContext)
     })
   })
 

@@ -19,7 +19,7 @@ export function useLiveVue(): LiveHook
 export function useLiveVue(elementId: string): LiveHook | null
 export function useLiveVue(elementId?: string): LiveHook | null {
   if (elementId) {
-    return (document.getElementById(elementId) as any)?.__liveVueHook ?? null
+    return hooksById.get(elementId) ?? null
   }
   const live = inject<LiveHook>(liveInjectKey)
   if (!live) throw new Error("LiveVue not provided. Are you using this inside a LiveVue component?")

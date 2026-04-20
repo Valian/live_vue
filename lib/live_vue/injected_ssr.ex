@@ -26,7 +26,20 @@ defmodule LiveVue.InjectedSSR do
           required(:component) => component()
         }
 
-  def register_injection(%{target: target, slot: slot, component: component}) do
+  @doc """
+  Single entry point for `LiveVue.vue/1` SSR. When `target` is nil, returns a
+  deferred fragment map for the root (visible) component. When `target` is a
+  string, registers this component as an injection into its target's slot and
+  returns nil — the target's fragment will pull it in at render time.
+  """
+  def prepare(component, nil, _slot), do: fragment(component)
+
+  def prepare(component, target, slot) do
+    register_injection(%{target: target, slot: slot || "default", component: component})
+    nil
+  end
+
+  defp register_injection(%{target: target, slot: slot, component: component}) do
     state = ensure_state()
 
     put_state(%{
@@ -40,7 +53,7 @@ defmodule LiveVue.InjectedSSR do
     :ok
   end
 
-  def fragment(component) do
+  defp fragment(component) do
     state = ensure_state()
     put_state(%{state | active: state.active + 1})
 
