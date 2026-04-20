@@ -9,9 +9,12 @@ const defaultComponent = {
   },
 }
 
+let mockIdCounter = 0
+
 export const createMockLiveViewHook = (elementAttributes: Record<string, string> = {}) => {
+  const id = elementAttributes.id || `mock-${++mockIdCounter}`
   const mockElement = {
-    id: elementAttributes.id || "",
+    id,
     getAttribute: vi.fn((name: string) => elementAttributes[name] || null),
     setAttribute: vi.fn(),
     removeAttribute: vi.fn(),

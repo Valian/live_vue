@@ -11,7 +11,6 @@ describe("getVueHook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(document, "querySelectorAll").mockReturnValue([] as any)
     mockLiveVueApp = createMockLiveVueApp()
     mockHookContext = createMockLiveViewHook()
     vueHook = getVueHook(mockLiveVueApp)

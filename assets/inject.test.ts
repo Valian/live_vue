@@ -9,12 +9,11 @@ describe("v-inject integration", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(document, "querySelectorAll").mockReturnValue([] as any)
     mockLiveVueApp = createMockLiveVueApp()
     vueHook = getVueHook(mockLiveVueApp)
   })
 
-  it("should register injected content even when the target mounts first", async () => {
+  it("should register injected content when the target mounts first", async () => {
     const targetContext = createMockLiveViewHook({
       id: "layout-root",
       "data-name": "LayoutComponent",
@@ -27,21 +26,17 @@ describe("v-inject integration", () => {
       "data-inject": "layout-root",
     })
 
-    vi.spyOn(document, "querySelectorAll").mockReturnValue([injectorContext.el] as any)
-
     await vueHook.mounted!.call(targetContext)
-
-    expect(targetContext.vue.slots.default).toBeDefined()
-
     await vueHook.mounted!.call(injectorContext)
 
+    expect(targetContext.vue.slots.default).toBeDefined()
     expect(mockLiveVueApp.setup).toHaveBeenCalledTimes(1)
 
     vueHook.destroyed!.call(injectorContext)
     vueHook.destroyed!.call(targetContext)
   })
 
-  it("should keep pending injections until the target mounts", async () => {
+  it("should apply pending injections when the target mounts after", async () => {
     const injectorContext = createMockLiveViewHook({
       id: "page-component-late",
       "data-name": "PageComponent",
@@ -57,7 +52,6 @@ describe("v-inject integration", () => {
 
     expect(mockLiveVueApp.setup).not.toHaveBeenCalled()
 
-    vi.spyOn(document, "querySelectorAll").mockReturnValue([injectorContext.el] as any)
     await vueHook.mounted!.call(targetContext)
 
     expect(targetContext.vue.slots.default).toBeDefined()

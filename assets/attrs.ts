@@ -68,10 +68,3 @@ export const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> 
 
 export const getElementId = (el: HTMLElement): string | null => el.id || el.getAttribute("id")
 
-export const replaceSlotMap = (target: SlotMap, next: SlotMap) => {
-  for (const key of Object.keys(target)) {
-    if (!(key in next)) delete target[key]
-  }
-
-  Object.assign(target, next)
-}

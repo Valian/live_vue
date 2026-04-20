@@ -2,39 +2,31 @@ import { createApp, createSSRApp, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
 import { liveInjectKey, hooksById } from "./use.js"
-import { getProps, getSlots, getDiff, getElementId, replaceSlotMap, type SlotMap } from "./attrs.js"
+import { getProps, getDiff, getElementId } from "./attrs.js"
 import { applyPatch } from "./jsonPatch.js"
-import {
-  injectMounted,
-  injectUpdated,
-  injectDestroyed,
-  primeInjectionsForTarget,
-  syncTargetChain,
-} from "./inject.js"
+import { registerInjector, unregisterInjector, syncSlots } from "./inject.js"
 
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
     const el = this.el as HTMLElement
     const componentName = el.getAttribute("data-name")
-    const componentPromise = Promise.resolve(componentName ? resolve(componentName) : null)
+    const component = componentName ? await resolve(componentName) : null
 
-    const inject = await injectMounted(this as LiveHook, this.liveSocket, resolve)
-    const props = inject?.props ?? reactive(getProps(el, this.liveSocket))
-    const slots = inject?.slots ?? reactive(getSlots(el))
-    if (!inject) applyPatch(props, getDiff(el, "data-streams-diff"))
+    const props = reactive(getProps(el, this.liveSocket))
+    applyPatch(props, getDiff(el, "data-streams-diff"))
 
-    this.vue = { props, slots, app: null }
+    this.vue = { props, slots: reactive({}), app: null }
     const elementId = getElementId(el)
     if (elementId) hooksById.set(elementId, this as LiveHook)
+    syncSlots(elementId)
 
-    await primeInjectionsForTarget(elementId, this.liveSocket, resolve)
-
-    if (inject) {
-      inject.register()
+    const targetId = el.getAttribute("data-inject")
+    if (targetId && elementId && component) {
+      const slotName = el.getAttribute("data-inject-slot") || "default"
+      registerInjector(elementId, targetId, slotName, component)
       return
     }
 
-    const component = await componentPromise
     if (!component) return
     const makeApp = el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
 
@@ -42,7 +34,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
       createApp: makeApp,
       component,
       props,
-      slots,
+      slots: this.vue.slots,
       plugin: {
         install: (app: App) => {
           app.provide(liveInjectKey, this as LiveHook)
@@ -63,31 +55,22 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     } else {
       Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     }
-    // we're always applying streams diff, since all stream changes are sent in that attribute
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    replaceSlotMap((this.vue.slots || {}) as SlotMap, getSlots(this.el))
-
-    const elementId = getElementId(this.el as HTMLElement)
-    if (elementId) syncTargetChain(elementId)
-    injectUpdated(this.el as HTMLElement)
+    syncSlots(getElementId(this.el as HTMLElement))
   },
   reconnected() {
-    // after reconnect, server sends full props in data-props (not diffs)
-    // read them directly instead of relying on stale data-props-diff
-    // we don't delete old keys — streams live in props too and are handled by data-streams-diff
     Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+    syncSlots(getElementId(this.el as HTMLElement))
   },
   destroyed() {
-    injectDestroyed(this.el as HTMLElement)
     const elementId = getElementId(this.el as HTMLElement)
     if (elementId) {
+      unregisterInjector(elementId)
       hooksById.delete(elementId)
     }
 
     const instance = this.vue.app
-    // TODO - is there maybe a better way to cleanup the app?
     if (instance) {
       window.addEventListener("phx:page-loading-stop", () => instance.unmount(), { once: true })
     }
