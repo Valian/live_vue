@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+- Added headless `<.vue>` elements (no `v-component`) that register reactive props under a given `id`, and extended `useLiveVue(elementId)` to look up another component's props by ID — enabling cross-component prop sharing without custom event plumbing ([#135](https://github.com/Valian/live_vue/pull/135))
 - Added `LiveVue.SSR.QuickJS` — embedded SSR via [quickjs_ex](https://hex.pm/packages/quickjs_ex), no Node.js required in production
 - Added `LiveVue.SharedPropsView` — a `~H` sigil override that injects shared props and `v-socket` into all `<.vue>` and LiveVue shortcut component tags at compile time, restoring shared props support with proper LiveView change tracking ([#123](https://github.com/Valian/live_vue/pull/123))
 

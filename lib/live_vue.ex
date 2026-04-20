@@ -112,6 +112,14 @@ defmodule LiveVue do
       assigns
       |> Map.put_new(:class, nil)
       |> Map.put(:__component_name, Map.get(assigns, :"v-component"))
+      |> then(fn assigns ->
+        if is_nil(assigns[:__component_name]) and is_nil(assigns[:id]) do
+          raise ArgumentError, "<.vue> without v-component requires an explicit id"
+        else
+          assigns
+        end
+      end)
+      |> then(fn assigns -> Map.put_new_lazy(assigns, :id, fn -> id(assigns.__component_name) end) end)
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
       |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
@@ -121,13 +129,13 @@ defmodule LiveVue do
       |> Map.put(:use_diff, use_diff)
 
     assigns =
-      Map.put(assigns, :ssr_render, if(render_ssr?, do: ssr_render(assigns)))
+      Map.put(assigns, :ssr_render, if(render_ssr? && assigns[:__component_name], do: ssr_render(assigns)))
 
     computed_changed =
       %{
         # we send initial props only on initial render, later we send only changed props
         props: init or dead or not use_diff,
-        ssr_render: render_ssr?,
+        ssr_render: assigns[:ssr_render] != nil,
         slots: slots != %{},
         handlers: handlers != %{},
         # we want to send props_diff always but not on initial render
@@ -145,9 +153,9 @@ defmodule LiveVue do
     # optimizing diffs by using string interpolation
     # https://elixirforum.com/t/heex-attribute-value-in-quotes-send-less-data-than-values-in-braces/63274
     ~H"""
-    {raw(@ssr_render[:preloadLinks])}
+    <%= if @ssr_render, do: raw(@ssr_render[:preloadLinks]) %>
     <div
-      id={assigns[:id] || id(@__component_name)}
+      id={@id}
       data-name={@__component_name}
       data-props={"#{json(Encoder.encode(@props))}"}
       data-props-diff={"#{json(@props_diff)}"}
@@ -160,7 +168,7 @@ defmodule LiveVue do
       phx-hook="VueHook"
       phx-no-format
       class={@class}
-    ><%= raw(@ssr_render[:html]) %></div>
+    ><%= if @ssr_render, do: raw(@ssr_render[:html]) %></div>
     """
   end
 
