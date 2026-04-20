@@ -87,7 +87,7 @@ export const loadManifest = (path: string): Record<string, string[]> => {
   }
 }
 
-function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) {
+export function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) {
   let links = ""
   const seen = new Set()
   modules.forEach((id: string) => {
@@ -111,8 +111,8 @@ function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) 
   return links
 }
 
-function renderPreloadLink(file: string) {
-  if (file.endsWith(".js")) {
+export function renderPreloadLink(file: string) {
+  if (file.endsWith(".js") || file.endsWith(".mjs")) {
     return `<link rel="modulepreload" crossorigin href="${file}">`
   } else if (file.endsWith(".css")) {
     return `<link rel="stylesheet" href="${file}">`
