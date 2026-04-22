@@ -6,6 +6,7 @@ defmodule LiveVue.InjectedSSR do
   require Logger
 
   @state_key :live_vue_injected_ssr_state
+  @validate_unique_component_ids_default Mix.env() == :dev
 
   defmodule Fragment do
     @moduledoc false
@@ -35,28 +36,39 @@ defmodule LiveVue.InjectedSSR do
   def prepare(component, nil, _slot), do: fragment(component)
 
   def prepare(component, target, slot) do
-    register_injection(%{target: target, slot: slot || "default", component: component})
+    state =
+      ensure_state()
+      |> register_component!(component)
+      |> register_injection(%{target: target, slot: slot || "default", component: component})
+
+    put_state(state)
     nil
   end
 
-  defp register_injection(%{target: target, slot: slot, component: component}) do
-    state = ensure_state()
+  defp register_injection(state, %{target: target, slot: slot, component: component}) do
+    if existing = get_in(state.injections, [target, slot]) do
+      Logger.warning(
+        "LiveVue SSR injection into ##{target} slot #{inspect(slot)} was overwritten. " <>
+          "Existing component: #{existing.name}##{existing.id}, new component: #{component.name}##{component.id}"
+      )
+    end
 
-    put_state(%{
+    %{
       state
       | injections:
           Map.update(state.injections, target, %{slot => component}, fn slots ->
             Map.put(slots, slot, component)
           end)
-    })
-
-    :ok
+    }
   end
 
   defp fragment(component) do
-    state = ensure_state()
-    put_state(%{state | active: state.active + 1})
+    state = register_component!(ensure_state(), component)
 
+    put_state(%{state | pending_roots: state.pending_roots + 1})
+
+    # HEEx builds the full rendered tree before these fragments are converted to
+    # iodata, giving later injected children a chance to register before root SSR runs.
     %{
       preloadLinks: %Fragment{token: state.token, field: :preloadLinks, component: component},
       html: %Fragment{token: state.token, field: :html, component: component}
@@ -70,7 +82,7 @@ defmodule LiveVue.InjectedSSR do
 
         state =
           if field == :html do
-            decrement_active(state)
+            decrement_pending_roots(state)
           else
             state
           end
@@ -92,6 +104,17 @@ defmodule LiveVue.InjectedSSR do
         result = render_component(component, state.injections, MapSet.new())
         {result, %{state | cache: Map.put(state.cache, component.id, result)}}
     end
+  end
+
+  defp register_component!(state, component) do
+    if validate_unique_component_ids?() && Map.has_key?(state.component_ids, component.id) do
+      raise ArgumentError,
+            "duplicate LiveVue component id #{inspect(component.id)} detected during SSR. " <>
+              "Component ids must be unique within a single render. " <>
+              "Set config :live_vue, validate_unique_component_ids: false to disable this check."
+    end
+
+    %{state | component_ids: Map.put(state.component_ids, component.id, component)}
   end
 
   defp render_component(component, injections, seen) do
@@ -125,22 +148,26 @@ defmodule LiveVue.InjectedSSR do
 
   defp ensure_state do
     case Process.get(@state_key) do
-      %{active: active} = state when active > 0 ->
+      %{pending_roots: pending_roots} = state when pending_roots > 0 ->
         state
 
       _ ->
-        state = %{token: make_ref(), active: 0, injections: %{}, cache: %{}}
+        state = %{token: make_ref(), pending_roots: 0, injections: %{}, cache: %{}, component_ids: %{}}
         put_state(state)
         state
     end
   end
 
-  defp decrement_active(%{active: 1}) do
-    %{token: make_ref(), active: 0, injections: %{}, cache: %{}}
+  defp decrement_pending_roots(%{pending_roots: 1}) do
+    %{token: make_ref(), pending_roots: 0, injections: %{}, cache: %{}, component_ids: %{}}
   end
 
-  defp decrement_active(state) do
-    %{state | active: max(state.active - 1, 0)}
+  defp decrement_pending_roots(state) do
+    %{state | pending_roots: max(state.pending_roots - 1, 0)}
+  end
+
+  defp validate_unique_component_ids? do
+    Application.get_env(:live_vue, :validate_unique_component_ids, @validate_unique_component_ids_default)
   end
 
   defp put_state(state) do

@@ -1,6 +1,7 @@
 defmodule LiveVueTest do
   use ExUnit.Case
 
+  import ExUnit.CaptureLog
   import LiveVue
   import Phoenix.Component
   import Phoenix.LiveViewTest
@@ -30,6 +31,18 @@ defmodule LiveVueTest do
   end
 
   doctest LiveVue
+
+  defp put_live_vue_env(key, value) do
+    previous = Application.fetch_env(:live_vue, key)
+    Application.put_env(:live_vue, key, value)
+
+    on_exit(fn ->
+      case previous do
+        {:ok, previous} -> Application.put_env(:live_vue, key, previous)
+        :error -> Application.delete_env(:live_vue, key)
+      end
+    end)
+  end
 
   describe "basic component rendering" do
     def simple_component(assigns) do
@@ -172,10 +185,33 @@ defmodule LiveVueTest do
       """
     end
 
+    def duplicate_ssr_id_component(assigns) do
+      ~H"""
+      <div>
+        <.vue v-component="First" id="duplicate-id" v-ssr={true} />
+        <.vue v-component="Second" id="duplicate-id" v-ssr={true} />
+      </div>
+      """
+    end
+
+    def duplicate_slot_injection_component(assigns) do
+      ~H"""
+      <div>
+        <.vue v-component="Layout" id="vue-layout" v-ssr={true} />
+        <.vue label="First" v-component="FirstSidebar" id="first-sidebar" v-inject:sidebar="vue-layout" v-ssr={true} />
+        <.vue label="Second" v-component="SecondSidebar" id="second-sidebar" v-inject:sidebar="vue-layout" v-ssr={true} />
+      </div>
+      """
+    end
+
+    def boolean_inject_component(assigns) do
+      ~H"""
+      <.vue v-component="Child" v-inject={true} />
+      """
+    end
+
     test "SSR-composes injected content into the visible target tree" do
-      previous = Application.get_env(:live_vue, :ssr_module)
-      Application.put_env(:live_vue, :ssr_module, InjectedSSRRenderer)
-      on_exit(fn -> Application.put_env(:live_vue, :ssr_module, previous) end)
+      put_live_vue_env(:ssr_module, InjectedSSRRenderer)
 
       html = render_component(&injected_ssr_component/1)
 
@@ -196,6 +232,41 @@ defmodule LiveVueTest do
                ~r/<section data-ssr-name="Layout">[\s\S]*<section data-ssr-name="Page">[\s\S]*<section data-ssr-name="Nested">/
 
       assert html =~ ~r/<section data-ssr-name="Layout">[\s\S]*<section data-ssr-name="Sidebar">/
+    end
+
+    test "raises on duplicate SSR component ids when configured" do
+      put_live_vue_env(:validate_unique_component_ids, true)
+
+      assert_raise ArgumentError, ~r/duplicate LiveVue component id "duplicate-id"/, fn ->
+        render_component(&duplicate_ssr_id_component/1)
+      end
+    end
+
+    test "allows duplicate SSR component ids when validation is disabled" do
+      put_live_vue_env(:validate_unique_component_ids, false)
+
+      assert render_component(&duplicate_ssr_id_component/1) =~ ~s(id="duplicate-id")
+    end
+
+    test "warns when multiple components inject into the same target slot" do
+      put_live_vue_env(:ssr_module, InjectedSSRRenderer)
+
+      log =
+        capture_log(fn ->
+          html = render_component(&duplicate_slot_injection_component/1)
+          send(self(), {:html, html})
+        end)
+
+      assert_receive {:html, html}
+      assert log =~ ~s(LiveVue SSR injection into #vue-layout slot "sidebar" was overwritten)
+      refute html =~ ~s(data-ssr-name="FirstSidebar")
+      assert html =~ ~s(data-ssr-name="SecondSidebar")
+    end
+
+    test "raises when v-inject is used without a target id" do
+      assert_raise ArgumentError, ~r/v-inject requires a target component id/, fn ->
+        render_component(&boolean_inject_component/1)
+      end
     end
   end
 

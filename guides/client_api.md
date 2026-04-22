@@ -26,6 +26,24 @@ live.pushEvent("some_event")
 </script>
 ```
 
+You can also pass a LiveVue element id to look up another mounted LiveVue hook. This is useful for persistent layout state:
+
+```html
+<script setup>
+import { useLiveVue } from 'live_vue'
+
+const layout = useLiveVue("layout")
+</script>
+
+<template>
+  <div v-if="layout">
+    Current user: {{ layout.vue.props.user.name }}
+  </div>
+</template>
+```
+
+When an id is passed, `useLiveVue(id)` returns the hook only if that LiveVue element has already been initialized. LiveVue hooks are initialized in HTML order, so a component can look up components that appear before it in the rendered HTML; if the target appears later or is not mounted, `useLiveVue(id)` returns `null`. For more context, see [Persistent Layouts](persistent_layout.md).
+
 ### `useLiveEvent(event, callback)`
 
 The `useLiveEvent` composable is the recommended way to listen for server-pushed events within a component. It automatically registers an event handler when the component is mounted and cleans it up when the component is unmounted.

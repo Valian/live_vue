@@ -4,7 +4,7 @@ This guide explains the architecture and inner workings of LiveVue, helping you 
 
 > #### Practical Usage {: .tip}
 >
-> Looking for practical examples? Check out [Basic Usage](basic_usage.md) for common patterns and [Getting Started](getting_started.md) for your first component.
+> Looking for practical examples? Check out [Basic Usage](basic_usage.md) for common patterns, [Persistent Layouts](persistent_layout.md) for app shells that survive navigation, and [Getting Started](getting_started.md) for your first component.
 
 ## Overview
 

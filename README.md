@@ -132,6 +132,7 @@ For syntax highlighting of the `~VUE` sigil:
 
 ### Advanced Topics
  - [Architecture](guides/architecture.md) - How LiveVue works under the hood
+ - [Persistent Layouts](guides/persistent_layout.md) - Keep layout Vue apps or global layout props alive across navigation
  - [Testing](guides/testing.md) - Testing Vue components in LiveView
  - [Deployment](guides/deployment.md) - Production deployment guide
 

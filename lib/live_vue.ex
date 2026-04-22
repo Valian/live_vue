@@ -34,6 +34,10 @@ defmodule LiveVue do
     * `v-socket` (LiveView.Socket) - LiveView socket. Usually injected automatically for LiveVue
       component tags in standard `~H` templates; pass it manually when calling `LiveVue.vue/1`
       directly or bypassing `LiveVue.SharedPropsView`
+    * `v-inject` (string) - Render this component into the default slot of another LiveVue
+      component by passing the target component's `id`
+    * `v-inject:*` (string) - Render this component into a named slot of another LiveVue
+      component, e.g. `v-inject:sidebar="layout"`
 
   ### Event Handlers
     * `v-on:*` - Vue event handlers can be attached using the `v-on:` prefix
@@ -315,8 +319,9 @@ defmodule LiveVue do
     # Check for v-inject (default slot) or v-inject:slotname (named slot)
     case Map.get(assigns, :"v-inject") do
       nil -> find_named_inject(assigns)
-      true -> {"default", nil}
+      false -> {nil, nil}
       target when is_binary(target) -> {target, nil}
+      _ -> raise ArgumentError, ~s(v-inject requires a target component id, for example v-inject="vue-layout")
     end
   end
 
@@ -324,8 +329,18 @@ defmodule LiveVue do
     Enum.find_value(assigns, {nil, nil}, fn
       {key, value} when is_atom(key) ->
         case Atom.to_string(key) do
-          "v-inject:" <> slot when is_binary(value) -> {value, slot}
-          _ -> nil
+          "v-inject:" <> slot when is_binary(value) ->
+            {value, slot}
+
+          "v-inject:" <> _slot when value in [nil, false] ->
+            nil
+
+          "v-inject:" <> slot ->
+            raise ArgumentError,
+                  ~s(v-inject:#{slot} requires a target component id, for example v-inject:#{slot}="vue-layout")
+
+          _ ->
+            nil
         end
 
       _ ->
