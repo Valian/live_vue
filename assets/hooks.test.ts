@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { createApp, createSSRApp } from "vue"
 import { getVueHook } from "./hooks"
 import type { LiveVueApp, Hook } from "./types"
 import { toUtf8Base64 } from "./utils"
@@ -34,14 +35,34 @@ describe("getVueHook", () => {
         if (name === "data-ssr") return "true"
         return null
       })
+      mockHookContext.el.hasChildNodes = vi.fn(() => true)
 
       await vueHook.mounted!.call(mockHookContext)
 
       // Verify setup was called with correct parameters
       expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
         expect.objectContaining({
+          createApp: createSSRApp,
           component: MockComponent,
           ssr: false,
+        })
+      )
+    })
+
+    it("should create client app when data-ssr is true but SSR rendered no content", async () => {
+      mockHookContext.el.getAttribute.mockImplementation((name: string) => {
+        if (name === "data-name") return "TestComponent"
+        if (name === "data-ssr") return "true"
+        return null
+      })
+      mockHookContext.el.hasChildNodes = vi.fn(() => false)
+
+      await vueHook.mounted!.call(mockHookContext)
+
+      expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          createApp,
+          component: MockComponent,
         })
       )
     })
@@ -57,6 +78,7 @@ describe("getVueHook", () => {
 
       expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
         expect.objectContaining({
+          createApp,
           component: MockComponent,
           ssr: false,
         })

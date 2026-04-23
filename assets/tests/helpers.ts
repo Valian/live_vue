@@ -16,6 +16,7 @@ export const createMockLiveViewHook = (elementAttributes: Record<string, string>
   const mockElement = {
     id,
     getAttribute: vi.fn((name: string) => elementAttributes[name] || null),
+    hasChildNodes: vi.fn(() => false),
     setAttribute: vi.fn(),
     removeAttribute: vi.fn(),
   } as any
@@ -33,7 +34,7 @@ export const createMockLiveViewHook = (elementAttributes: Record<string, string>
 
 export const createMockLiveVueApp = (component: any = defaultComponent): LiveVueApp => ({
   resolve: vi.fn().mockResolvedValue(component),
-  setup: vi.fn(({ createApp, component, plugin }) => {
+  setup: vi.fn(({ createApp, plugin }) => {
     const app = createApp({
       render: () => null,
     })

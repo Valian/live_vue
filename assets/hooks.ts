@@ -6,6 +6,9 @@ import { getProps, getDiff, getElementId } from "./attrs.js"
 import { applyPatch } from "./jsonPatch.js"
 import { registerInjector, unregisterInjector, syncSlots } from "./inject.js"
 
+const shouldHydrate = (el: HTMLElement): boolean =>
+  el.getAttribute("data-ssr") === "true" && el.hasChildNodes()
+
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
     const el = this.el as HTMLElement
@@ -28,7 +31,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     }
 
     if (!component) return
-    const makeApp = el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+    const makeApp = shouldHydrate(el) ? createSSRApp : createApp
 
     const app = setup({
       createApp: makeApp,
