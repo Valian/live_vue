@@ -63,7 +63,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> Config.configure("config.exs", :live_vue, [:shared_props], {:code, Sourceror.parse_string!("[]")})
       |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
       |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})
-      |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.NodeJS")})
+      |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.QuickBEAM")})
       |> Config.configure("prod.exs", :live_vue, [:ssr], true)
     end
 
@@ -158,7 +158,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           "import { phoenixVitePlugin } from 'phoenix_vite'",
-          ~s(import vue from "@vitejs/plugin-vue";\nimport liveVuePlugin from "live_vue/vitePlugin";)
+          ~s(import vue from "@vitejs/plugin-vue";\nimport liveVuePlugin from "live_vue/vitePlugin";\nimport stubNodeBuiltins from "live_vue/stubNodeBuiltins";)
         )
       end
     end
@@ -188,7 +188,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       String.replace(
         content,
         ~r/phoenixVitePlugin\(\{\s*pattern: \/\\.\(ex\|heex\)\$\/\s*\}\)/s,
-        "vue(),\n    liveVuePlugin()"
+        "vue(),\n    liveVuePlugin(),\n    stubNodeBuiltins()"
       )
     end
 
@@ -328,12 +328,12 @@ defmodule Mix.Tasks.LiveVue.Install do
       # Use simple file update instead of complex AST manipulation
       Igniter.update_file(igniter, app_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          # Look for the children list and add NodeJS.Supervisor right after the opening bracket
-          if String.contains?(content, "children = [") and not String.contains?(content, "NodeJS.Supervisor") do
+          # Look for the children list and add LiveVue.SSR.QuickBEAM right after the opening bracket
+          if String.contains?(content, "children = [") and not String.contains?(content, "LiveVue.SSR.QuickBEAM") do
             String.replace(
               content,
               ~r/(children = \[\s*\n)/,
-              "\\1      {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},\n"
+              "\\1      LiveVue.SSR.QuickBEAM,\n"
             )
           else
             content

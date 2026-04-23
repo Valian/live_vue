@@ -2,19 +2,20 @@
 
 Deploying a LiveVue app is similar to deploying a regular Phoenix app.
 
-> #### No Node.js? {: .tip}
->
-> If you'd rather not install Node.js in production, you can use `LiveVue.SSR.QuickBEAM` which
-> runs JavaScript inside the BEAM. See `LiveVue.SSR.QuickBEAM` module docs and
-> [Configuration](configuration.md#server-side-rendering-ssr) for details.
+By default, LiveVue uses `LiveVue.SSR.QuickBEAM` for production SSR, which runs JavaScript
+inside the BEAM — **no Node.js required in production**.
 
-The instructions below cover the default `LiveVue.SSR.NodeJS` setup, which requires **Node.js 19+** in production.
+> #### Need Node.js instead? {: .tip}
+>
+> If you prefer the Node.js-based SSR, you can switch to `LiveVue.SSR.NodeJS`.
+> See [Configuration](configuration.md#server-side-rendering-ssr) for details.
+> This requires Node.js 19+ installed in production and `NodeJS.Supervisor` in your supervision tree.
 
 ## General Requirements
 
-1. Node.js 19+ installed in production
-2. Standard Phoenix deployment requirements
-3. Build assets before deployment
+1. Standard Phoenix deployment requirements
+2. Build assets before deployment (requires Node.js at **build time** only)
+3. QuickBEAM hex dependency (`{:quickbeam, "~> 0.8"}`)
 
 ## Fly.io Deployment Guide
 
@@ -30,47 +31,44 @@ mix phx.gen.release --docker
 
 ### 2. Modify Dockerfile
 
-Update the generated Dockerfile to include Node.js:
+Update the generated Dockerfile to install Node.js in the **build stage only** (for compiling assets):
 
 ```dockerfile
 # Build Stage
 FROM hexpm/elixir:1.14.4-erlang-25.3.2-debian-bullseye-20230227-slim AS builder
 
 # Set environment variables
-...(about 15 lines omitted)...
+...
 
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git curl \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# Install Node.js for build stage
+# Install Node.js for building assets
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
 
 # Copy application code
 COPY . .
 
 # Install npm dependencies
-RUN cd /app/assets && npm install
+RUN npm install
 
-...(about 20 lines omitted)...
+...
 
-# Production Stage
+# Production Stage — no Node.js needed!
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl \
+    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-# Install Node.js for production
-RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
 
 ...(remaining dockerfile content)...
 ```
 
-Key changes:
+Key points:
 - Add `curl` to build dependencies
-- Install Node.js in both build and production stages
-- Add npm install step for assets
+- Install Node.js **only in the build stage** for asset compilation
+- No Node.js needed in the production stage — QuickBEAM handles SSR natively
 
 ### 3. Launch on Fly.io
 
@@ -101,7 +99,7 @@ fly apps open
 
 For Heroku deployment:
 1. Use the [Phoenix buildpack](https://hexdocs.pm/phoenix/heroku.html)
-2. Add Node.js buildpack:
+2. Add Node.js buildpack for asset compilation:
 ```bash
 heroku buildpacks:add --index 1 heroku/nodejs
 ```
@@ -109,26 +107,22 @@ heroku buildpacks:add --index 1 heroku/nodejs
 ### Docker
 
 If using your own Docker setup:
-1. Ensure Node.js 19+ is installed
+1. Install Node.js in the build stage for asset compilation
 2. Follow standard Phoenix deployment practices
-3. Configure SSR for production (see [Configuration](configuration.md#production-ssr-setup))
+3. No Node.js needed at runtime — QuickBEAM runs SSR inside the BEAM
 
 ### Custom Server
 
 For bare metal or VM deployments:
-1. Install Node.js 19+:
-```bash
-curl -fsSL https://deb.nodesource.com/setup_19.x | bash -
-apt-get install -y nodejs
-```
-
-2. Follow standard [Phoenix deployment guide](https://hexdocs.pm/phoenix/deployment.html)
+1. Build assets on the build machine (requires Node.js)
+2. Deploy the release — no Node.js needed on the production server
+3. Follow standard [Phoenix deployment guide](https://hexdocs.pm/phoenix/deployment.html)
 
 ## Production Checklist
 
-- [ ] Node.js 19+ installed
 - [ ] Assets built (`mix assets.build`)
 - [ ] SSR configured properly (see [Configuration](configuration.md#production-ssr-setup))
+- [ ] `LiveVue.SSR.QuickBEAM` added to supervision tree
 - [ ] Database configured
 - [ ] Environment variables set
 - [ ] SSL certificates configured (if needed)
@@ -140,17 +134,19 @@ apt-get install -y nodejs
 ### Common Issues
 
 1. **SSR Not Working**
-   - Verify Node.js installation
    - Check SSR configuration (see [Configuration](configuration.md#ssr-troubleshooting))
    - Ensure server bundle exists in `priv/static/server.mjs`
+   - Verify `LiveVue.SSR.QuickBEAM` is in your supervision tree
 
 2. **Asset Loading Issues**
    - Verify assets were built
    - Check digest configuration
    - Inspect network requests
 
-3. **Performance Issues**
-   - Consider adjusting NodeJS pool size (see [Configuration](configuration.md#production-ssr-setup))
+3. **QuickBEAM Errors**
+   - Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
+   - Check that the `stubNodeBuiltins()` Vite plugin is configured
+   - Verify server bundle was built correctly
 
 ## Next Steps
 
