@@ -40,6 +40,7 @@ defmodule Mix.Tasks.LiveVue.Install do
 
       igniter
       |> Igniter.compose_task("phoenix_vite.install", igniter.args.argv)
+      |> Igniter.Project.Deps.add_dep({:quickbeam, "~> 0.8"})
       |> configure_environments(app_name)
       |> add_live_vue_to_html_helpers(app_name)
       |> update_javascript_configuration()
