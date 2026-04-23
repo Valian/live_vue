@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improvements
 
-- Embedded the Vite SSR manifest into new server bundles at build time through `live_vue/ssrManifest`, avoiding runtime manifest file reads and keeping non-Node SSR bundles free of `fs` imports ([#126](https://github.com/Valian/live_vue/issues/126))
+- Embedded the Vite SSR manifest into new server bundles at build time through `live_vue/ssrManifest`, avoiding runtime manifest file reads and keeping non-Node SSR bundles free of `fs` imports ([#126](https://github.com/Valian/live_vue/issues/126), [#137](https://github.com/Valian/live_vue/pull/137))
 
 ### Bug Fixes
 
