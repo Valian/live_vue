@@ -59,7 +59,7 @@ defmodule LiveVue.SSR.QuickBEAM do
     end
 
     def start_link(_opts \\ []) do
-      {:ok, rt} = QuickBEAM.start(name: __MODULE__)
+      {:ok, rt} = QuickBEAM.start(name: __MODULE__, apis: [:browser, :node])
       load_bundle(rt)
       {:ok, rt}
     end
