@@ -24,6 +24,8 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       server_js = project.rewrite.sources["assets/js/server.js"]
       assert server_js.content =~ "getRender"
+      assert server_js.content =~ ~s(import manifest from "live_vue/ssrManifest")
+      refute server_js.content =~ "loadManifest"
 
       # Check for LiveVue usage
       web_file = project.rewrite.sources["lib/test_web.ex"]
@@ -65,10 +67,10 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
 
       # Check if mix.exs was updated
       mix_exs = project.rewrite.sources["mix.exs"]
-      assert mix_exs.content =~ ~r/build --manifest --emptyOutDir true/
+      assert mix_exs.content =~ ~r/build --manifest --ssrManifest --emptyOutDir true/
 
       assert mix_exs.content =~
-               ~r/build --ssrManifest --emptyOutDir false --ssr js\/server\.js --outDir \.\.\/priv\/static/
+               ~r/build --emptyOutDir false --ssr js\/server\.js --outDir \.\.\/priv\/static/
 
       # Check for vue_demo route in dev section
       router_file = project.rewrite.sources["lib/test_web/router.ex"]
