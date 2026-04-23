@@ -75,6 +75,22 @@ defmodule LiveVue.SSR.QuickBEAM do
         {:error, reason} -> raise "QuickBEAM SSR bundle evaluation failed: #{inspect(reason)}"
       end
     end
+
+    defp ssr_filepath do
+      app =
+        case :application.get_application(__MODULE__) do
+          {:ok, app} -> app
+          :undefined -> :live_vue
+        end
+
+      filepath = Application.get_env(:live_vue, :ssr_filepath, "./static/server.mjs")
+
+      if Path.type(filepath) == :absolute do
+        filepath
+      else
+        Application.app_dir(app, Path.join("priv", filepath))
+      end
+    end
   else
     @quickbeam_missing "QuickBEAM is required for LiveVue.SSR.QuickBEAM. Add {:quickbeam, \"~> 0.8\"} to your dependencies."
 
@@ -83,21 +99,5 @@ defmodule LiveVue.SSR.QuickBEAM do
 
     @impl true
     def render(_name, _props, _slots), do: raise(@quickbeam_missing)
-  end
-
-  defp ssr_filepath do
-    app =
-      case :application.get_application(__MODULE__) do
-        {:ok, app} -> app
-        :undefined -> :live_vue
-      end
-
-    filepath = Application.get_env(:live_vue, :ssr_filepath, "./static/server.mjs")
-
-    if Path.type(filepath) == :absolute do
-      filepath
-    else
-      Application.app_dir(app, Path.join("priv", filepath))
-    end
   end
 end

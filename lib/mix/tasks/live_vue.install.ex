@@ -18,8 +18,8 @@ defmodule Mix.Tasks.LiveVue.Install do
 
   import Mix.Tasks.PhoenixVite.Install.Helper
 
-  @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
   with_igniter do
+    @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
     use Igniter.Mix.Task
 
     alias Igniter.Libs.Phoenix
