@@ -32,6 +32,10 @@ config :live_vue,
   # Useful for testing scenarios where you need complete props state
   enable_props_diff: true,
 
+  # Raise when duplicate LiveVue component ids are registered during SSR
+  # Defaults to true in dev and false elsewhere
+  validate_unique_component_ids: Mix.env() == :dev,
+
   # Gettext backend for translating form validation errors
   # When set, Phoenix.HTML.Form errors are translated using this backend
   # Example: MyApp.Gettext
@@ -352,6 +356,17 @@ When disabled:
 - Useful for debugging component behavior and ensuring all props are correctly passed
 
 **Note**: This option is primarily intended for testing scenarios. In production, the default behavior (sending only diffs) provides better performance.
+
+### validate_unique_component_ids
+
+LiveVue can raise when the same component `id` is registered more than once during SSR. This catches duplicate DOM ids early and prevents SSR injection cache collisions.
+
+```elixir
+config :live_vue,
+  validate_unique_component_ids: true
+```
+
+By default this check is enabled in development and disabled elsewhere. Set it to `false` to allow duplicate ids, although duplicate DOM ids can still cause browser and hydration issues.
 
 ### SSR Performance
 

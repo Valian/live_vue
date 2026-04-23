@@ -244,7 +244,46 @@ Important notes about slots:
 > Slots are rendered server-side and then sent to the client as a raw HTML.
 > It happens outside of the LiveView lifecycle, so hooks inside slots are not supported.
 >
-> As a consequence, since `.vue` components rely on hooks, it's not possible to nest `.vue` components inside other `.vue` components.
+> As a consequence, since `.vue` components rely on hooks, you cannot directly nest `.vue` components inside regular slots.
+
+### Vue Component Slots with v-inject
+
+When you need Vue components inside another Vue component's slots, declare the components as siblings in HEEX and use `v-inject` to attach them to the target component.
+
+```elixir
+<.vue id="app-layout" v-component="AppLayout" />
+
+<.vue
+  v-component="PageContent"
+  page={@page}
+  v-inject="app-layout"
+/>
+
+<.vue
+  v-component="Sidebar"
+  label="Menu"
+  v-inject:sidebar="app-layout"
+/>
+```
+
+The target Vue component renders regular Vue slots:
+
+```vue
+<!-- AppLayout.vue -->
+<template>
+  <main>
+    <slot />
+  </main>
+
+  <aside>
+    <slot name="sidebar" />
+  </aside>
+</template>
+```
+
+`v-inject` always needs an explicit target component `id`. Use `v-inject="target-id"` for the default slot and `v-inject:slot_name="target-id"` for named slots. Boolean shorthand like `v-inject={true}` is invalid.
+
+For the full reference, including SSR behavior and slot prop details, see [Component Reference - Vue Component Slot Injection](component_reference.md#vue-component-slot-injection). For app shells that persist across navigation, see [Persistent Layouts](persistent_layout.md).
 
 ## File Uploads
 

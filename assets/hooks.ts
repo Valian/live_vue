@@ -1,99 +1,43 @@
-import { createApp, createSSRApp, h, reactive, type App } from "vue"
+import { createApp, createSSRApp, reactive, type App } from "vue"
 import { migrateToLiveVueApp } from "./app.js"
 import type { ComponentMap, LiveVueApp, LiveVueOptions, LiveHook, Hook } from "./types.js"
 import { liveInjectKey, hooksById } from "./use.js"
-import { mapValues, fromUtf8Base64 } from "./utils.js"
-import { applyPatch, type Operation } from "./jsonPatch.js"
+import { getProps, getDiff, getElementId } from "./attrs.js"
+import { applyPatch } from "./jsonPatch.js"
+import { registerInjector, unregisterInjector, syncSlots } from "./inject.js"
 
-/**
- * Parses the JSON object from the element's attribute and returns them as an object.
- */
-const getAttributeJson = (el: HTMLElement, attributeName: string): Record<string, any> | null => {
-  const data = el.getAttribute(attributeName)
-  return data ? JSON.parse(data) : null
-}
-
-/**
- * Parses the slots from the element's attributes and returns them as a record.
- * The slots are parsed from the "data-slots" attribute.
- * The slots are converted to a function that returns a div with the innerHTML set to the base64 decoded slot.
- */
-const getSlots = (el: HTMLElement): Record<string, () => any> => {
-  const dataSlots = getAttributeJson(el, "data-slots") || {}
-  return mapValues(dataSlots, base64 => () => h("div", { innerHTML: fromUtf8Base64(base64).trim() }))
-}
-
-const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {
-  const dataPropsDiff = getAttributeJson(el, attributeName) || []
-  return dataPropsDiff.map(([op, path, value]: [string, string, any]) => ({
-    op,
-    path,
-    value,
-  }))
-}
-
-/**
- * Parses the event handlers from the element's attributes and returns them as a record.
- * The handlers are parsed from the "data-handlers" attribute.
- * The handlers are converted to snake case and returned as a record.
- * A special case is made for the "JS.push" event, where the event is replaced with $event.
- * @param el - The element to parse the handlers from.
- * @param liveSocket - The LiveSocket instance.
- * @returns The handlers as an object.
- */
-const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (event: any) => void> => {
-  const handlers = getAttributeJson(el, "data-handlers") || {}
-  const result: Record<string, (event: any) => void> = {}
-  for (const handlerName in handlers) {
-    const ops = handlers[handlerName]
-    const snakeCaseName = `on${handlerName.charAt(0).toUpperCase() + handlerName.slice(1)}`
-    result[snakeCaseName] = event => {
-      // a little bit of magic to replace the event with the value of the input
-      const parsedOps = JSON.parse(ops)
-      const replacedOps = parsedOps.map(([op, args, ...other]: [string, any, ...any[]]) => {
-        if (op === "push" && !args.value) args.value = event
-        return [op, args, ...other]
-      })
-      liveSocket.execJS(el, JSON.stringify(replacedOps))
-    }
-  }
-  return result
-}
-
-/**
- * Parses the props from the element's attributes and returns them as an object.
- * The props are parsed from the "data-props" attribute.
- * The props are merged with the event handlers from the "data-handlers" attribute.
- * @param el - The element to parse the props from.
- * @param liveSocket - The LiveSocket instance.
- * @returns The props as an object.
- */
-const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
-  ...(getAttributeJson(el, "data-props") || {}),
-  ...getHandlers(el, liveSocket),
-})
+const shouldHydrate = (el: HTMLElement): boolean =>
+  el.getAttribute("data-ssr") === "true" && el.hasChildNodes()
 
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
-    const componentName = this.el.getAttribute("data-name")
+    const el = this.el as HTMLElement
+    const componentName = el.getAttribute("data-name")
     const component = componentName ? await resolve(componentName) : null
 
-    const props = reactive(getProps(this.el, this.liveSocket))
-    const slots = reactive(getSlots(this.el))
-    applyPatch(props, getDiff(this.el, "data-streams-diff"))
+    const props = reactive(getProps(el, this.liveSocket))
+    applyPatch(props, getDiff(el, "data-streams-diff"))
 
-    this.vue = { props, slots, app: null }
-    hooksById.set(this.el.id, this as LiveHook)
+    this.vue = { props, slots: reactive({}), app: null }
+    const elementId = getElementId(el)
+    if (elementId) hooksById.set(elementId, this as LiveHook)
+    syncSlots(elementId)
+
+    const targetId = el.getAttribute("data-inject")
+    if (targetId && elementId && component) {
+      const slotName = el.getAttribute("data-inject-slot") || "default"
+      registerInjector(elementId, targetId, slotName, component)
+      return
+    }
 
     if (!component) return
-
-    const makeApp = this.el.getAttribute("data-ssr") === "true" ? createSSRApp : createApp
+    const makeApp = shouldHydrate(el) ? createSSRApp : createApp
 
     const app = setup({
       createApp: makeApp,
       component,
       props,
-      slots,
+      slots: this.vue.slots,
       plugin: {
         install: (app: App) => {
           app.provide(liveInjectKey, this as LiveHook)
@@ -114,22 +58,22 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     } else {
       Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     }
-    // we're always applying streams diff, since all stream changes are sent in that attribute
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+    syncSlots(getElementId(this.el as HTMLElement))
   },
   reconnected() {
-    // after reconnect, server sends full props in data-props (not diffs)
-    // read them directly instead of relying on stale data-props-diff
-    // we don't delete old keys — streams live in props too and are handled by data-streams-diff
     Object.assign(this.vue.props, getProps(this.el, this.liveSocket))
     applyPatch(this.vue.props, getDiff(this.el, "data-streams-diff"))
-    Object.assign(this.vue.slots ?? {}, getSlots(this.el))
+    syncSlots(getElementId(this.el as HTMLElement))
   },
   destroyed() {
-    hooksById.delete(this.el.id)
+    const elementId = getElementId(this.el as HTMLElement)
+    if (elementId) {
+      unregisterInjector(elementId)
+      hooksById.delete(elementId)
+    }
+
     const instance = this.vue.app
-    // TODO - is there maybe a better way to cleanup the app?
     if (instance) {
       window.addEventListener("phx:page-loading-stop", () => instance.unmount(), { once: true })
     }

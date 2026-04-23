@@ -2,14 +2,15 @@ import path from "path"
 import { defineConfig } from "vite"
 
 import vue from "@vitejs/plugin-vue"
+import stubNodeBuiltins from "../../assets/stubNodeBuiltins.js"
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(({ isSsrBuild }) => {
   const isDev = false
 
   return {
     base: "/assets",
-    plugins: [vue()],
+    plugins: [vue(), ...(isSsrBuild ? [stubNodeBuiltins()] : [])],
     resolve: {
       alias: {
         vue: path.resolve(__dirname, "../../node_modules/vue"),
@@ -17,21 +18,30 @@ export default defineConfig(({ command }) => {
         live_vue: path.resolve(__dirname, "../../assets/index.ts"),
       },
     },
+    ssr: isSsrBuild
+      ? {
+          noExternal: true,
+        }
+      : undefined,
     build: {
       commonjsOptions: { transformMixedEsModules: true },
       target: "es2020",
-      outDir: "./test/e2e/priv/static/assets",
-      emptyOutDir: true,
+      outDir: isSsrBuild ? "./priv/static" : "./test/e2e/priv/static/assets",
+      emptyOutDir: !isSsrBuild,
       sourcemap: isDev,
       manifest: false,
       rollupOptions: {
-        input: {
-          app: path.resolve(__dirname, "./js/app.js"),
-        },
+        ...(isSsrBuild
+          ? {}
+          : {
+              input: {
+                app: path.resolve(__dirname, "./js/app.js"),
+              },
+            }),
         output: {
           // remove hashes to match phoenix way of handling assets
-          entryFileNames: "[name].js",
-          chunkFileNames: "[name].js",
+          entryFileNames: isSsrBuild ? "server.mjs" : "[name].js",
+          chunkFileNames: isSsrBuild ? "[name].mjs" : "[name].js",
           assetFileNames: "[name][extname]",
         },
       },

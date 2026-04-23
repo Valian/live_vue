@@ -21,7 +21,8 @@ Application.put_env(:live_vue, LiveVue.E2E.Endpoint,
 )
 
 Application.put_env(:live_vue, :enable_props_diff, true)
-Application.put_env(:live_vue, :ssr_default, false)
+Application.put_env(:live_vue, :ssr_module, LiveVue.SSR.QuickBEAM)
+Application.put_env(:live_vue, :ssr_filepath, Path.expand("priv/static/server.mjs"))
 
 Process.register(self(), :e2e_helper)
 
@@ -32,6 +33,7 @@ end
 defmodule LiveVue.E2E.Layout do
   @moduledoc false
   use Phoenix.Component
+  use LiveVue
 
   def render("root.html", assigns) do
     ~H"""
@@ -58,6 +60,7 @@ defmodule LiveVue.E2E.Layout do
     {@inner_content}
     """
   end
+
 end
 
 defmodule LiveVue.E2E.Hooks do
@@ -103,6 +106,7 @@ defmodule LiveVue.E2E.Router do
 
   import Phoenix.LiveView.Router
 
+  alias LiveVue.E2E.Hooks
   alias LiveVue.E2E.Layout
 
   pipeline :browser do
@@ -115,7 +119,7 @@ defmodule LiveVue.E2E.Router do
 
   live_session :default,
     layout: {Layout, :live},
-    on_mount: {LiveVue.E2E.Hooks, :default} do
+    on_mount: {Hooks, :default} do
     scope "/", LiveVue.E2E do
       pipe_through(:browser)
 
@@ -132,6 +136,7 @@ defmodule LiveVue.E2E.Router do
       live "/memory-benchmark", MemoryBenchmarkLive
       live "/reconnect", ReconnectLive
       live "/headless", HeadlessLive
+      live "/persistent-layout/:page", PersistentLayoutLive
     end
   end
 
@@ -198,6 +203,7 @@ end
 {:ok, _} =
   Supervisor.start_link(
     [
+      LiveVue.SSR.QuickBEAM,
       LiveVue.E2E.Endpoint,
       {Phoenix.PubSub, name: LiveVue.E2E.PubSub}
     ],

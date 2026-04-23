@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+- Added `v-inject` and `v-inject:*` for rendering LiveVue components into persistent Vue layout slots across LiveView navigations, including SSR composition support
 - Added headless `<.vue>` elements (no `v-component`) that register reactive props under a given `id`, and extended `useLiveVue(elementId)` to look up another component's props by ID — enabling cross-component prop sharing without custom event plumbing ([#135](https://github.com/Valian/live_vue/pull/135))
 - Added `LiveVue.SSR.QuickBEAM` — embedded SSR via [quickbeam](https://hex.pm/packages/quickbeam), no Node.js required in production
 - Added `LiveVue.SharedPropsView` — a `~H` sigil override that injects shared props and `v-socket` into all `<.vue>` and LiveVue shortcut component tags at compile time, restoring shared props support with proper LiveView change tracking ([#123](https://github.com/Valian/live_vue/pull/123))
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 - Fixed missing preload links for `.mjs` chunks in production SSR builds, which broke hydration when Vite emitted chunks with `.mjs` extension ([#136](https://github.com/Valian/live_vue/pull/136))
+- Fixed empty SSR output falling back to Vue hydration instead of a normal client mount
 - Fixed `useLiveUpload()` sending stale upload refs after reconnect or remount by preserving the hidden file input across upload ref rotations and updating its attributes in place
 - Fixed Vue components not refreshing props and streams after LiveSocket reconnect — added `reconnected()` hook that reads full props from `data-props` instead of relying on stale `data-props-diff` ([#134](https://github.com/Valian/live_vue/pull/134))
 

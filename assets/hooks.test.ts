@@ -1,52 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { ref, reactive, type App } from "vue"
+import { createApp, createSSRApp } from "vue"
 import { getVueHook } from "./hooks"
 import type { LiveVueApp, Hook } from "./types"
 import { toUtf8Base64 } from "./utils"
-
-// Mock Vue component for testing
-const MockComponent = {
-  template: "<div>{{ message }}</div>",
-  props: ["message", "count"],
-  setup(props: any) {
-    return { props }
-  },
-}
-
-// Mock LiveView hook context
-const createMockLiveViewHook = (elementAttributes: Record<string, string> = {}) => {
-  const mockElement = {
-    getAttribute: vi.fn((name: string) => elementAttributes[name] || null),
-    setAttribute: vi.fn(),
-    removeAttribute: vi.fn(),
-  } as any
-
-  const mockLiveSocket = {
-    execJS: vi.fn(),
-  }
-
-  return {
-    el: mockElement,
-    liveSocket: mockLiveSocket,
-    vue: undefined as any,
-  } as any // Type assertion to avoid strict type checking for test mocks
-}
-
-// Mock LiveVue app configuration
-const createMockLiveVueApp = (component = MockComponent): LiveVueApp => ({
-  resolve: vi.fn().mockResolvedValue(component),
-  setup: vi.fn(({ createApp, component, props, slots, plugin, el }) => {
-    const app = createApp({
-      render: () => null, // simplified for testing
-    })
-    app.use(plugin)
-
-    // Mock mount method to avoid DOM operations
-    app.mount = vi.fn().mockReturnValue(app)
-
-    return app
-  }),
-})
+import { createMockLiveViewHook, createMockLiveVueApp, MockComponent } from "./tests/helpers"
 
 describe("getVueHook", () => {
   let mockLiveVueApp: LiveVueApp
@@ -78,14 +35,34 @@ describe("getVueHook", () => {
         if (name === "data-ssr") return "true"
         return null
       })
+      mockHookContext.el.hasChildNodes = vi.fn(() => true)
 
       await vueHook.mounted!.call(mockHookContext)
 
       // Verify setup was called with correct parameters
       expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
         expect.objectContaining({
+          createApp: createSSRApp,
           component: MockComponent,
           ssr: false,
+        })
+      )
+    })
+
+    it("should create client app when data-ssr is true but SSR rendered no content", async () => {
+      mockHookContext.el.getAttribute.mockImplementation((name: string) => {
+        if (name === "data-name") return "TestComponent"
+        if (name === "data-ssr") return "true"
+        return null
+      })
+      mockHookContext.el.hasChildNodes = vi.fn(() => false)
+
+      await vueHook.mounted!.call(mockHookContext)
+
+      expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          createApp,
+          component: MockComponent,
         })
       )
     })
@@ -101,6 +78,7 @@ describe("getVueHook", () => {
 
       expect(mockLiveVueApp.setup).toHaveBeenCalledWith(
         expect.objectContaining({
+          createApp,
           component: MockComponent,
           ssr: false,
         })
@@ -349,7 +327,6 @@ describe("getVueHook", () => {
     })
 
     it("should set up unmount listener for Vue app", () => {
-      const mockApp = mockHookContext.vue.app
       const addEventListenerSpy = vi.spyOn(window, "addEventListener")
 
       vueHook.destroyed!.call(mockHookContext)
@@ -362,7 +339,7 @@ describe("getVueHook", () => {
       mockApp.unmount = vi.fn()
 
       let eventHandler: () => void
-      const addEventListenerSpy = vi.spyOn(window, "addEventListener").mockImplementation((event, handler) => {
+      vi.spyOn(window, "addEventListener").mockImplementation((event, handler) => {
         if (event === "phx:page-loading-stop") {
           eventHandler = handler as () => void
         }

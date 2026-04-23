@@ -39,6 +39,8 @@ For practical examples of different rendering patterns, see [Basic Usage](basic_
 | `v-ssr` | `boolean` | `true` | Enable/disable server-side rendering |
 | `v-diff` | `boolean` | `true` | Enable/disable props diffing for this component |
 | `v-socket` | `Phoenix.LiveView.Socket` | auto in standard `~H` | LiveView socket; pass explicitly only when bypassing `LiveVue.SharedPropsView` |
+| `v-inject` | `string` | `nil` | Render this component into the target component's default slot |
+| `v-inject:name` | `string` | `nil` | Render this component into the target component's named slot |
 
 ### Event Handlers
 
@@ -167,9 +169,96 @@ Vue components can receive slots from LiveView templates.
 ### Slot Limitations
 
 - Each slot is wrapped in a `div` element (technical limitation)
-- Slots are rendered server-side, so they can't contain Vue components
+- Regular HEEX slots are rendered server-side, so they can't directly contain Vue components
 - Phoenix hooks don't work inside slots
 - Slots remain reactive and update when their content changes
+
+### Vue Component Slot Injection
+
+Use `v-inject` when you need to render one LiveVue component into another LiveVue component's slot. The value must be the `id` of the target component.
+
+```elixir
+<.vue
+  id="app-layout"
+  v-component="AppLayout"
+/>
+
+<.vue
+  v-component="PageContent"
+  page={@page}
+  v-inject="app-layout"
+/>
+```
+
+The injected component is hidden in the DOM where it is declared and mounted inside the target component's default slot. The target component must render a matching slot:
+
+```html
+<!-- AppLayout.vue -->
+<template>
+  <main>
+    <slot />
+  </main>
+</template>
+```
+
+For named slots, use `v-inject:slot_name`:
+
+```elixir
+<.vue
+  id="app-layout"
+  v-component="AppLayout"
+/>
+
+<.vue
+  v-component="Sidebar"
+  v-inject:sidebar="app-layout"
+/>
+```
+
+```html
+<!-- AppLayout.vue -->
+<template>
+  <main>
+    <slot />
+  </main>
+  <aside>
+    <slot name="sidebar" />
+  </aside>
+</template>
+```
+
+Injected components receive both their LiveView props and any slot props from the target. If the same prop name exists in both places, the LiveView prop passed to the injected component wins.
+
+```html
+<!-- AppLayout.vue -->
+<template>
+  <slot :layout-count="count" />
+</template>
+```
+
+```elixir
+<.vue
+  v-component="PageContent"
+  page={@page}
+  v-inject="app-layout"
+/>
+```
+
+```vue
+<!-- PageContent.vue -->
+<script setup>
+defineProps(["page", "layoutCount"])
+</script>
+```
+
+Important notes:
+- The target component needs a stable explicit `id`; auto-generated ids are not practical as injection targets.
+- `v-inject` and `v-inject:name` require string target ids. Boolean shorthand such as `v-inject={true}` is invalid.
+- Only one injected component can own a given target slot. If multiple components inject into the same target and slot, the last one wins and LiveVue logs a warning.
+- When SSR is enabled, injected components are composed into the target's initial SSR HTML. During LiveView patches, the target Vue app can stay mounted while injected slot content changes.
+- Injected components can themselves be injection targets, which allows nested injection trees.
+
+For common app-shell patterns built on `v-inject`, including root layouts and sticky LiveViews, see [Persistent Layouts](persistent_layout.md).
 
 ## Event Handling
 
