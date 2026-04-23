@@ -212,7 +212,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           ~r/build: {/s,
-          "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },\n    build: {"
+          "ssr: {\n      noExternal: process.env.NODE_ENV === \"production\" ? true : undefined,\n      resolve: { conditions: [\"import\", \"module\", \"browser\", \"default\"] },\n    },\n    build: {"
         )
       end
     end
