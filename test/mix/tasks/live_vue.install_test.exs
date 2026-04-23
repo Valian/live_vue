@@ -42,8 +42,6 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert vite_config.content =~ "liveVuePlugin()"
       assert vite_config.content =~ "import vue from"
       assert vite_config.content =~ "import liveVuePlugin from"
-      assert vite_config.content =~ "import stubNodeBuiltins from"
-      assert vite_config.content =~ "stubNodeBuiltins()"
       assert vite_config.content =~ "manifest: false"
       assert vite_config.content =~ "ssrManifest: false"
       assert vite_config.content =~ "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },"

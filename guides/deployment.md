@@ -145,7 +145,6 @@ For bare metal or VM deployments:
 
 3. **QuickBEAM Errors**
    - Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
-   - Check that the `stubNodeBuiltins()` Vite plugin is configured
    - Verify server bundle was built correctly
 
 ## Next Steps

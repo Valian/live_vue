@@ -2,7 +2,6 @@ import path from "path"
 import { defineConfig } from "vite"
 
 import vue from "@vitejs/plugin-vue"
-import stubNodeBuiltins from "../../assets/stubNodeBuiltins.js"
 
 // https://vitejs.dev/config/
 export default defineConfig(({ isSsrBuild }) => {
@@ -10,7 +9,7 @@ export default defineConfig(({ isSsrBuild }) => {
 
   return {
     base: "/assets",
-    plugins: [vue(), ...(isSsrBuild ? [stubNodeBuiltins()] : [])],
+    plugins: [vue()],
     resolve: {
       alias: {
         vue: path.resolve(__dirname, "../../node_modules/vue"),

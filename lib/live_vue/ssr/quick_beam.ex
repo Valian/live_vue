@@ -13,20 +13,7 @@ defmodule LiveVue.SSR.QuickBEAM do
       {:quickbeam, "~> 0.8"}
       ```
 
-  2. Add the `stubNodeBuiltins` Vite plugin to your `vite.config`:
-
-      ```javascript
-      import stubNodeBuiltins from "live_vue/stubNodeBuiltins"
-
-      export default defineConfig({
-        plugins: [vue(), liveVuePlugin(), stubNodeBuiltins()],
-      })
-      ```
-
-     This replaces Node.js built-in imports (`fs`, `path`, `node:stream`) with
-     stubs at build time, producing a self-contained SSR bundle.
-
-  3. Configure production SSR:
+  2. Configure production SSR:
 
       ```elixir
       # config/prod.exs
@@ -34,7 +21,7 @@ defmodule LiveVue.SSR.QuickBEAM do
         ssr_module: LiveVue.SSR.QuickBEAM
       ```
 
-  4. Add to your supervision tree in `application.ex`:
+  3. Add to your supervision tree in `application.ex`:
 
       ```elixir
       children = [

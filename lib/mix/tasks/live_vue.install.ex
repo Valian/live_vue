@@ -158,7 +158,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           "import { phoenixVitePlugin } from 'phoenix_vite'",
-          ~s(import vue from "@vitejs/plugin-vue";\nimport liveVuePlugin from "live_vue/vitePlugin";\nimport stubNodeBuiltins from "live_vue/stubNodeBuiltins";)
+          ~s(import vue from "@vitejs/plugin-vue";\nimport liveVuePlugin from "live_vue/vitePlugin";)
         )
       end
     end
@@ -188,7 +188,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       String.replace(
         content,
         ~r/phoenixVitePlugin\(\{\s*pattern: \/\\.\(ex\|heex\)\$\/\s*\}\)/s,
-        "vue(),\n    liveVuePlugin(),\n    stubNodeBuiltins()"
+        "vue(),\n    liveVuePlugin()"
       )
     end
 

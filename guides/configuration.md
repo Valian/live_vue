@@ -407,7 +407,6 @@ The server bundle will be created at `priv/static/server.mjs` and loaded by Quic
 - Check that `priv/static/server.mjs` exists after build
 - Verify `LiveVue.SSR.QuickBEAM` is in your supervision tree
 - Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
-- Check that the `stubNodeBuiltins()` Vite plugin is configured
 
 **Performance issues?**
 - Disable SSR for components that don't benefit from it
