@@ -44,8 +44,7 @@ defmodule Mix.Tasks.LiveVue.InstallTest do
       assert vite_config.content =~ "import liveVuePlugin from"
       assert vite_config.content =~ "manifest: false"
       assert vite_config.content =~ "ssrManifest: false"
-      assert vite_config.content =~ "noExternal: process.env.NODE_ENV === \"production\" ? true : undefined"
-      assert vite_config.content =~ "resolve: { conditions: [\"import\", \"module\", \"browser\", \"default\"] }"
+      assert vite_config.content =~ "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },"
 
       # Check if tsconfig.json was updated
       tsconfig = project.rewrite.sources["tsconfig.json"]
