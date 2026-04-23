@@ -1,10 +1,17 @@
 /// <reference types="vite/client" />
 
+import fs from "node:fs"
+import path from "node:path"
+
 /**
  * @typedef {Object} PluginOptions
  * @property {string} [path] - SSR render endpoint path (default: "/ssr_render")
  * @property {string} [entrypoint] - SSR entrypoint file (default: "./js/server.js")
+ * @property {string} [ssrManifest] - SSR manifest path, relative to Vite root (default: "../priv/static/.vite/ssr-manifest.json")
  */
+
+const ssrManifestModuleId = "live_vue/ssrManifest"
+const resolvedSsrManifestModuleId = `\0${ssrManifestModuleId}`
 
 /**
  * @param {string} path
@@ -61,8 +68,31 @@ const jsonMiddleware = (req, res, next) => {
  * @returns {import("vite").Plugin}
  */
 function liveVuePlugin(opts = {}) {
+  /** @type {import("vite").ResolvedConfig | undefined} */
+  let config
+
   return {
     name: "live-vue",
+    enforce: "pre",
+    configResolved(resolvedConfig) {
+      config = resolvedConfig
+    },
+    resolveId(id) {
+      if (id === ssrManifestModuleId) return resolvedSsrManifestModuleId
+    },
+    load(id) {
+      if (id !== resolvedSsrManifestModuleId) return
+
+      const root = config?.root || process.cwd()
+      const manifestPath = path.resolve(root, opts.ssrManifest || "../priv/static/.vite/ssr-manifest.json")
+
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+        return `export default ${JSON.stringify(manifest)}`
+      } catch (_error) {
+        return "export default {}"
+      }
+    },
     handleHotUpdate({ file, modules, server, timestamp }) {
       if (file.match(/\.(heex|ex)$/)) {
         const invalidatedModules = new Set()

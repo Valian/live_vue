@@ -16,12 +16,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `LiveVue.SSR.QuickBEAM` — embedded SSR via [quickbeam](https://hex.pm/packages/quickbeam), no Node.js required in production
 - Added `LiveVue.SharedPropsView` — a `~H` sigil override that injects shared props and `v-socket` into all `<.vue>` and LiveVue shortcut component tags at compile time, restoring shared props support with proper LiveView change tracking ([#123](https://github.com/Valian/live_vue/pull/123))
 
+### Improvements
+
+- Embedded the Vite SSR manifest into new server bundles at build time through `live_vue/ssrManifest`, avoiding runtime manifest file reads and keeping non-Node SSR bundles free of `fs` imports ([#126](https://github.com/Valian/live_vue/issues/126), [#137](https://github.com/Valian/live_vue/pull/137))
+
 ### Bug Fixes
 
 - Fixed missing preload links for `.mjs` chunks in production SSR builds, which broke hydration when Vite emitted chunks with `.mjs` extension ([#136](https://github.com/Valian/live_vue/pull/136))
 - Fixed empty SSR output falling back to Vue hydration instead of a normal client mount
 - Fixed `useLiveUpload()` sending stale upload refs after reconnect or remount by preserving the hidden file input across upload ref rotations and updating its attributes in place
 - Fixed Vue components not refreshing props and streams after LiveSocket reconnect — added `reconnected()` hook that reads full props from `data-props` instead of relying on stale `data-props-diff` ([#134](https://github.com/Valian/live_vue/pull/134))
+
+### Migration Guide
+
+#### Embed the SSR manifest at build time
+
+Existing server entrypoints that call `loadManifest(...)` keep working. To remove runtime manifest file reads from the SSR bundle, update `assets/js/server.js`:
+
+```javascript
+import components from "../vue"
+import manifest from "live_vue/ssrManifest"
+import { getRender } from "live_vue/server"
+
+export const render = getRender(components, manifest)
+```
+
+Then update your asset build alias so the browser build writes both manifests before the server bundle is built:
+
+```elixir
+"assets.deploy": [
+  "phoenix_vite.npm vite build --manifest --ssrManifest --emptyOutDir true",
+  "phoenix_vite.npm vite build --emptyOutDir false --ssr js/server.js --outDir ../priv/static"
+]
+```
+
+If your SSR manifest is not at `../priv/static/.vite/ssr-manifest.json` relative to the Vite root, configure the plugin path:
+
+```javascript
+liveVuePlugin({ ssrManifest: "../priv/static/.vite/ssr-manifest.json" })
+```
 
 ## 1.0.1 - 2026-02-19
 

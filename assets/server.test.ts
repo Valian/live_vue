@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { describe, it, expect } from "vitest"
 import { renderPreloadLink, renderPreloadLinks } from "./server"
 
@@ -15,9 +17,7 @@ describe("renderPreloadLink", () => {
   })
 
   it("returns stylesheet for .css files", () => {
-    expect(renderPreloadLink("/assets/style.css")).toBe(
-      `<link rel="stylesheet" href="/assets/style.css">`
-    )
+    expect(renderPreloadLink("/assets/style.css")).toBe(`<link rel="stylesheet" href="/assets/style.css">`)
   })
 
   it("returns font preload for .woff files", () => {
