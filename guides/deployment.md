@@ -120,7 +120,7 @@ For bare metal or VM deployments:
 
 ## Production Checklist
 
-- [ ] Assets built (`mix assets.build`)
+- [ ] Assets built (`mix assets.deploy`, which also creates `priv/static/server.mjs`)
 - [ ] SSR configured properly (see [Configuration](configuration.md#production-ssr-setup))
 - [ ] `LiveVue.SSR.QuickBEAM` added to supervision tree
 - [ ] Database configured

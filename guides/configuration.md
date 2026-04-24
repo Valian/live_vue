@@ -24,7 +24,7 @@ config :live_vue,
   vite_host: nil,
 
   # SSR server bundle path (relative to priv directory)
-  # Created by Vite "build-server" command
+  # Created by the Mix assets build/deploy alias
   ssr_filepath: "./static/server.mjs",
 
   # Testing configuration
@@ -392,10 +392,19 @@ children = [
 
 ```bash
 # In your deployment script
-cd assets && npm run build-server
+mix assets.deploy
 ```
 
-The server bundle will be created at `priv/static/server.mjs` and loaded by QuickBEAM at startup.
+The installer configures the Mix asset alias to run both the client Vite build and the SSR build:
+
+```elixir
+"assets.deploy": [
+  "phoenix_vite.npm vite build --manifest --ssrManifest --emptyOutDir true",
+  "phoenix_vite.npm vite build --emptyOutDir false --ssr js/server.js --outDir ../priv/static"
+]
+```
+
+The SSR bundle will be created at `priv/static/server.mjs` and loaded by QuickBEAM at startup.
 
 ### SSR Troubleshooting
 

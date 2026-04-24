@@ -22,7 +22,7 @@ lib/
 ├── live_vue/components.ex   # <.vue> component, props handling
 ├── live_vue/encoder.ex      # JSON encoding for Vue props
 ├── live_vue/slots.ex        # Slot interoperability
-└── live_vue/ssr/            # SSR: NodeJS and ViteJS modes
+└── live_vue/ssr/            # SSR: QuickBEAM, NodeJS, and ViteJS modes
 assets/
 ├── index.ts                 # Main entry, getHooks()
 ├── hooks.ts                 # Phoenix LiveView hooks
@@ -54,7 +54,8 @@ test/e2e/                    # Playwright E2E tests with Phoenix server
 - `useLiveUpload(uploadName)` - File upload integration
 
 ### SSR Modes
-- `LiveVue.SSR.NodeJS` - Node.js subprocess (default)
+- `LiveVue.SSR.QuickBEAM` - embedded BEAM runtime (production default)
+- `LiveVue.SSR.NodeJS` - Node.js subprocess
 - `LiveVue.SSR.ViteJS` - HTTP to Vite dev server (dev mode)
 
 ## E2E Testing
