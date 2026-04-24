@@ -325,18 +325,16 @@ defmodule Mix.Tasks.LiveVue.Install do
       app_module = igniter |> Igniter.Project.Application.app_name() |> to_string()
       app_file = "lib/#{Macro.underscore(app_module)}/application.ex"
 
-      # Use simple file update instead of complex AST manipulation
       Igniter.update_file(igniter, app_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          # Look for the children list and add LiveVue.SSR.QuickBEAM right after the opening bracket
-          if String.contains?(content, "children = [") and not String.contains?(content, "LiveVue.SSR.QuickBEAM") do
+          if String.contains?(content, "LiveVue.SSR.QuickBEAM") do
+            content
+          else
             String.replace(
               content,
-              ~r/(children = \[\s*\n)/,
-              "\\1      LiveVue.SSR.QuickBEAM,\n"
+              ~r/\n(\s*)(Supervisor\.start_link\(children)/,
+              "\n\\1children =\n\\1  children ++\n\\1    if(Application.get_env(:live_vue, :ssr_module) == LiveVue.SSR.QuickBEAM,\n\\1      do: [LiveVue.SSR.QuickBEAM],\n\\1      else: []\n\\1    )\n\n\\1\\2"
             )
-          else
-            content
           end
         end)
       end)
