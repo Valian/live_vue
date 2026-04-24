@@ -17,18 +17,21 @@
     "e2e:test:headed": "npm run e2e:build && npx playwright test --config test/e2e/playwright.config.js --headed",
     "e2e:test:debug": "npm run e2e:build && npx playwright test --config test/e2e/playwright.config.js --debug"
   },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
   "devDependencies": {
     "phoenix": "file:deps/phoenix",
     "phoenix_html": "file:deps/phoenix_html",
     "phoenix_live_view": "file:deps/phoenix_live_view",
     "@playwright/test": "^1.53.0",
     "@types/node": "^22.9.1",
-    "@vitejs/plugin-vue": "^5.2.0",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vitest/ui": "^3.2.4",
     "jsdom": "^26.1.0",
     "prettier": "2.8.7",
     "typescript": "^5.6.2",
-    "vite": "^5.4.8",
+    "vite": "^6.3.0",
     "vitest": "^3.2.4",
     "vue": "^3.5.10"
   },

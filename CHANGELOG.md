@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improvements
 
 - Embedded the Vite SSR manifest into new server bundles at build time through `live_vue/ssrManifest`, avoiding runtime manifest file reads and keeping non-Node SSR bundles free of `fs` imports ([#126](https://github.com/Valian/live_vue/issues/126), [#137](https://github.com/Valian/live_vue/pull/137))
+- **Bumped installer dependencies to latest majors** ([#140](https://github.com/Valian/live_vue/pull/140)):
+  - Vite `^6.3.0` → `^8.0.0` (Rolldown-based bundler — significantly faster builds)
+  - `@vitejs/plugin-vue` `^5.0.4` → `^6.0.0`
+  - TypeScript `^5.4.5` → `^6.0.0`
+  - `vue-tsc` `^2.0.13` → `^3.0.0`
+  - `@vueuse/core` `^13.7.0` → `^14.0.0`
+  - TailwindCSS `^4.1.0` → `^4.2.0`, `@tailwindcss/vite` `^4.1.0` → `^4.2.0`
+- Declared `vue ^3.4.0` as a `peerDependency` of the library instead of injecting it into the user's `package.json` via the installer ([#140](https://github.com/Valian/live_vue/pull/140))
 
 ### Bug Fixes
 
