@@ -243,23 +243,22 @@ defmodule Mix.Tasks.LiveVue.Install do
           """
           {
             "dependencies": {
-              "@vueuse/core": "^13.7.0",
+              "@vueuse/core": "^14.0.0",
               "live_vue": "file:./deps/live_vue",
               "phoenix": "file:./deps/phoenix",
               "phoenix_html": "file:./deps/phoenix_html",
               "phoenix_live_view": "file:./deps/phoenix_live_view",
-              "topbar": "^3.0.0",
-              "vue": "^3.4.21"
+              "topbar": "^3.0.0"
             },
             "devDependencies": {
-              "@tailwindcss/vite": "^4.1.0",
-              "@vitejs/plugin-vue": "^5.0.4",
+              "@tailwindcss/vite": "^4.2.0",
+              "@vitejs/plugin-vue": "^6.0.0",
               "daisyui": "^5.0.0",
               "phoenix_vite": "file:./deps/phoenix_vite",
-              "tailwindcss": "^4.1.0",
-              "typescript": "^5.4.5",
-              "vite": "^6.3.0",
-              "vue-tsc": "^2.0.13"
+              "tailwindcss": "^4.2.0",
+              "typescript": "^6.0.0",
+              "vite": "^8.0.0",
+              "vue-tsc": "^3.0.0"
             }
           }
           """
