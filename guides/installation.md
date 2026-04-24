@@ -6,7 +6,7 @@ LiveVue replaces `esbuild` with [Vite](https://vitejs.dev/) for both client side
 
 - Vite provides a best-in-class Hot-Reload functionality and offers [many benefits](https://vitejs.dev/guide/why#why-vite)
 - `esbuild` package doesn't support plugins, so we would need to setup a custom build process anyway
-- In production, we'll use [elixir-nodejs](https://github.com/revelrylabs/elixir-nodejs) for SSR
+- In production, SSR runs inside the BEAM via [QuickBEAM](https://hex.pm/packages/quickbeam) — no Node.js needed at runtime
 
 If you don't need SSR, you can easily disable it with one line of configuration.
 

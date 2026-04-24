@@ -38,9 +38,6 @@
     "./vitePlugin": {
       "import": "./assets/vitePlugin.js"
     },
-    "./stubNodeBuiltins": {
-      "import": "./assets/stubNodeBuiltins.js"
-    },
     "./server": {
       "import": "./assets/server.ts",
       "types": "./assets/server.ts"

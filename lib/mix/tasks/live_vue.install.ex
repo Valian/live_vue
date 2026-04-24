@@ -18,8 +18,8 @@ defmodule Mix.Tasks.LiveVue.Install do
 
   import Mix.Tasks.PhoenixVite.Install.Helper
 
-  @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
   with_igniter do
+    @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
     use Igniter.Mix.Task
 
     alias Igniter.Libs.Phoenix
@@ -40,6 +40,7 @@ defmodule Mix.Tasks.LiveVue.Install do
 
       igniter
       |> Igniter.compose_task("phoenix_vite.install", igniter.args.argv)
+      |> Igniter.Project.Deps.add_dep({:quickbeam, "~> 0.8"})
       |> configure_environments(app_name)
       |> add_live_vue_to_html_helpers(app_name)
       |> update_javascript_configuration()
@@ -63,7 +64,7 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> Config.configure("config.exs", :live_vue, [:shared_props], {:code, Sourceror.parse_string!("[]")})
       |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
       |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})
-      |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.NodeJS")})
+      |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.QuickBEAM")})
       |> Config.configure("prod.exs", :live_vue, [:ssr], true)
     end
 
@@ -211,7 +212,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           ~r/build: {/s,
-          "ssr: { noExternal: process.env.NODE_ENV === \"production\" ? true : undefined },\n    build: {"
+          "ssr: {\n      noExternal: process.env.NODE_ENV === \"production\" ? true : undefined,\n      resolve: { conditions: [\"import\", \"module\", \"browser\", \"default\"] },\n    },\n    build: {"
         )
       end
     end
@@ -328,12 +329,12 @@ defmodule Mix.Tasks.LiveVue.Install do
       # Use simple file update instead of complex AST manipulation
       Igniter.update_file(igniter, app_file, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          # Look for the children list and add NodeJS.Supervisor right after the opening bracket
-          if String.contains?(content, "children = [") and not String.contains?(content, "NodeJS.Supervisor") do
+          # Look for the children list and add LiveVue.SSR.QuickBEAM right after the opening bracket
+          if String.contains?(content, "children = [") and not String.contains?(content, "LiveVue.SSR.QuickBEAM") do
             String.replace(
               content,
               ~r/(children = \[\s*\n)/,
-              "\\1      {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},\n"
+              "\\1      LiveVue.SSR.QuickBEAM,\n"
             )
           else
             content

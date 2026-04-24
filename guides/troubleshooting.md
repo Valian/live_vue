@@ -298,18 +298,13 @@ config :live_vue,
 
 For complete SSR configuration options, see [Configuration](configuration.md#server-side-rendering-ssr).
 
-**Verify Node.js version:**
-```bash
-node --version  # Should be 19+
-```
-
 ### SSR Errors in Production
 
-**Check NodeJS supervisor:**
+**Check QuickBEAM is in your supervision tree:**
 ```elixir
 # application.ex
 children = [
-  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
+  LiveVue.SSR.QuickBEAM,
   # ... other children
 ]
 ```

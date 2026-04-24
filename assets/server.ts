@@ -78,6 +78,7 @@ export const getRender = (componentsOrApp: Components | LiveVueOptions, manifest
  * We need to load it to know which files to preload for the given page.
  * @param path - The path to the manifest file.
  * @returns A record of the assets.
+ * @deprecated Use `import manifest from "live_vue/ssrManifest"` instead. Will be removed in LiveVue 2.0.
  */
 export const loadManifest = (path: string): Record<string, string[]> => {
   try {

@@ -79,8 +79,15 @@ function liveVuePlugin(opts = {}) {
     },
     resolveId(id) {
       if (id === ssrManifestModuleId) return resolvedSsrManifestModuleId
+      // vue/server-renderer imports node:stream for its streaming API (renderToNodeStream),
+      // but LiveVue only uses renderToString. Stub it out so the SSR bundle is self-contained
+      // and can run in non-Node runtimes like QuickBEAM.
+      if (config?.build?.ssr && id === "node:stream") return "\0stub:node:stream"
     },
     load(id) {
+      if (id === "\0stub:node:stream") {
+        return "function Readable() {} export { Readable }; export default { Readable }"
+      }
       if (id !== resolvedSsrManifestModuleId) return
 
       const root = config?.root || process.cwd()

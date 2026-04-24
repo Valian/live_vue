@@ -12,7 +12,7 @@ import Config
 config :live_vue,
   # SSR module selection
   # For development: LiveVue.SSR.ViteJS
-  # For production: LiveVue.SSR.NodeJS
+  # For production: LiveVue.SSR.QuickBEAM (default) or LiveVue.SSR.NodeJS
   ssr_module: nil,
 
   # Default SSR behavior
@@ -24,7 +24,7 @@ config :live_vue,
   vite_host: nil,
 
   # SSR server bundle path (relative to priv directory)
-  # Created by Vite "build-server" command
+  # Created by the Mix assets build/deploy alias
   ssr_filepath: "./static/server.mjs",
 
   # Testing configuration
@@ -59,11 +59,11 @@ config :live_vue,
 ```elixir
 # config/prod.exs
 config :live_vue,
-  ssr_module: LiveVue.SSR.NodeJS,
+  ssr_module: LiveVue.SSR.QuickBEAM,
   ssr: true
 
-# or use embedded QuickBEAM (no Node.js needed in production):
-# ssr_module: LiveVue.SSR.QuickBEAM
+# or use Node.js-based SSR (requires Node.js 19+ in production):
+# ssr_module: LiveVue.SSR.NodeJS
 
 # or disable SSR entirely:
 # ssr_module: nil, ssr: false
@@ -377,26 +377,34 @@ Vue SSR is compiled into optimized string concatenation for maximum performance.
 
 ### Production SSR Setup
 
-For production deployments, you'll need Node.js 19+ and proper configuration:
+The default production setup uses QuickBEAM, which runs JavaScript inside the BEAM — no Node.js needed at runtime.
 
-1. **Install Node.js 19+** in your production environment
-2. **Configure NodeJS supervisor** in your `application.ex`:
+1. **Add QuickBEAM** to your supervision tree in `application.ex`:
 
 ```elixir
 children = [
-  {NodeJS.Supervisor, [path: LiveVue.SSR.NodeJS.server_path(), pool_size: 4]},
+  LiveVue.SSR.QuickBEAM,
   # ... other children
 ]
 ```
 
-3. **Build server bundle** as part of your deployment:
+2. **Build server bundle** as part of your deployment:
 
 ```bash
 # In your deployment script
-cd assets && npm run build-server
+mix assets.deploy
 ```
 
-The server bundle will be created at `priv/static/server.mjs` and used by the NodeJS supervisor.
+The installer configures the Mix asset alias to run both the client Vite build and the SSR build:
+
+```elixir
+"assets.deploy": [
+  "phoenix_vite.npm vite build --manifest --ssrManifest --emptyOutDir true",
+  "phoenix_vite.npm vite build --emptyOutDir false --ssr js/server.js --outDir ../priv/static"
+]
+```
+
+The SSR bundle will be created at `priv/static/server.mjs` and loaded by QuickBEAM at startup.
 
 ### SSR Troubleshooting
 
@@ -405,12 +413,11 @@ The server bundle will be created at `priv/static/server.mjs` and used by the No
 - Verify `vite_host` matches your Vite server URL
 
 **SSR failing in production?**
-- Ensure Node.js 19+ is installed
 - Check that `priv/static/server.mjs` exists after build
-- Verify NodeJS supervisor is properly configured
+- Verify `LiveVue.SSR.QuickBEAM` is in your supervision tree
+- Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
 
 **Performance issues?**
-- Consider adjusting the NodeJS pool size based on your server capacity
 - Disable SSR for components that don't benefit from it
 
 ## Shared Props
