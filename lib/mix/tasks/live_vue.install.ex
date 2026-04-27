@@ -19,12 +19,12 @@ defmodule Mix.Tasks.LiveVue.Install do
   import Mix.Tasks.PhoenixVite.Install.Helper
 
   with_igniter do
-    @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
     use Igniter.Mix.Task
 
     alias Igniter.Libs.Phoenix
     alias Igniter.Project.Config
 
+    @usage_rules_content File.read!(Path.join([__DIR__, "../../../usage-rules.md"]))
     @impl Igniter.Mix.Task
     def info(_argv, _parent) do
       %Igniter.Mix.Task.Info{
@@ -64,7 +64,12 @@ defmodule Mix.Tasks.LiveVue.Install do
       |> Config.configure("config.exs", :live_vue, [:shared_props], {:code, Sourceror.parse_string!("[]")})
       |> Config.configure("dev.exs", :live_vue, [:vite_host], "http://localhost:5173")
       |> Config.configure("dev.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.ViteJS")})
-      |> Config.configure("prod.exs", :live_vue, [:ssr_module], {:code, Sourceror.parse_string!("LiveVue.SSR.QuickBEAM")})
+      |> Config.configure(
+        "prod.exs",
+        :live_vue,
+        [:ssr_module],
+        {:code, Sourceror.parse_string!("LiveVue.SSR.QuickBEAM")}
+      )
       |> Config.configure("prod.exs", :live_vue, [:ssr], true)
     end
 
@@ -212,7 +217,7 @@ defmodule Mix.Tasks.LiveVue.Install do
         String.replace(
           content,
           ~r/build: {/s,
-          "ssr: {\n      noExternal: process.env.NODE_ENV === \"production\" ? true : undefined,\n      resolve: { conditions: [\"import\", \"module\", \"browser\", \"default\"] },\n    },\n    build: {"
+          ~s(ssr: {\n      noExternal: process.env.NODE_ENV === "production" ? true : undefined,\n      resolve: { conditions: ["import", "module", "browser", "default"] },\n    },\n    build: {)
         )
       end
     end

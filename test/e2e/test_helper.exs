@@ -60,7 +60,6 @@ defmodule LiveVue.E2E.Layout do
     {@inner_content}
     """
   end
-
 end
 
 defmodule LiveVue.E2E.Hooks do
