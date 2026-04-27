@@ -171,22 +171,20 @@ Elixir changes are reflected immediately. For TypeScript changes, run `npm insta
 
 ### Releasing
 
-Release is done with `expublish` package.
+Release is done with `easy_publish`.
 
--   Write version changelog in untracked `RELEASE.md` file
--   Update version in `INSTALLATION.md`
+-   Update `CHANGELOG.md`
+-   Check the version in `mix.exs`
+-   Check the version in `package.json`
 
 Run
 
 ```bash
-git add INSTALLATION.md
-git commit -m "INSTALLATION version bump"
-
 # to ensure everything works fine
-mix expublish.minor --dry-run --allow-untracked --branch=main
+mix release.minor --dry-run
 
 # to publish
-mix expublish.minor --allow-untracked --branch=main
+mix release.minor
 ```
 
 ## Features Implemented 🎯
@@ -198,6 +196,10 @@ mix expublish.minor --allow-untracked --branch=main
 - [x] `useEventReply` - easy handling of `{:reply, data, socket}` responses
 - [x] `useLiveForm` - Ecto changesets & server-side validation
 - [x] Phoenix Streams - full support for `stream()` operations
+- [x] `useLiveUpload` - LiveView file uploads from Vue components
+- [x] `v-inject` - Vue components inside Vue slots across LiveView navigation
+- [x] Headless LiveVue components - shared reactive props without visible UI
+- [x] QuickBEAM SSR - embedded production SSR without Node.js at runtime
 
 ## Credits
 

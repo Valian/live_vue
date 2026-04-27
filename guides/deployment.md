@@ -9,7 +9,7 @@ inside the BEAM — **no Node.js required in production**.
 >
 > If you prefer the Node.js-based SSR, you can switch to `LiveVue.SSR.NodeJS`.
 > See [Configuration](configuration.md#server-side-rendering-ssr) for details.
-> This requires Node.js 19+ installed in production and `NodeJS.Supervisor` in your supervision tree.
+> This requires Node.js 24+ installed in production and `NodeJS.Supervisor` in your supervision tree.
 
 ## General Requirements
 
@@ -45,7 +45,7 @@ RUN apt-get update -y && apt-get install -y build-essential git curl \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Install Node.js for building assets
-RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && apt-get install -y nodejs
 
 # Copy application code
 COPY . .

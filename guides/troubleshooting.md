@@ -245,7 +245,7 @@ npm install
 
 ```bash
 # Check TypeScript version compatibility
-npm install typescript@5.5.4 vue-tsc@2.10.0
+npm install -D typescript@^6.0.0 vue-tsc@^3.0.0
 ```
 
 **Vite build errors:**

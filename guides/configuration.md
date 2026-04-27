@@ -62,7 +62,7 @@ config :live_vue,
   ssr_module: LiveVue.SSR.QuickBEAM,
   ssr: true
 
-# or use Node.js-based SSR (requires Node.js 19+ in production):
+# or use Node.js-based SSR (requires Node.js 24+ in production):
 # ssr_module: LiveVue.SSR.NodeJS
 
 # or disable SSR entirely:
@@ -272,7 +272,7 @@ config :live_vue,
 Uses Vite's `ssrLoadModule` for efficient development compilation with instant updates.
 
 #### NodeJS (Production)
-Uses elixir-nodejs with a pre-built server bundle. Requires Node.js 19+ in production:
+Uses elixir-nodejs with a pre-built server bundle. Requires Node.js 24+ in production:
 
 ```elixir
 # config/prod.exs
