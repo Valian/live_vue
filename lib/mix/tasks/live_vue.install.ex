@@ -217,21 +217,42 @@ defmodule Mix.Tasks.LiveVue.Install do
       end
     end
 
-    # Configure Tailwind to include Vue files
+    # Configure Tailwind to include Vue files and fix daisyui imports
     defp configure_tailwind_for_vue(igniter) do
       Igniter.update_file(igniter, "assets/css/app.css", fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          if String.contains?(content, "@source \"../vue\";") do
-            content
-          else
-            String.replace(
-              content,
-              "@source \"../js\";",
-              ~s(@source "../js";\n@source "../vue";)
-            )
-          end
+          content
+          |> add_vue_source()
+          |> fix_daisyui_imports()
         end)
       end)
+    end
+
+    defp add_vue_source(content) do
+      if String.contains?(content, "@source \"../vue\";") do
+        content
+      else
+        String.replace(
+          content,
+          "@source \"../js\";",
+          ~s(@source "../js";\n@source "../vue";)
+        )
+      end
+    end
+
+    # Workaround for Tailwind CSS <4.2.5 not resolving daisyui bare specifiers.
+    # Can be removed after upgrading to tailwindcss >= 4.2.5.
+    # See: https://github.com/tailwindlabs/tailwindcss/pull/19949
+    defp fix_daisyui_imports(content) do
+      content
+      |> String.replace(
+        ~s(@plugin "daisyui" {),
+        ~s(/* Workaround: use full path until tailwindcss >= 4.2.5, see https://github.com/tailwindlabs/tailwindcss/pull/19949 */\n@plugin "daisyui/index.js" {)
+      )
+      |> String.replace(
+        ~s(@plugin "daisyui/theme.js"),
+        ~s(@plugin "daisyui/theme/index.js")
+      )
     end
 
     # Update package.json for Vue dependencies
