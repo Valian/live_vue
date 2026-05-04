@@ -250,7 +250,9 @@ defmodule LiveVue.SharedPropsView do
   end
 
   defp compile_heex(expr, meta, caller) do
-    Phoenix.LiveView.TagEngine.compile(expr,
+    EEx.compile_string(expr,
+      engine: Phoenix.LiveView.TagEngine,
+      source: expr,
       file: caller.file,
       line: caller.line + 1,
       caller: caller,
