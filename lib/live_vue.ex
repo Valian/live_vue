@@ -52,6 +52,7 @@ defmodule LiveVue do
 
   alias LiveVue.Encoder
   alias LiveVue.InjectedSSR
+  alias LiveVue.Patch
   alias LiveVue.Slots
   alias Phoenix.LiveView
   alias Phoenix.LiveView.LiveStream
@@ -126,8 +127,8 @@ defmodule LiveVue do
       |> then(fn assigns -> Map.put_new_lazy(assigns, :id, fn -> id(assigns.__component_name) end) end)
       |> Map.put(:props, props)
       # let's compress it a little bit, and decompress it on the client side
-      |> Map.put(:props_diff, Enum.map(props_diff, &prepare_diff/1))
-      |> Map.put(:streams_diff, Enum.map(streams_diff, &prepare_diff/1))
+      |> Map.put(:props_diff, serialize_patch(props_diff))
+      |> Map.put(:streams_diff, serialize_patch(streams_diff))
       |> Map.put(:handlers, handlers)
       |> Map.put(:slots, Slots.rendered_slot_map(slots))
       |> Map.put(:use_diff, use_diff)
@@ -166,8 +167,8 @@ defmodule LiveVue do
       id={@id}
       data-name={@__component_name}
       data-props={"#{json(Encoder.encode(@props))}"}
-      data-props-diff={"#{json(@props_diff)}"}
-      data-streams-diff={"#{json(@streams_diff)}"}
+      data-props-diff={"#{@props_diff}"}
+      data-streams-diff={"#{@streams_diff}"}
       data-ssr={(@ssr_render != nil) |> to_string()}
       data-use-diff={@use_diff |> to_string()}
       data-handlers={"#{for({k, v} <- @handlers, into: %{}, do: {k, json(v.ops)}) |> json()}"}
@@ -278,6 +279,12 @@ defmodule LiveVue do
 
   # we compress the diff to make it smaller, so it's faster to send to the client
   # then, it's decompressed on the client side
+  @doc false
+  def compress_patch(diff), do: Enum.map(diff, &prepare_diff/1)
+
+  @doc false
+  def serialize_patch(diff), do: Patch.serialize(diff)
+
   defp prepare_diff(%{op: op, path: p, value: value}), do: [op, p, value]
   defp prepare_diff(%{op: op, path: p}), do: [op, p]
 
