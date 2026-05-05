@@ -1,10 +1,66 @@
 defmodule LiveVue.Patch do
-  @moduledoc false
+  @moduledoc """
+  Encodes LiveVue patch operations into the compact wire format used by
+  `data-props-diff` and `data-streams-diff`.
 
+  The payload is a concatenated sequence of operations. Dynamic text fields are
+  byte-length-prefixed, so paths and values can contain delimiters without extra
+  escaping.
+
+  Operation codes:
+
+  | Code | Operation |
+  | --- | --- |
+  | `a` | `add` |
+  | `d` | `remove` |
+  | `r` | `replace` |
+  | `u` | `upsert` |
+  | `l` | `limit` |
+  | `n` | nonce marker, ignored while decoding |
+
+  Normal operations use:
+
+  ```text
+  <op><path_byte_len>:<path><value>
+  ```
+
+  `remove` omits `<value>`. The nonce marker uses `n<digits>` and exists only
+  to force LiveView to send a changed attribute.
+
+  Value tags:
+
+  | Tag | Value |
+  | --- | --- |
+  | `z` | `nil` |
+  | `b0`, `b1` | booleans |
+  | `n<len>:<number>` | number |
+  | `s<len>:<utf8 string>` | string |
+  | `J<len>:<base64url JSON>` | maps, lists, and complex values |
+
+  Paths are encoded from JSON Pointer form by removing the leading slash,
+  joining segments with `.`, and escaping literal `.` as `~2`. Existing JSON
+  Pointer escapes such as `~0` and `~1` are preserved.
+  """
+
+  @doc """
+  Serializes patch maps into a compact binary payload.
+
+  Expected patch shapes are `%{op: op, path: path, value: value}`,
+  `%{op: "remove", path: path}`, and `%{op: "test", path: "", value: nonce}`.
+  The nonce test operation is encoded as a marker and is not returned by
+  `deserialize/1`.
+  """
   def serialize(patches) do
     :erlang.iolist_to_binary(for patch <- patches, do: serialize_op(patch))
   end
 
+  @doc """
+  Deserializes a compact patch payload into list-shaped operations.
+
+  Returns `[]` for an empty payload. Decoded operations are shaped as
+  `[op, path]` for `remove` and `[op, path, value]` for all value-bearing
+  operations. Nonce markers are skipped.
+  """
   def deserialize(""), do: []
 
   def deserialize(payload) when is_binary(payload) do
