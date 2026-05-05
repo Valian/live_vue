@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## Unreleased
+
+### Improvements
+
+- Improved compact patch serialization performance and documented the compact patch wire format.
+
 ## 1.1.1 - 2026-05-04
 
 ### Bug Fixes
