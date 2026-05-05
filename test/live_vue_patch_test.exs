@@ -3,41 +3,186 @@ defmodule LiveVuePatchTest do
 
   alias LiveVue.Patch
 
-  test "serializes and deserializes scalar operations" do
-    patches = [
-      %{op: "test", path: "", value: 123},
-      %{op: "replace", path: "/count", value: 6},
-      %{op: "add", path: "/items/3", value: "d"},
-      %{op: "remove", path: "/items/0"}
-    ]
+  describe "values" do
+    test "round-trips nil" do
+      patches = [%{op: "replace", path: "/value", value: nil}]
 
-    assert Patch.serialize(patches) == "n123r5:countn1:6a7:items.3s1:dd7:items.0"
+      assert serialize_deserialize(patches) == patches
+    end
 
-    assert Patch.deserialize(Patch.serialize(patches)) == [
-             ["replace", "/count", 6],
-             ["add", "/items/3", "d"],
-             ["remove", "/items/0"]
-           ]
+    test "round-trips booleans" do
+      patches = [
+        %{op: "replace", path: "/enabled", value: true},
+        %{op: "replace", path: "/disabled", value: false}
+      ]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips integers" do
+      patches = [%{op: "replace", path: "/count", value: 6}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips floats" do
+      patches = [%{op: "replace", path: "/price", value: 12.5}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips strings" do
+      patches = [%{op: "replace", path: "/title", value: "Published"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips lists" do
+      patches = [%{op: "replace", path: "/tags", value: ["bug", "urgent"]}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips maps" do
+      patches = [%{op: "replace", path: "/user", value: %{"id" => 3, "name" => "Charlie"}}]
+
+      assert serialize_deserialize(patches) == patches
+    end
   end
 
-  test "uses base64url JSON for complex values" do
-    patches = [%{op: "add", path: "/rows", value: %{id: 3, name: "Charlie"}}]
+  describe "paths" do
+    test "round-trips the document root path" do
+      patches = [%{op: "replace", path: "", value: %{"status" => "ready"}}]
 
-    assert Patch.serialize(patches) == "a4:rowsJ34:eyJpZCI6MywibmFtZSI6IkNoYXJsaWUifQ"
-    assert Patch.deserialize(Patch.serialize(patches)) == [["add", "/rows", %{"id" => 3, "name" => "Charlie"}]]
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips nested paths" do
+      patches = [%{op: "replace", path: "/profile/name", value: "Ada"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips array index paths" do
+      patches = [%{op: "replace", path: "/items/0/name", value: "Keyboard"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips append marker paths" do
+      patches = [%{op: "add", path: "/items/-", value: "new"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips dots inside path segments" do
+      patches = [%{op: "replace", path: "/settings/a.b.c", value: "value"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips JSON pointer escapes in path segments" do
+      patches = [%{op: "replace", path: "/settings/a~1b~0c", value: "value"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips UTF-8 paths and values using byte lengths" do
+      patches = [%{op: "replace", path: "/profile/na.me", value: "zażółć"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
   end
 
-  test "escapes dots in path segments while preserving JSON pointer escapes" do
-    patches = [%{op: "replace", path: "/settings/a~1b~0c|d.e", value: "value"}]
+  describe "operations" do
+    test "round-trips an empty patch list" do
+      patches = []
 
-    assert Patch.serialize(patches) == "r21:settings.a~1b~0c|d~2es5:value"
-    assert Patch.deserialize(Patch.serialize(patches)) == [["replace", "/settings/a~1b~0c|d.e", "value"]]
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips remove operations without a value" do
+      patches = [%{op: "remove", path: "/items/0"}]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "omits nonce test operations when deserializing" do
+      patches = [
+        %{op: "test", path: "", value: 123},
+        %{op: "replace", path: "/count", value: 6}
+      ]
+
+      assert serialize_deserialize(patches) == [%{op: "replace", path: "/count", value: 6}]
+    end
   end
 
-  test "uses UTF-8 byte lengths" do
-    patches = [%{op: "replace", path: "/profile/na.me", value: "zażółć"}]
+  describe "complex patches" do
+    test "round-trips mixed scalar operations" do
+      patches = [
+        %{op: "replace", path: "/count", value: 6},
+        %{op: "add", path: "/items/3", value: "d"},
+        %{op: "remove", path: "/items/0"}
+      ]
 
-    assert Patch.serialize(patches) == "r14:profile.na~2mes10:zażółć"
-    assert Patch.deserialize(Patch.serialize(patches)) == [["replace", "/profile/na.me", "zażółć"]]
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips nested object updates" do
+      patches = [
+        %{
+          op: "replace",
+          path: "/form/errors",
+          value: %{
+            "email" => ["must have the @ sign"],
+            "age" => ["must be greater than 18"]
+          }
+        },
+        %{op: "replace", path: "/form/touched", value: %{"email" => true, "age" => true}}
+      ]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips stream upsert and limit operations" do
+      patches = [
+        %{
+          op: "upsert",
+          path: "/users/-",
+          value: %{"id" => 4, "name" => "Margaret Hamilton", "role" => "guest"}
+        },
+        %{op: "limit", path: "/users", value: 10}
+      ]
+
+      assert serialize_deserialize(patches) == patches
+    end
+
+    test "round-trips multiple nested lists and objects" do
+      patches = [
+        %{
+          op: "replace",
+          path: "/cart/items/1",
+          value: %{"id" => "sku-2", "name" => "Mouse", "qty" => 3, "price" => 49.5}
+        },
+        %{
+          op: "replace",
+          path: "/cart/totals",
+          value: %{"subtotal" => 277.5, "tax" => 22.2, "total" => 299.7}
+        },
+        %{op: "replace", path: "/cart/coupon", value: nil}
+      ]
+
+      assert serialize_deserialize(patches) == patches
+    end
   end
+
+  defp serialize_deserialize(patches) do
+    patches
+    |> Patch.serialize()
+    |> Patch.deserialize()
+    |> Enum.map(&patch_from_wire/1)
+  end
+
+  defp patch_from_wire([op, path]), do: %{op: op, path: path}
+  defp patch_from_wire([op, path, value]), do: %{op: op, path: path, value: value}
 end
