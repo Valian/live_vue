@@ -102,12 +102,13 @@ defmodule LiveVue.Test do
 
   def get_vue(html, opts) when is_binary(html) do
     if Code.ensure_loaded?(LazyHTML) do
-      lazy_html =
+      components =
         html
         |> LazyHTML.from_document()
-        |> LazyHTML.query("[phx-hook='VueHook']")
+        |> LazyHTML.to_tree()
+        |> vue_components()
 
-      vue_tree = find_component!(lazy_html, opts)
+      vue_tree = find_component!(components, opts)
 
       %{
         props: Jason.decode!(attr_from_tree(vue_tree, "data-props")),
@@ -118,8 +119,8 @@ defmodule LiveVue.Test do
         ssr: vue_tree |> attr_from_tree("data-ssr") |> String.to_existing_atom(),
         use_diff: vue_tree |> attr_from_tree("data-use-diff") |> String.to_existing_atom(),
         class: attr_from_tree(vue_tree, "class"),
-        props_diff: Jason.decode!(attr_from_tree(vue_tree, "data-props-diff")),
-        streams_diff: Jason.decode!(attr_from_tree(vue_tree, "data-streams-diff")),
+        props_diff: LiveVue.Patch.deserialize(attr_from_tree(vue_tree, "data-props-diff")),
+        streams_diff: LiveVue.Patch.deserialize(attr_from_tree(vue_tree, "data-streams-diff")),
         doc: vue_tree
       }
     else
@@ -150,12 +151,10 @@ defmodule LiveVue.Test do
   end
 
   defp find_component!(components, opts) do
-    components_tree = LazyHTML.to_tree(components)
-
-    available = Enum.map_join(components_tree, ", ", &"#{attr_from_tree(&1, "data-name")}##{attr_from_tree(&1, "id")}")
+    available = Enum.map_join(components, ", ", &"#{attr_from_tree(&1, "data-name")}##{attr_from_tree(&1, "id")}")
 
     matched =
-      Enum.reduce(opts, components_tree, fn
+      Enum.reduce(opts, components, fn
         {:id, id}, result ->
           with [] <- Enum.filter(result, &(attr_from_tree(&1, "id") == id)) do
             raise "No Vue component found with id=\"#{id}\". Available components: #{available}"
@@ -185,4 +184,18 @@ defmodule LiveVue.Test do
       nil -> nil
     end
   end
+
+  defp vue_components(tree) when is_list(tree), do: Enum.flat_map(tree, &vue_components/1)
+
+  defp vue_components({_tag, attrs, children} = node) do
+    rest = vue_components(children)
+
+    if Enum.any?(attrs, fn {key, value} -> key == "phx-hook" and value == "VueHook" end) do
+      [node | rest]
+    else
+      rest
+    end
+  end
+
+  defp vue_components(_), do: []
 end

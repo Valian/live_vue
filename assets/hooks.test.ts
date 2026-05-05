@@ -206,20 +206,19 @@ describe("getVueHook", () => {
       await vueHook.mounted!.call(mockHookContext)
 
       // Define a complex diff that modifies various parts of the props
-      const mockPropsDiff = [
-        ["replace", "/user/name", "Jane Smith"],
-        ["replace", "/user/age", 25],
-        ["add", "/user/email", "jane@example.com"],
-        ["replace", "/user/preferences/theme", "dark"],
-        ["add", "/items/-", "orange"], // Add to end of array
-        ["remove", "/items/0"], // Remove first item
-        ["replace", "/message", "Updated message"],
-        ["add", "/newTopLevelProp", "brand new property"]
-      ]
+      const mockPropsDiff =
+        "r9:user.names10:Jane Smith" +
+        "r8:user.agen2:25" +
+        "a10:user.emails16:jane@example.com" +
+        "r22:user.preferences.themes4:dark" +
+        "a7:items.-s6:orange" +
+        "d7:items.0" +
+        "r7:messages15:Updated message" +
+        "a15:newTopLevelProps18:brand new property"
 
       mockHookContext.el.getAttribute.mockImplementation((name: string) => {
         if (name === "data-use-diff") return "true"
-        if (name === "data-props-diff") return JSON.stringify(mockPropsDiff)
+        if (name === "data-props-diff") return mockPropsDiff
         return null
       })
 

@@ -1,6 +1,7 @@
 import { h } from "vue"
 import { mapValues, fromUtf8Base64 } from "./utils.js"
 import type { Operation } from "./jsonPatch.js"
+import { decodeCompactPatch } from "./compactPatch.js"
 
 export type SlotMap = Record<string, (slotProps?: Record<string, any>) => any>
 
@@ -23,12 +24,7 @@ export const getSlots = (el: HTMLElement): SlotMap => {
 }
 
 export const getDiff = (el: HTMLElement, attributeName: string): Operation[] => {
-  const dataPropsDiff = getAttributeJson(el, attributeName) || []
-  return dataPropsDiff.map(([op, path, value]: [string, string, any]) => ({
-    op,
-    path,
-    value,
-  }))
+  return decodeCompactPatch(el.getAttribute(attributeName))
 }
 
 /**
@@ -67,4 +63,3 @@ export const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> 
 })
 
 export const getElementId = (el: HTMLElement): string | null => el.id || el.getAttribute("id")
-
