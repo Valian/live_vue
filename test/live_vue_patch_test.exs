@@ -48,6 +48,18 @@ defmodule LiveVuePatchTest do
 
       assert serialize_deserialize(patches) == patches
     end
+
+    test "round-trips caret-encoded JSON edge cases" do
+      patches = [
+        %{
+          op: "replace",
+          path: "/meta",
+          value: %{"empty" => "", "caret" => "^", "tilde" => "~", "both" => "~^"}
+        }
+      ]
+
+      assert serialize_deserialize(patches) == patches
+    end
   end
 
   describe "paths" do
