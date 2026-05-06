@@ -9,7 +9,6 @@ const opByCode: Record<string, Operation["op"]> = {
 }
 
 const textEncoder = new TextEncoder()
-const textDecoder = new TextDecoder()
 
 export const decodeCompactPatch = (payload: string | null): Operation[] => {
   if (!payload) return []
@@ -34,7 +33,7 @@ export const decodeCompactPatch = (payload: string | null): Operation[] => {
 
     const pathResult = readUtf8Bytes(payload, offset, pathLength.value)
     offset = pathResult.offset
-    const path = decodePath(pathResult.value)
+    const path = pathResult.value
 
     if (op === "remove") {
       operations.push({ op, path })
@@ -47,14 +46,6 @@ export const decodeCompactPatch = (payload: string | null): Operation[] => {
   }
 
   return operations
-}
-
-const decodePath = (path: string): string => {
-  if (path === "") return ""
-  return `/${path
-    .split(".")
-    .map(segment => segment.replace(/~2/g, "."))
-    .join("/")}`
 }
 
 const readValue = (payload: string, offset: number): { value: any; offset: number } => {
@@ -73,7 +64,7 @@ const readValue = (payload: string, offset: number): { value: any; offset: numbe
       return readLengthPrefixed(payload, offset)
     case "J": {
       const result = readLengthPrefixed(payload, offset)
-      return { value: JSON.parse(fromBase64Url(result.value)), offset: result.offset }
+      return { value: decodeCompactJson(result.value), offset: result.offset }
     }
     default:
       throw new Error(`Unknown LiveVue patch value tag: ${tag}`)
@@ -116,9 +107,10 @@ const readUtf8Bytes = (payload: string, offset: number, byteLength: number): { v
   return { value: payload.slice(offset, end), offset: end }
 }
 
-const fromBase64Url = (value: string): string => {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=")
-  const binary = atob(padded)
-  const bytes = Uint8Array.from(binary, char => char.charCodeAt(0))
-  return textDecoder.decode(bytes)
+export const decodeCompactJson = (value: string): any => {
+  return JSON.parse(value.replace(/~~|~\^|\^/g, match => {
+    if (match === "~~") return "~"
+    if (match === "~^") return "^"
+    return "\""
+  }))
 }

@@ -207,14 +207,14 @@ describe("getVueHook", () => {
 
       // Define a complex diff that modifies various parts of the props
       const mockPropsDiff =
-        "r9:user.names10:Jane Smith" +
-        "r8:user.agen2:25" +
-        "a10:user.emails16:jane@example.com" +
-        "r22:user.preferences.themes4:dark" +
-        "a7:items.-s6:orange" +
-        "d7:items.0" +
-        "r7:messages15:Updated message" +
-        "a15:newTopLevelProps18:brand new property"
+        "r10:/user/names10:Jane Smith" +
+        "r9:/user/agen2:25" +
+        "a11:/user/emails16:jane@example.com" +
+        "r23:/user/preferences/themes4:dark" +
+        "a8:/items/-s6:orange" +
+        "d8:/items/0" +
+        "r8:/messages15:Updated message" +
+        "a16:/newTopLevelProps18:brand new property"
 
       mockHookContext.el.getAttribute.mockImplementation((name: string) => {
         if (name === "data-use-diff") return "true"

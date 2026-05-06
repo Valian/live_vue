@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improvements
 
 - Improved compact patch serialization performance and documented the compact patch wire format.
+- Reduced LiveVue wire payload size by caret-encoding full props and complex patch values instead of relying on HTML-safe JSON/base64url JSON.
 
 ## 1.1.1 - 2026-05-04
 

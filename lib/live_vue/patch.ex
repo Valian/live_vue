@@ -35,11 +35,9 @@ defmodule LiveVue.Patch do
   | `b0`, `b1` | booleans |
   | `n<len>:<number>` | number |
   | `s<len>:<utf8 string>` | string |
-  | `J<len>:<base64url JSON>` | maps, lists, and complex values |
+  | `J<len>:<caret-encoded JSON>` | maps, lists, and complex values |
 
-  Paths are encoded from JSON Pointer form by removing the leading slash,
-  joining segments with `.`, and escaping literal `.` as `~2`. Existing JSON
-  Pointer escapes such as `~0` and `~1` are preserved.
+  Paths are transported as JSON Pointer strings unchanged.
   """
 
   @doc """
@@ -52,6 +50,32 @@ defmodule LiveVue.Patch do
   """
   def serialize(patches) do
     :erlang.iolist_to_binary(for patch <- patches, do: serialize_op(patch))
+  end
+
+  @doc """
+  Encodes a JSON value for safe, compact HTML attribute transport.
+
+  The value is encoded with Jason's default JSON escaping, then JSON quote
+  characters are replaced with `^`. Literal `~` and `^` characters are escaped
+  as `~~` and `~^`, so the transform is reversible by `decode_object/1`.
+  """
+  def encode_object(value) do
+    value
+    |> Jason.encode!()
+    |> String.replace("~", "~~")
+    |> String.replace("^", "~^")
+    |> String.replace("\"", "^")
+  end
+
+  @doc false
+  def decode_object(value) when is_binary(value) do
+    value
+    |> String.replace(~r/~~|~\^|\^/, fn
+      "~~" -> "~"
+      "~^" -> "^"
+      "^" -> "\""
+    end)
+    |> Jason.decode!()
   end
 
   @doc """
@@ -81,16 +105,7 @@ defmodule LiveVue.Patch do
     [op_code(op), Integer.to_string(byte_size(path)), ?:, path]
   end
 
-  defp encode_path(""), do: ""
-
-  defp encode_path("/" <> rest) do
-    encode_path(rest, [])
-  end
-
-  defp encode_path(<<>>, acc), do: acc |> :lists.reverse() |> :erlang.iolist_to_binary()
-  defp encode_path(<<?/, rest::binary>>, acc), do: encode_path(rest, [?. | acc])
-  defp encode_path(<<?., rest::binary>>, acc), do: encode_path(rest, ["~2" | acc])
-  defp encode_path(<<char, rest::binary>>, acc), do: encode_path(rest, [char | acc])
+  defp encode_path(path), do: path
 
   defp encode_value(nil), do: "z"
   defp encode_value(true), do: "b1"
@@ -104,11 +119,7 @@ defmodule LiveVue.Patch do
   defp encode_value(value) when is_binary(value), do: ["s", Integer.to_string(byte_size(value)), ?:, value]
 
   defp encode_value(value) do
-    encoded =
-      value
-      |> Jason.encode!()
-      |> Base.url_encode64(padding: false)
-
+    encoded = encode_object(value)
     ["J", Integer.to_string(byte_size(encoded)), ?:, encoded]
   end
 
@@ -123,8 +134,6 @@ defmodule LiveVue.Patch do
     {path_length, rest} = take_length(rest)
     <<path::binary-size(path_length), rest::binary>> = rest
     op = op_from_code(code)
-    path = decode_path(path)
-
     parse_op(op, path, rest, acc)
   end
 
@@ -147,22 +156,11 @@ defmodule LiveVue.Patch do
       case tag do
         "n" -> parse_number(encoded)
         "s" -> encoded
-        "J" -> encoded |> Base.url_decode64!(padding: false) |> Jason.decode!()
+        "J" -> decode_object(encoded)
       end
 
     {value, rest}
   end
-
-  defp decode_path(""), do: ""
-
-  defp decode_path(path) do
-    :erlang.iolist_to_binary([?/ | decode_path(path, [])])
-  end
-
-  defp decode_path(<<>>, acc), do: :lists.reverse(acc)
-  defp decode_path(<<?., rest::binary>>, acc), do: decode_path(rest, [?/ | acc])
-  defp decode_path(<<?~, ?2, rest::binary>>, acc), do: decode_path(rest, [?. | acc])
-  defp decode_path(<<char, rest::binary>>, acc), do: decode_path(rest, [char | acc])
 
   defp parse_number(value) do
     case Integer.parse(value) do

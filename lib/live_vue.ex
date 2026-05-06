@@ -166,7 +166,7 @@ defmodule LiveVue do
     <div
       id={@id}
       data-name={@__component_name}
-      data-props={"#{json(Encoder.encode(@props))}"}
+      data-props={"#{Patch.encode_object(Encoder.encode(@props))}"}
       data-props-diff={"#{@props_diff}"}
       data-streams-diff={"#{@streams_diff}"}
       data-ssr={(@ssr_render != nil) |> to_string()}

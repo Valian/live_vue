@@ -1,7 +1,7 @@
 import { h } from "vue"
 import { mapValues, fromUtf8Base64 } from "./utils.js"
 import type { Operation } from "./jsonPatch.js"
-import { decodeCompactPatch } from "./compactPatch.js"
+import { decodeCompactJson, decodeCompactPatch } from "./compactPatch.js"
 
 export type SlotMap = Record<string, (slotProps?: Record<string, any>) => any>
 
@@ -58,7 +58,7 @@ export const getHandlers = (el: HTMLElement, liveSocket: any): Record<string, (e
  * The props are merged with the event handlers from the "data-handlers" attribute.
  */
 export const getProps = (el: HTMLElement, liveSocket: any): Record<string, any> => ({
-  ...(getAttributeJson(el, "data-props") || {}),
+  ...decodeCompactJson(el.getAttribute("data-props") || "{}"),
   ...getHandlers(el, liveSocket),
 })
 
