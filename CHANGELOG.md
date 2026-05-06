@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improvements
 
-- Improved compact patch serialization performance and documented the compact patch wire format.
-- Reduced LiveVue wire payload size by caret-encoding full props and complex patch values instead of relying on HTML-safe JSON/base64url JSON.
+- Dramatically reduced LiveVue patch payload sizes with a compact wire format for patch operations, cutting the amount of data sent to the client for prop updates ([#143](https://github.com/Valian/live_vue/pull/143)).
+- Extended compact encoding to full props and complex JSON patch values, replacing HTML-safe JSON/base64url JSON with a much smaller caret-encoded representation ([#144](https://github.com/Valian/live_vue/pull/144)).
 
 ## 1.1.1 - 2026-05-04
 
