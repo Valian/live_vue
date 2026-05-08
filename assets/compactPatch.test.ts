@@ -16,6 +16,12 @@ describe("decodeCompactPatch", () => {
     ])
   })
 
+  it("decodes escaped caret JSON values", () => {
+    expect(decodeCompactPatch("a5:/metaJ27:{^tilde^:^~~^,^caret^:^~^^}")).toEqual([
+      { op: "add", path: "/meta", value: { tilde: "~", caret: "^" } },
+    ])
+  })
+
   it("decodes JSON pointer paths", () => {
     expect(decodeCompactPatch("r21:/settings/a~1b~0c|d.es5:value")).toEqual([
       { op: "replace", path: "/settings/a~1b~0c|d.e", value: "value" },
