@@ -3,11 +3,11 @@ import { decodeCompactJson, decodeCompactPatch } from "./compactPatch"
 
 const textEncoder = new TextEncoder()
 
-const byteLength = (value: string) => textEncoder.encode(value).length
+const fieldLength = (value: string) => value.length
 
 const encodeJson = (value: unknown) => JSON.stringify(value).replace(/~/g, "~~").replace(/\^/g, "~^").replace(/"/g, "^")
 
-const field = (value: string) => `${byteLength(value)}:${value}`
+const field = (value: string) => `${fieldLength(value)}:${value}`
 
 const valueField = (value: unknown) => {
   if (value === null) return "z"
@@ -96,24 +96,7 @@ const realistic25kb = makeRealisticPayload(25_000)
 const realistic50kb = makeRealisticPayload(50_000)
 const realisticJsonValue = encodeJson({ articles: Array.from({ length: 30 }, (_, index) => makeArticle(index)) })
 const utf8Sample = Array.from({ length: 150 }, (_, index) => makeArticle(index).summary).join(" | ")
-const utf8SampleBytes = byteLength(utf8Sample)
-
-const findUtf8EndWithTextEncoder = (value: string, offset: number, bytesToRead: number) => {
-  let end = offset
-  let bytes = 0
-
-  while (end < value.length && bytes < bytesToRead) {
-    const codePoint = value.codePointAt(end)
-    if (codePoint === undefined) break
-
-    const char = String.fromCodePoint(codePoint)
-    bytes += textEncoder.encode(char).length
-    end += char.length
-  }
-
-  if (bytes !== bytesToRead) throw new Error("Invalid UTF-8 byte length")
-  return end
-}
+const utf8SampleBytes = textEncoder.encode(utf8Sample).length
 
 const findUtf8EndManually = (value: string, offset: number, bytesToRead: number) => {
   let end = offset
@@ -175,12 +158,12 @@ describe("decodeCompactJson", () => {
   })
 })
 
-describe("UTF-8 byte scanning", () => {
-  bench("TextEncoder per character", () => {
-    findUtf8EndWithTextEncoder(utf8Sample, 0, utf8SampleBytes)
+describe("field boundary detection", () => {
+  bench("UTF-8 byte scan", () => {
+    findUtf8EndManually(utf8Sample, 0, utf8SampleBytes)
   })
 
-  bench("manual byte count", () => {
-    findUtf8EndManually(utf8Sample, 0, utf8SampleBytes)
+  bench("JS string length", () => {
+    utf8Sample.slice(0, utf8Sample.length)
   })
 })

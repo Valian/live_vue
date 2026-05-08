@@ -18,9 +18,8 @@ export const decodeCompactPatch = (payload: string | null): Operation[] => {
     const pathLength = readLength(payload, offset)
     offset = pathLength.offset
 
-    const pathEnd = findUtf8End(payload, offset, pathLength.value)
-    const path = payload.slice(offset, pathEnd)
-    offset = pathEnd
+    const path = payload.slice(offset, offset + pathLength.value)
+    offset += pathLength.value
 
     if (op === "remove") {
       operations.push({ op, path })
@@ -42,9 +41,8 @@ export const decodeCompactPatch = (payload: string | null): Operation[] => {
     const valueLength = readLength(payload, offset)
     offset = valueLength.offset
 
-    const valueEnd = findUtf8End(payload, offset, valueLength.value)
-    const rawValue = payload.slice(offset, valueEnd)
-    offset = valueEnd
+    const rawValue = payload.slice(offset, offset + valueLength.value)
+    offset += valueLength.value
 
     if (tag === "n") {
       operations.push({ op, path, value: Number(rawValue) } as Operation)
@@ -101,39 +99,6 @@ const skipDigits = (payload: string, offset: number): number => {
   }
 
   return offset
-}
-
-const findUtf8End = (payload: string, offset: number, byteLength: number): number => {
-  let end = offset
-  let bytes = 0
-
-  while (end < payload.length && bytes < byteLength) {
-    const code = payload.charCodeAt(end)
-
-    if (code <= 0x7f) {
-      bytes++
-      end++
-    } else if (code <= 0x7ff) {
-      bytes += 2
-      end++
-    } else if (code >= 0xd800 && code <= 0xdbff && end + 1 < payload.length) {
-      const next = payload.charCodeAt(end + 1)
-      if (next >= 0xdc00 && next <= 0xdfff) {
-        bytes += 4
-        end += 2
-      } else {
-        bytes += 3
-        end++
-      }
-    } else {
-      bytes += 3
-      end++
-    }
-  }
-
-  if (bytes !== byteLength) throw new Error("Invalid LiveVue patch UTF-8 byte length")
-
-  return end
 }
 
 export const decodeCompactJson = (value: string): any => {
