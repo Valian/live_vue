@@ -1,4 +1,4 @@
-import type { Operation } from "./jsonPatch.js"
+import { applyPatchOperation, type Operation } from "./jsonPatch.js"
 
 export const decodeCompactPatch = (payload: string | null): Operation[] => {
   if (!payload) return []
@@ -99,6 +99,64 @@ const skipDigits = (payload: string, offset: number): number => {
   }
 
   return offset
+}
+
+export const applyCompactPatch = <T>(document: T, payload: string | null): T => {
+  if (!payload) return document
+
+  let result = document
+  let offset = 0
+
+  while (offset < payload.length) {
+    const code = payload[offset++]
+
+    if (code === "n") {
+      offset = skipDigits(payload, offset)
+      continue
+    }
+
+    const op = opFromCode(code)
+    const pathLength = readLength(payload, offset)
+    offset = pathLength.offset
+
+    const path = payload.slice(offset, offset + pathLength.value)
+    offset += pathLength.value
+
+    if (op === "remove") {
+      result = applyPatchOperation(result, op, path)
+      continue
+    }
+
+    const tag = payload[offset++]
+
+    if (tag === "z") {
+      result = applyPatchOperation(result, op, path, null)
+      continue
+    }
+
+    if (tag === "b") {
+      result = applyPatchOperation(result, op, path, payload[offset++] === "1")
+      continue
+    }
+
+    const valueLength = readLength(payload, offset)
+    offset = valueLength.offset
+
+    const rawValue = payload.slice(offset, offset + valueLength.value)
+    offset += valueLength.value
+
+    if (tag === "n") {
+      result = applyPatchOperation(result, op, path, Number(rawValue))
+    } else if (tag === "s") {
+      result = applyPatchOperation(result, op, path, rawValue)
+    } else if (tag === "J") {
+      result = applyPatchOperation(result, op, path, decodeCompactJson(rawValue))
+    } else {
+      throw new Error(`Unknown LiveVue patch value tag: ${tag}`)
+    }
+  }
+
+  return result
 }
 
 export const decodeCompactJson = (value: string): any => {

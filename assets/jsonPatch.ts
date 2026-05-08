@@ -87,10 +87,7 @@ function resolvePathComponent(component: string, arrayObj: any[]): string | null
     return component
   }
 
-  // Extract the ID from $$<id> syntax
   const targetId = component.substring(2)
-
-  // Find the index of the element with matching __dom_id
   const index = arrayObj.findIndex(item => item && typeof item === "object" && item.__dom_id == targetId)
 
   if (index === -1) {
@@ -99,6 +96,21 @@ function resolvePathComponent(component: string, arrayObj: any[]): string | null
   }
 
   return index.toString()
+}
+
+function readPathSegment(path: string, start: number, end: number): string {
+  const segment = path.slice(start, end)
+  return segment.indexOf("~") === -1 ? segment : unescapePathComponent(segment)
+}
+
+function resolveArrayIndex(key: string, arrayObj: any[], allowAppend: boolean): number | null {
+  if (key.startsWith("$$")) {
+    const resolved = resolvePathComponent(key, arrayObj)
+    return resolved === null ? null : parseInt(resolved, 10)
+  }
+
+  if (key === "-") return allowAppend ? arrayObj.length : arrayObj.length - 1
+  return parseInt(key, 10)
 }
 
 /**
@@ -136,160 +148,138 @@ export function getValueByPointer(document: any, pointer: string): any {
  * Modifies the original document to maintain Vue reactivity.
  */
 export function applyOperation<T>(document: T, operation: Operation): T {
-  // Handle root operations
-  if (operation.path === "") {
-    switch (operation.op) {
+  return applyPatchOperation(
+    document,
+    operation.op,
+    operation.path,
+    "value" in operation ? operation.value : undefined,
+    "from" in operation ? operation.from : undefined
+  )
+}
+
+export function applyPatchOperation<T>(
+  document: T,
+  op: Operation["op"],
+  path: string,
+  value?: AddOperation["value"],
+  from?: string
+): T {
+  if (path === "") {
+    switch (op) {
       case "add":
       case "replace":
-        return (operation as AddOperation | ReplaceOperation).value
+        return value
       case "move":
       case "copy":
-        return getValueByPointer(document, (operation as MoveOperation | CopyOperation).from)
+        return getValueByPointer(document, from || "")
       case "test":
-        return document // Test always returns original document
+        return document
       case "remove":
         return null as any
     }
   }
 
-  const keys = operation.path.split("/").slice(1) // remove empty first element
   let obj = document as any
+  let segmentStart = 1
 
-  // Navigate to parent object
-  for (let i = 0; i < keys.length - 1; i++) {
-    let key = keys[i].indexOf("~") !== -1 ? unescapePathComponent(keys[i]) : keys[i]
+  while (true) {
+    const segmentEnd = path.indexOf("/", segmentStart)
+    if (segmentEnd === -1) break
+
+    const key = readPathSegment(path, segmentStart, segmentEnd)
 
     if (Array.isArray(obj)) {
-      // Handle special $$id syntax for arrays
-      if (key.startsWith("$$")) {
-        const resolved = resolvePathComponent(key, obj)
-        if (resolved === null) {
-          return document // Skip operation if id not found
-        }
-        key = resolved
-      }
-      obj = obj[key === "-" ? obj.length - 1 : parseInt(key, 10)]
+      const index = resolveArrayIndex(key, obj, false)
+      if (index === null) return document
+      obj = obj[index]
     } else {
       obj = obj[key]
     }
+
+    segmentStart = segmentEnd + 1
   }
 
-  // Apply operation on final key
-  const finalKey = keys[keys.length - 1]
-  let unescapedKey = finalKey.indexOf("~") !== -1 ? unescapePathComponent(finalKey) : finalKey
+  const unescapedKey = readPathSegment(path, segmentStart, path.length)
 
   if (Array.isArray(obj)) {
     let index: number
 
-    // Handle special $$id syntax for arrays
-    if (unescapedKey.startsWith("$$")) {
-      const resolved = resolvePathComponent(unescapedKey, obj)
-      if (resolved === null) {
-        return document // Skip operation if id not found
-      }
-      index = parseInt(resolved, 10)
-    } else {
-      index = unescapedKey === "-" ? obj.length : parseInt(unescapedKey, 10)
-    }
+    const resolvedIndex = resolveArrayIndex(unescapedKey, obj, true)
+    if (resolvedIndex === null) return document
+    index = resolvedIndex
 
-    switch (operation.op) {
+    switch (op) {
       case "add":
-        obj.splice(index, 0, (operation as AddOperation).value)
+        obj.splice(index, 0, value)
         break
       case "remove":
         obj.splice(index, 1)
         break
       case "replace":
-        obj[index] = (operation as ReplaceOperation).value
+        obj[index] = value
         break
       case "upsert":
-        const upsertValue = (operation as UpsertOperation).value
-        // Check if item with same ID already exists in the array
-        if (upsertValue && typeof upsertValue === "object" && "__dom_id" in upsertValue) {
+        if (value && typeof value === "object" && "__dom_id" in value) {
           const existingIndex = obj.findIndex(
-            item => item && typeof item === "object" && item.__dom_id === upsertValue.__dom_id
+            item => item && typeof item === "object" && item.__dom_id === value.__dom_id
           )
 
           if (existingIndex !== -1) {
-            // Update existing item
-            obj[existingIndex] = upsertValue
+            obj[existingIndex] = value
           } else {
-            // Insert new item at specified index
-            obj.splice(index, 0, upsertValue)
+            obj.splice(index, 0, value)
           }
         } else {
-          // No ID to match against, just insert at specified index
-          obj.splice(index, 0, upsertValue)
+          obj.splice(index, 0, value)
         }
         break
       case "move":
-        const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
-        if (moveValue === undefined) {
-          return document // Skip operation if source not found
-        }
-        applyOperation(document, { op: "remove", path: (operation as MoveOperation).from })
+        const moveValue = getValueByPointer(document, from || "")
+        if (moveValue === undefined) return document
+        applyPatchOperation(document, "remove", from || "")
         obj.splice(index, 0, moveValue)
         break
       case "copy":
-        const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
-        obj.splice(index, 0, deepClone(copyValue))
+        obj.splice(index, 0, deepClone(getValueByPointer(document, from || "")))
         break
       case "test":
-        // Test operation - just return document unchanged
         break
       case "limit":
-        const limitValue = (operation as LimitOperation).value
-        if (limitValue >= 0) {
-          // Positive limit: keep first N elements, remove the rest
-          if (limitValue < obj.length) {
-            obj.splice(limitValue)
-          }
+        if (value >= 0) {
+          if (value < obj.length) obj.splice(value)
         } else {
-          // Negative limit: keep last N elements, remove from the beginning
-          const keepCount = Math.abs(limitValue)
-          if (keepCount < obj.length) {
-            obj.splice(0, obj.length - keepCount)
-          }
+          const keepCount = Math.abs(value)
+          if (keepCount < obj.length) obj.splice(0, obj.length - keepCount)
         }
         break
     }
   } else {
-    switch (operation.op) {
+    switch (op) {
       case "add":
       case "replace":
-        obj[unescapedKey] = (operation as AddOperation | ReplaceOperation).value
+        obj[unescapedKey] = value
         break
       case "remove":
         delete obj[unescapedKey]
         break
       case "move":
-        const moveValue = getValueByPointer(document, (operation as MoveOperation).from)
-        applyOperation(document, { op: "remove", path: (operation as MoveOperation).from })
+        const moveValue = getValueByPointer(document, from || "")
+        applyPatchOperation(document, "remove", from || "")
         obj[unescapedKey] = moveValue
         break
       case "copy":
-        const copyValue = getValueByPointer(document, (operation as CopyOperation).from)
-        obj[unescapedKey] = deepClone(copyValue)
+        obj[unescapedKey] = deepClone(getValueByPointer(document, from || ""))
         break
       case "test":
-        // Test operation - just return document unchanged
         break
       case "limit":
-        // Check if target is an array
         const targetArray = obj[unescapedKey]
         if (Array.isArray(targetArray)) {
-          const limitValue = (operation as LimitOperation).value
-          if (limitValue >= 0) {
-            // Positive limit: keep first N elements, remove the rest
-            if (limitValue < targetArray.length) {
-              targetArray.splice(limitValue)
-            }
+          if (value >= 0) {
+            if (value < targetArray.length) targetArray.splice(value)
           } else {
-            // Negative limit: keep last N elements, remove from the beginning
-            const keepCount = Math.abs(limitValue)
-            if (keepCount < targetArray.length) {
-              targetArray.splice(0, targetArray.length - keepCount)
-            }
+            const keepCount = Math.abs(value)
+            if (keepCount < targetArray.length) targetArray.splice(0, targetArray.length - keepCount)
           }
         }
         break

@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { decodeCompactPatch } from "./compactPatch"
+import { applyCompactPatch, decodeCompactPatch } from "./compactPatch"
+
+describe("applyCompactPatch", () => {
+  it("applies compact patches directly", () => {
+    const document = { count: 1, items: ["a", "b", "c"] }
+
+    applyCompactPatch(document, "r6:/countn1:6r8:/items/1s1:dd8:/items/0")
+
+    expect(document).toEqual({ count: 6, items: ["d", "c"] })
+  })
+})
 
 describe("decodeCompactPatch", () => {
   it("decodes scalar add, replace, remove, and nonce operations", () => {

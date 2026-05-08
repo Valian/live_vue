@@ -1,5 +1,6 @@
 import { bench, describe } from "vitest"
-import { decodeCompactJson, decodeCompactPatch } from "./compactPatch"
+import { applyCompactPatch, decodeCompactJson, decodeCompactPatch } from "./compactPatch"
+import { applyPatch } from "./jsonPatch"
 
 const textEncoder = new TextEncoder()
 
@@ -40,6 +41,7 @@ const makeSyntheticPayload = (targetBytes: number) => {
 }
 
 const makeArticle = (index: number) => ({
+  __dom_id: `article-${index}`,
   id: index,
   slug: `article-${index}`,
   title: `LiveVue update ${index} 🚀 zażółć`,
@@ -70,6 +72,34 @@ const makeArticle = (index: number) => ({
   },
 })
 
+const makeScalarDocument = (rows = 300) => ({
+  dashboard: {
+    rows: Array.from({ length: rows }, (_, index) => ({
+      id: index,
+      title: `Title ${index}`,
+      count: index,
+      enabled: index % 2 === 0,
+      nested: { label: `Label ${index}`, score: index * 2 },
+    })),
+  },
+})
+
+const makeScalarPayload = (targetBytes: number) => {
+  let payload = "n246810"
+  let index = 0
+
+  while (payload.length < targetBytes) {
+    const row = index % 300
+    payload += operation("r", `/dashboard/rows/${row}/title`, `Updated ${index} ✨`)
+    payload += operation("r", `/dashboard/rows/${row}/count`, index)
+    payload += operation("r", `/dashboard/rows/${row}/enabled`, index % 2 === 0)
+    payload += operation("r", `/dashboard/rows/${row}/nested/label`, `Nested ${index} zażółć`)
+    index++
+  }
+
+  return payload
+}
+
 const makeRealisticPayload = (targetBytes: number) => {
   let payload = "n987654"
   let index = 0
@@ -94,7 +124,14 @@ const synthetic25kb = makeSyntheticPayload(25_000)
 const synthetic50kb = makeSyntheticPayload(50_000)
 const realistic25kb = makeRealisticPayload(25_000)
 const realistic50kb = makeRealisticPayload(50_000)
+const scalar50kb = makeScalarPayload(50_000)
 const realisticJsonValue = encodeJson({ articles: Array.from({ length: 30 }, (_, index) => makeArticle(index)) })
+const decodeThenApplyDocument = {
+  dashboard: { articles: Array.from({ length: 80 }, (_, index) => makeArticle(index)) },
+}
+const directApplyDocument = { dashboard: { articles: Array.from({ length: 80 }, (_, index) => makeArticle(index)) } }
+const scalarDecodeThenApplyDocument = makeScalarDocument()
+const scalarDirectApplyDocument = makeScalarDocument()
 const utf8Sample = Array.from({ length: 150 }, (_, index) => makeArticle(index).summary).join(" | ")
 const utf8SampleBytes = textEncoder.encode(utf8Sample).length
 
@@ -149,6 +186,24 @@ describe("decodeCompactPatch", () => {
 
   bench("realistic 50kb payload", () => {
     decodeCompactPatch(realistic50kb)
+  })
+})
+
+describe("decode and apply compact patch", () => {
+  bench("object-heavy: decode to operations, then apply", () => {
+    applyPatch(decodeThenApplyDocument, decodeCompactPatch(realistic50kb))
+  })
+
+  bench("object-heavy: apply while decoding", () => {
+    applyCompactPatch(directApplyDocument, realistic50kb)
+  })
+
+  bench("scalar-heavy: decode to operations, then apply", () => {
+    applyPatch(scalarDecodeThenApplyDocument, decodeCompactPatch(scalar50kb))
+  })
+
+  bench("scalar-heavy: apply while decoding", () => {
+    applyCompactPatch(scalarDirectApplyDocument, scalar50kb)
   })
 })
 
