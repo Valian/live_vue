@@ -16,15 +16,22 @@ describe("decodeCompactPatch", () => {
     ])
   })
 
+  it("decodes escaped caret JSON values", () => {
+    expect(decodeCompactPatch("a5:/metaJ27:{^tilde^:^~~^,^caret^:^~^^}")).toEqual([
+      { op: "add", path: "/meta", value: { tilde: "~", caret: "^" } },
+    ])
+  })
+
   it("decodes JSON pointer paths", () => {
     expect(decodeCompactPatch("r21:/settings/a~1b~0c|d.es5:value")).toEqual([
       { op: "replace", path: "/settings/a~1b~0c|d.e", value: "value" },
     ])
   })
 
-  it("uses UTF-8 byte lengths for strings and paths", () => {
-    expect(decodeCompactPatch("r14:/profile/na.mes10:zażółć")).toEqual([
+  it("uses JavaScript string lengths for strings and paths", () => {
+    expect(decodeCompactPatch("r14:/profile/na.mes6:zażółćr6:/emojis2:🚀")).toEqual([
       { op: "replace", path: "/profile/na.me", value: "zażółć" },
+      { op: "replace", path: "/emoji", value: "🚀" },
     ])
   })
 

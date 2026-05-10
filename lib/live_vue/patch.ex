@@ -4,8 +4,8 @@ defmodule LiveVue.Patch do
   `data-props-diff` and `data-streams-diff`.
 
   The payload is a concatenated sequence of operations. Dynamic text fields are
-  byte-length-prefixed, so paths and values can contain delimiters without extra
-  escaping.
+  JavaScript-string-length-prefixed, so paths and values can contain delimiters
+  without extra escaping.
 
   Operation codes:
 
@@ -21,7 +21,7 @@ defmodule LiveVue.Patch do
   Normal operations use:
 
   ```text
-  <op><path_byte_len>:<path><value>
+  <op><path_len>:<path><value>
   ```
 
   `remove` omits `<value>`. The nonce marker uses `n<digits>` and exists only
@@ -34,7 +34,7 @@ defmodule LiveVue.Patch do
   | `z` | `nil` |
   | `b0`, `b1` | booleans |
   | `n<len>:<number>` | number |
-  | `s<len>:<utf8 string>` | string |
+  | `s<len>:<string>` | string |
   | `J<len>:<caret-encoded JSON>` | maps, lists, and complex values |
 
   Paths are transported as JSON Pointer strings unchanged.
@@ -97,12 +97,12 @@ defmodule LiveVue.Patch do
 
   defp serialize_op(%{op: op, path: path, value: value}) do
     path = encode_path(path)
-    [op_code(op), Integer.to_string(byte_size(path)), ?:, path, encode_value(value)]
+    [op_code(op), Integer.to_string(js_string_length(path)), ?:, path, encode_value(value)]
   end
 
   defp serialize_op(%{op: op, path: path}) do
     path = encode_path(path)
-    [op_code(op), Integer.to_string(byte_size(path)), ?:, path]
+    [op_code(op), Integer.to_string(js_string_length(path)), ?:, path]
   end
 
   defp encode_path(path), do: path
@@ -113,14 +113,14 @@ defmodule LiveVue.Patch do
 
   defp encode_value(value) when is_number(value) do
     encoded = to_string(value)
-    ["n", Integer.to_string(byte_size(encoded)), ?:, encoded]
+    ["n", Integer.to_string(js_string_length(encoded)), ?:, encoded]
   end
 
-  defp encode_value(value) when is_binary(value), do: ["s", Integer.to_string(byte_size(value)), ?:, value]
+  defp encode_value(value) when is_binary(value), do: ["s", Integer.to_string(js_string_length(value)), ?:, value]
 
   defp encode_value(value) do
     encoded = encode_object(value)
-    ["J", Integer.to_string(byte_size(encoded)), ?:, encoded]
+    ["J", Integer.to_string(js_string_length(encoded)), ?:, encoded]
   end
 
   defp parse_ops("", acc), do: acc
@@ -132,7 +132,7 @@ defmodule LiveVue.Patch do
 
   defp parse_ops(<<code::binary-size(1), rest::binary>>, acc) do
     {path_length, rest} = take_length(rest)
-    <<path::binary-size(path_length), rest::binary>> = rest
+    {path, rest} = take_js_string(rest, path_length)
     op = op_from_code(code)
     parse_op(op, path, rest, acc)
   end
@@ -150,7 +150,7 @@ defmodule LiveVue.Patch do
 
   defp parse_value(<<tag::binary-size(1), rest::binary>>) when tag in ["n", "s", "J"] do
     {length, rest} = take_length(rest)
-    <<encoded::binary-size(length), rest::binary>> = rest
+    {encoded, rest} = take_js_string(rest, length)
 
     value =
       case tag do
@@ -185,6 +185,33 @@ defmodule LiveVue.Patch do
   end
 
   defp take_digits(rest, acc), do: {acc, rest}
+
+  defp take_js_string(payload, length), do: take_js_string(payload, payload, length, 0)
+
+  defp take_js_string(original, _rest, 0, bytes) do
+    <<value::binary-size(bytes), rest::binary>> = original
+    {value, rest}
+  end
+
+  defp take_js_string(original, <<codepoint::utf8, rest::binary>>, remaining, bytes) do
+    units = js_code_units(codepoint)
+    if units > remaining, do: raise(ArgumentError, "Invalid LiveVue patch length prefix")
+    take_js_string(original, rest, remaining - units, bytes + utf8_byte_size(codepoint))
+  end
+
+  defp js_string_length(value), do: js_string_length(value, 0)
+  defp js_string_length(<<>>, acc), do: acc
+
+  defp js_string_length(<<codepoint::utf8, rest::binary>>, acc),
+    do: js_string_length(rest, acc + js_code_units(codepoint))
+
+  defp js_code_units(codepoint) when codepoint > 0xFFFF, do: 2
+  defp js_code_units(_codepoint), do: 1
+
+  defp utf8_byte_size(codepoint) when codepoint <= 0x7F, do: 1
+  defp utf8_byte_size(codepoint) when codepoint <= 0x7FF, do: 2
+  defp utf8_byte_size(codepoint) when codepoint <= 0xFFFF, do: 3
+  defp utf8_byte_size(_codepoint), do: 4
 
   defp op_code("add"), do: "a"
   defp op_code("remove"), do: "d"

@@ -1,15 +1,5 @@
 import type { Operation } from "./jsonPatch.js"
 
-const opByCode: Record<string, Operation["op"]> = {
-  a: "add",
-  d: "remove",
-  r: "replace",
-  u: "upsert",
-  l: "limit",
-}
-
-const textEncoder = new TextEncoder()
-
 export const decodeCompactPatch = (payload: string | null): Operation[] => {
   if (!payload) return []
 
@@ -20,97 +10,103 @@ export const decodeCompactPatch = (payload: string | null): Operation[] => {
     const code = payload[offset++]
 
     if (code === "n") {
-      const result = readDigits(payload, offset)
-      offset = result.offset
+      offset = skipDigits(payload, offset)
       continue
     }
 
-    const op = opByCode[code]
-    if (!op) throw new Error(`Unknown LiveVue patch operation code: ${code}`)
-
+    const op = opFromCode(code)
     const pathLength = readLength(payload, offset)
     offset = pathLength.offset
 
-    const pathResult = readUtf8Bytes(payload, offset, pathLength.value)
-    offset = pathResult.offset
-    const path = pathResult.value
+    const path = payload.slice(offset, offset + pathLength.value)
+    offset += pathLength.value
 
     if (op === "remove") {
       operations.push({ op, path })
       continue
     }
 
-    const valueResult = readValue(payload, offset)
-    offset = valueResult.offset
-    operations.push({ op, path, value: valueResult.value } as Operation)
+    const tag = payload[offset++]
+
+    if (tag === "z") {
+      operations.push({ op, path, value: null } as Operation)
+      continue
+    }
+
+    if (tag === "b") {
+      operations.push({ op, path, value: payload[offset++] === "1" } as Operation)
+      continue
+    }
+
+    const valueLength = readLength(payload, offset)
+    offset = valueLength.offset
+
+    const rawValue = payload.slice(offset, offset + valueLength.value)
+    offset += valueLength.value
+
+    if (tag === "n") {
+      operations.push({ op, path, value: Number(rawValue) } as Operation)
+    } else if (tag === "s") {
+      operations.push({ op, path, value: rawValue } as Operation)
+    } else if (tag === "J") {
+      operations.push({ op, path, value: decodeCompactJson(rawValue) } as Operation)
+    } else {
+      throw new Error(`Unknown LiveVue patch value tag: ${tag}`)
+    }
   }
 
   return operations
 }
 
-const readValue = (payload: string, offset: number): { value: any; offset: number } => {
-  const tag = payload[offset++]
-
-  switch (tag) {
-    case "z":
-      return { value: null, offset }
-    case "b":
-      return { value: payload[offset++] === "1", offset }
-    case "n": {
-      const result = readLengthPrefixed(payload, offset)
-      return { value: Number(result.value), offset: result.offset }
-    }
-    case "s":
-      return readLengthPrefixed(payload, offset)
-    case "J": {
-      const result = readLengthPrefixed(payload, offset)
-      return { value: decodeCompactJson(result.value), offset: result.offset }
-    }
+const opFromCode = (code: string): Operation["op"] => {
+  switch (code) {
+    case "a":
+      return "add"
+    case "d":
+      return "remove"
+    case "r":
+      return "replace"
+    case "u":
+      return "upsert"
+    case "l":
+      return "limit"
     default:
-      throw new Error(`Unknown LiveVue patch value tag: ${tag}`)
+      throw new Error(`Unknown LiveVue patch operation code: ${code}`)
   }
-}
-
-const readLengthPrefixed = (payload: string, offset: number): { value: string; offset: number } => {
-  const length = readLength(payload, offset)
-  const value = readUtf8Bytes(payload, length.offset, length.value)
-  return { value: value.value, offset: value.offset }
 }
 
 const readLength = (payload: string, offset: number): { value: number; offset: number } => {
-  const result = readDigits(payload, offset)
-  if (payload[result.offset] !== ":") throw new Error("Invalid LiveVue patch length prefix")
-  return { value: Number(result.value), offset: result.offset + 1 }
-}
+  let value = 0
+  let hasDigits = false
 
-const readDigits = (payload: string, offset: number): { value: string; offset: number } => {
-  const start = offset
-  while (offset < payload.length && payload.charCodeAt(offset) >= 48 && payload.charCodeAt(offset) <= 57) offset++
-  return { value: payload.slice(start, offset), offset }
-}
-
-const readUtf8Bytes = (payload: string, offset: number, byteLength: number): { value: string; offset: number } => {
-  let end = offset
-  let bytes = 0
-
-  while (end < payload.length && bytes < byteLength) {
-    const codePoint = payload.codePointAt(end)
-    if (codePoint === undefined) break
-
-    const char = String.fromCodePoint(codePoint)
-    bytes += textEncoder.encode(char).length
-    end += char.length
+  while (offset < payload.length) {
+    const code = payload.charCodeAt(offset)
+    if (code < 48 || code > 57) break
+    value = value * 10 + code - 48
+    offset++
+    hasDigits = true
   }
 
-  if (bytes !== byteLength) throw new Error("Invalid LiveVue patch UTF-8 byte length")
+  if (!hasDigits || payload[offset] !== ":") throw new Error("Invalid LiveVue patch length prefix")
+  return { value, offset: offset + 1 }
+}
 
-  return { value: payload.slice(offset, end), offset: end }
+const skipDigits = (payload: string, offset: number): number => {
+  while (offset < payload.length) {
+    const code = payload.charCodeAt(offset)
+    if (code < 48 || code > 57) break
+    offset++
+  }
+
+  return offset
 }
 
 export const decodeCompactJson = (value: string): any => {
-  return JSON.parse(value.replace(/~~|~\^|\^/g, match => {
-    if (match === "~~") return "~"
-    if (match === "~^") return "^"
-    return "\""
-  }))
+  return JSON.parse(
+    value.replace(/~~|~\^|\^/g, match => {
+      if (match === "~~") return "~"
+      if (match === "~^") return "^"
+      return '"'
+    })
+  )
 }

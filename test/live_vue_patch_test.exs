@@ -99,9 +99,13 @@ defmodule LiveVuePatchTest do
       assert serialize_deserialize(patches) == patches
     end
 
-    test "round-trips UTF-8 paths and values using byte lengths" do
-      patches = [%{op: "replace", path: "/profile/na.me", value: "zażółć"}]
+    test "round-trips UTF-8 paths and values using JavaScript string lengths" do
+      patches = [
+        %{op: "replace", path: "/profile/na.me", value: "zażółć"},
+        %{op: "replace", path: "/emoji", value: "🚀"}
+      ]
 
+      assert Patch.serialize(patches) == "r14:/profile/na.mes6:zażółćr6:/emojis2:🚀"
       assert serialize_deserialize(patches) == patches
     end
   end

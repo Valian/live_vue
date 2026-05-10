@@ -118,7 +118,7 @@ defmodule LiveVue.MixProject do
         GitHub: @repo_url
       },
       files: ~w(assets lib mix.exs package.json .formatter.exs LICENSE.md README.md CHANGELOG.md usage-rules.md),
-      exclude_patterns: [~r/\.test\.ts$/, ~r/assets\/tests\//]
+      exclude_patterns: [~r/\.test\.[jt]s$/, ~r/\.bench\.ts$/, ~r/assets\/tests\//]
     ]
   end
 
