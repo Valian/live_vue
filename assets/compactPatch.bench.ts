@@ -1,5 +1,5 @@
 import { bench, describe } from "vitest"
-import { applyCompactPatch, decodeCompactJson, decodeCompactPatch } from "./compactPatch"
+import { decodeCompactJson, decodeCompactPatch } from "./compactPatch"
 import { applyPatch } from "./jsonPatch"
 
 const textEncoder = new TextEncoder()
@@ -129,9 +129,7 @@ const realisticJsonValue = encodeJson({ articles: Array.from({ length: 30 }, (_,
 const decodeThenApplyDocument = {
   dashboard: { articles: Array.from({ length: 80 }, (_, index) => makeArticle(index)) },
 }
-const directApplyDocument = { dashboard: { articles: Array.from({ length: 80 }, (_, index) => makeArticle(index)) } }
 const scalarDecodeThenApplyDocument = makeScalarDocument()
-const scalarDirectApplyDocument = makeScalarDocument()
 const utf8Sample = Array.from({ length: 150 }, (_, index) => makeArticle(index).summary).join(" | ")
 const utf8SampleBytes = textEncoder.encode(utf8Sample).length
 
@@ -190,20 +188,13 @@ describe("decodeCompactPatch", () => {
 })
 
 describe("decode and apply compact patch", () => {
+  // Direct compact-patch application was benchmarked here and removed because it was not faster.
   bench("object-heavy: decode to operations, then apply", () => {
     applyPatch(decodeThenApplyDocument, decodeCompactPatch(realistic50kb))
   })
 
-  bench("object-heavy: apply while decoding", () => {
-    applyCompactPatch(directApplyDocument, realistic50kb)
-  })
-
   bench("scalar-heavy: decode to operations, then apply", () => {
     applyPatch(scalarDecodeThenApplyDocument, decodeCompactPatch(scalar50kb))
-  })
-
-  bench("scalar-heavy: apply while decoding", () => {
-    applyCompactPatch(scalarDirectApplyDocument, scalar50kb)
   })
 })
 
