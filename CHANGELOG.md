@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## Unreleased
+
+### Improvements
+
+- Improved compact patch decoding performance by using JavaScript string lengths in the compact patch protocol ([#145](https://github.com/Valian/live_vue/pull/145)).
+
 ## 1.2.0 - 2026-05-06
 
 ### Improvements
