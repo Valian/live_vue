@@ -13,15 +13,25 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
     const el = this.el as HTMLElement
     const componentName = el.getAttribute("data-name")
-    const component = componentName ? await resolve(componentName) : null
 
+    // Initialise `this.vue` *synchronously*, before awaiting the
+    // component import. `updated()`, `reconnected()`, and
+    // `destroyed()` all dereference `this.vue` — if a LiveView
+    // patch fires while we're awaiting `resolve(...)` (which can
+    // return a real Promise when the consumer uses lazy globs
+    // like `import.meta.glob(..., { eager: false })`), those
+    // handlers would otherwise throw against an undefined
+    // `this.vue`. `app: null` is filled in once the Vue app is
+    // actually constructed below.
     const props = reactive(getProps(el, this.liveSocket))
     applyPatch(props, getDiff(el, "data-streams-diff"))
-
     this.vue = { props, slots: reactive({}), app: null }
+
     const elementId = getElementId(el)
     if (elementId) hooksById.set(elementId, this as LiveHook)
     syncSlots(elementId)
+
+    const component = componentName ? await resolve(componentName) : null
 
     const targetId = el.getAttribute("data-inject")
     if (targetId && elementId && component) {
