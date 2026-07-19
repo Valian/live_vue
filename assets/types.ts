@@ -2,11 +2,7 @@
 import type { App, Component, createApp, createSSRApp, h, Plugin } from "vue"
 
 // Try to import from phoenix_live_view first, fallback to our definitions if not available
-import type {
-  LiveSocketInstanceInterface as PhoenixLiveSocketInstanceInterface,
-  ViewHook as PhoenixViewHook,
-  Hook as PhoenixHook,
-} from "phoenix_live_view"
+import type { ViewHook as PhoenixViewHook, Hook as PhoenixHook } from "phoenix_live_view"
 
 // If using phoenix_live_view < 1.1, use our fallback types
 import type {
@@ -16,9 +12,8 @@ import type {
 } from "./phoenixFallbackTypes"
 
 // Re-export with our preferred names, using phoenix_live_view types if available
-export type LiveSocketInstanceInterface = PhoenixLiveSocketInstanceInterface extends undefined
-  ? FallbackLiveSocketInstanceInterface
-  : PhoenixLiveSocketInstanceInterface
+export type LiveSocketInstanceInterface = PhoenixViewHook["liveSocket"] &
+  Pick<FallbackLiveSocketInstanceInterface, "pushHistoryPatch" | "historyRedirect">
 
 export type ViewHook = PhoenixViewHook extends undefined ? FallbackViewHook : PhoenixViewHook
 export type Hook = PhoenixHook extends undefined ? FallbackHook : PhoenixHook
@@ -42,8 +37,11 @@ export type VueArgs = {
 // all the functions and additional properties that are available on the LiveHook
 // We use a mapped type to extract only public members from ViewHook (stripping private fields),
 // and omit lifecycle methods (required on ViewHook but optional on HookInterface where `this` lives)
-type ViewHookLifecycle = 'mounted' | 'beforeUpdate' | 'updated' | 'destroyed' | 'disconnected' | 'reconnected'
-export type LiveHook = Omit<{ [K in keyof ViewHook]: ViewHook[K] }, ViewHookLifecycle> & { vue: VueArgs; liveSocket: LiveSocketInstanceInterface }
+type ViewHookLifecycle = "mounted" | "beforeUpdate" | "updated" | "destroyed" | "disconnected" | "reconnected"
+export type LiveHook = Omit<{ [K in keyof ViewHook]: ViewHook[K] }, ViewHookLifecycle> & {
+  vue: VueArgs
+  liveSocket: LiveSocketInstanceInterface
+}
 
 // Phoenix LiveView Upload types for client-side use
 export interface UploadEntry {
