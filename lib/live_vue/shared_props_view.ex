@@ -45,6 +45,9 @@ defmodule LiveVue.SharedPropsView do
   LiveView's reactivity since the props appear as regular template expressions.
   """
 
+  alias Phoenix.LiveView.HTMLEngine
+  alias Phoenix.LiveView.TagEngine
+
   @shared_props_config Application.compile_env(:live_vue, :shared_props, [])
 
   @doc """
@@ -249,15 +252,27 @@ defmodule LiveVue.SharedPropsView do
     end
   end
 
-  defp compile_heex(expr, meta, caller) do
-    EEx.compile_string(expr,
-      engine: Phoenix.LiveView.TagEngine,
-      source: expr,
-      file: caller.file,
-      line: caller.line + 1,
-      caller: caller,
-      indentation: meta[:indentation] || 0,
-      tag_handler: Phoenix.LiveView.HTMLEngine
-    )
+  if function_exported?(TagEngine, :compile, 2) do
+    defp compile_heex(expr, meta, caller) do
+      TagEngine.compile(expr,
+        file: caller.file,
+        line: caller.line + 1,
+        caller: caller,
+        indentation: meta[:indentation] || 0,
+        tag_handler: HTMLEngine
+      )
+    end
+  else
+    defp compile_heex(expr, meta, caller) do
+      EEx.compile_string(expr,
+        engine: TagEngine,
+        source: expr,
+        file: caller.file,
+        line: caller.line + 1,
+        caller: caller,
+        indentation: meta[:indentation] || 0,
+        tag_handler: HTMLEngine
+      )
+    end
   end
 end
