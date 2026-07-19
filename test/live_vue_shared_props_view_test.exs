@@ -56,6 +56,28 @@ defmodule LiveVue.SharedPropsViewTest do
     {:current_user, :current_user}
   ]
 
+  test "~H sigil does not use TagEngine as an EEx engine when compile/2 is available" do
+    warnings =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        Code.compile_string(~S'''
+        defmodule LiveVue.SharedPropsNoDeprecationWarning do
+          use Phoenix.Component
+
+          import Phoenix.Component, except: [sigil_H: 2]
+          import LiveVue.SharedPropsView, only: [sigil_H: 2]
+
+          def render(assigns) do
+            ~H"""
+            <div>{@message}</div>
+            """
+          end
+        end
+        ''')
+      end)
+
+    refute warnings =~ "Using Phoenix.LiveView.TagEngine as an EEx.Engine is deprecated"
+  end
+
   describe "inject_shared_props_in_vue/2" do
     test "injects shared attrs into .vue component" do
       input = """
