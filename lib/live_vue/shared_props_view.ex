@@ -252,7 +252,7 @@ defmodule LiveVue.SharedPropsView do
     end
   end
 
-  if function_exported?(TagEngine, :compile, 2) do
+  if Code.ensure_loaded?(TagEngine) and function_exported?(TagEngine, :compile, 2) do
     defp compile_heex(expr, meta, caller) do
       TagEngine.compile(expr,
         file: caller.file,
