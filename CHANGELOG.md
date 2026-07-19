@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## Unreleased
+
+### Bug Fixes
+
+- Avoided deprecated `Phoenix.LiveView.TagEngine` EEx usage on LiveView 1.2 while retaining compatibility with older LiveView versions ([#149](https://github.com/Valian/live_vue/pull/149)).
+
 ## 1.2.1 - 2026-05-10
 
 ### Improvements
