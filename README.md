@@ -207,4 +207,4 @@ mix release.minor
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Valian/live_vue&type=Date)](https://star-history.com/#Valian/live_vue&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=Valian/live_vue&type=Date)](https://star-history.dera.page/#Valian/live_vue&Date)
