@@ -96,6 +96,7 @@ export const loadManifest = (path: string): Record<string, string[]> => {
 export function renderPreloadLinks(modules: SSRContext["modules"], manifest: Manifest) {
   let links = ""
   const seen = new Set()
+  if (!modules) return links
   modules.forEach((id: string) => {
     const files = manifest[id]
     if (files) {
