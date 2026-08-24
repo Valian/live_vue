@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.3 - 2026-08-24
+
+- ### Bug Fixes
+
+- Fixed SSR crashing when non-Vite bundlers do not provide rendered module metadata ([#153](https://github.com/Valian/live_vue/pull/153)).
+- Fixed lifecycle race conditions with lazily loaded Vue components, including preventing components from mounting after their hooks are destroyed ([#146](https://github.com/Valian/live_vue/pull/146)).
+- Updated PhoenixVite for compatibility with the latest Phoenix project structure.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
