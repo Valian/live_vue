@@ -167,6 +167,75 @@ describe("getVueHook", () => {
       expect(mockHookContext.vue.props).toBeDefined()
       expect(mockHookContext.vue.slots).toBeDefined()
     })
+
+    // Regression: when `resolve()` returns a real Promise (e.g. the
+    // consumer is using `import.meta.glob(..., { eager: false })`
+    // for lazy chunks), `mounted()` used to set `this.vue` only
+    // *after* the await. A LiveView patch arriving during that
+    // window would call `updated()` / `reconnected()` /
+    // `destroyed()` against an undefined `this.vue` and throw with
+    // `TypeError: can't access property "props", this.vue is
+    // undefined`. The fix initialises `this.vue` synchronously
+    // before the await; the lifecycle handlers below must now be
+    // safe even before the component has resolved.
+    it("initializes this.vue synchronously so concurrent lifecycle calls don't throw", async () => {
+      mockHookContext.el.getAttribute.mockImplementation((name: string) => {
+        if (name === "data-name") return "TestComponent"
+        return null
+      })
+
+      // Block the component resolve until we explicitly unblock it.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let unblock!: (component: any) => void
+      const pending = new Promise((res) => {
+        unblock = res
+      })
+      ;(mockLiveVueApp.resolve as ReturnType<typeof vi.fn>).mockReturnValue(pending)
+
+      // Kick mounted() but don't await it yet. The sync portion
+      // runs to completion before the first microtask boundary.
+      const mountedPromise = vueHook.mounted!.call(mockHookContext)
+      await Promise.resolve()
+
+      // this.vue must already be set, with app: null pending.
+      expect(mockHookContext.vue).toBeDefined()
+      expect(mockHookContext.vue.props).toBeDefined()
+      expect(mockHookContext.vue.app).toBeNull()
+
+      // updated() and reconnected() must be safe to call during
+      // this window.
+      expect(() => vueHook.updated!.call(mockHookContext)).not.toThrow()
+      expect(() => vueHook.reconnected!.call(mockHookContext)).not.toThrow()
+
+      // Unblock the resolver — mounted() finishes, app is set.
+      unblock(MockComponent)
+      await mountedPromise
+      expect(mockHookContext.vue.app).toBeDefined()
+      expect(mockLiveVueApp.setup).toHaveBeenCalled()
+    })
+
+    it("does not mount a component that was destroyed while resolving", async () => {
+      mockHookContext.el.getAttribute.mockImplementation((name: string) => {
+        if (name === "data-name") return "TestComponent"
+        return null
+      })
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let unblock!: (component: any) => void
+      const pending = new Promise((res) => {
+        unblock = res
+      })
+      ;(mockLiveVueApp.resolve as ReturnType<typeof vi.fn>).mockReturnValue(pending)
+
+      const mountedPromise = vueHook.mounted!.call(mockHookContext)
+      expect(() => vueHook.destroyed!.call(mockHookContext)).not.toThrow()
+
+      unblock(MockComponent)
+      await mountedPromise
+
+      expect(mockHookContext.vue.app).toBeNull()
+      expect(mockLiveVueApp.setup).not.toHaveBeenCalled()
+    })
   })
 
   describe("updated lifecycle", () => {
