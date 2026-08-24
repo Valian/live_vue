@@ -9,8 +9,11 @@ import { registerInjector, unregisterInjector, syncSlots } from "./inject.js"
 const shouldHydrate = (el: HTMLElement): boolean =>
   el.getAttribute("data-ssr") === "true" && el.hasChildNodes()
 
+const destroyedHooks = new WeakSet<object>()
+
 export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
   async mounted() {
+    destroyedHooks.delete(this)
     const el = this.el as HTMLElement
     const componentName = el.getAttribute("data-name")
 
@@ -32,6 +35,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     syncSlots(elementId)
 
     const component = componentName ? await resolve(componentName) : null
+    if (destroyedHooks.has(this)) return
 
     const targetId = el.getAttribute("data-inject")
     if (targetId && elementId && component) {
@@ -77,6 +81,7 @@ export const getVueHook = ({ resolve, setup }: LiveVueApp): Hook => ({
     syncSlots(getElementId(this.el as HTMLElement))
   },
   destroyed() {
+    destroyedHooks.add(this)
     const elementId = getElementId(this.el as HTMLElement)
     if (elementId) {
       unregisterInjector(elementId)

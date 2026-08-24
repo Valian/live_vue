@@ -203,17 +203,38 @@ describe("getVueHook", () => {
       expect(mockHookContext.vue.app).toBeNull()
 
       // updated() and reconnected() must be safe to call during
-      // this window. destroyed() must also short-circuit cleanly
-      // when app is still null.
+      // this window.
       expect(() => vueHook.updated!.call(mockHookContext)).not.toThrow()
       expect(() => vueHook.reconnected!.call(mockHookContext)).not.toThrow()
-      expect(() => vueHook.destroyed!.call(mockHookContext)).not.toThrow()
 
       // Unblock the resolver — mounted() finishes, app is set.
       unblock(MockComponent)
       await mountedPromise
       expect(mockHookContext.vue.app).toBeDefined()
       expect(mockLiveVueApp.setup).toHaveBeenCalled()
+    })
+
+    it("does not mount a component that was destroyed while resolving", async () => {
+      mockHookContext.el.getAttribute.mockImplementation((name: string) => {
+        if (name === "data-name") return "TestComponent"
+        return null
+      })
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let unblock!: (component: any) => void
+      const pending = new Promise((res) => {
+        unblock = res
+      })
+      ;(mockLiveVueApp.resolve as ReturnType<typeof vi.fn>).mockReturnValue(pending)
+
+      const mountedPromise = vueHook.mounted!.call(mockHookContext)
+      expect(() => vueHook.destroyed!.call(mockHookContext)).not.toThrow()
+
+      unblock(MockComponent)
+      await mountedPromise
+
+      expect(mockHookContext.vue.app).toBeNull()
+      expect(mockLiveVueApp.setup).not.toHaveBeenCalled()
     })
   })
 
