@@ -152,7 +152,7 @@ defmodule LiveVue.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jsonpatch, "~> 2.3"},
       {:igniter, "~> 0.6", optional: true},
-      {:phoenix_vite, "~> 0.4"},
+      {:phoenix_vite, "~> 0.5"},
       {:lazy_html, ">= 0.1.0", optional: true},
       {:quickbeam, "~> 0.8", optional: true},
       {:ecto, "~> 3.0", optional: true},
