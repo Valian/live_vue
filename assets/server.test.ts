@@ -67,6 +67,10 @@ describe("renderPreloadLinks", () => {
     expect(renderPreloadLinks([], {})).toBe("")
   })
 
+  it("returns empty string when modules is undefined (non-Vite bundlers)", () => {
+    expect(renderPreloadLinks(undefined, {})).toBe("")
+  })
+
   it("returns empty string when modules have no manifest entries", () => {
     expect(renderPreloadLinks(["SomeModule.vue"], {})).toBe("")
   })
