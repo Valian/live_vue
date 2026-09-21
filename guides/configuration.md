@@ -415,7 +415,7 @@ The SSR bundle will be created at `priv/static/server.mjs` and loaded by QuickBE
 **SSR failing in production?**
 - Check that `priv/static/server.mjs` exists after build
 - Verify `LiveVue.SSR.QuickBEAM` is in your supervision tree
-- Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
+- Ensure `{:quickbeam, "~> 0.11.1"}` is in your dependencies
 
 **Performance issues?**
 - Disable SSR for components that don't benefit from it

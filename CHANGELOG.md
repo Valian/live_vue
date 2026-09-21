@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## Unreleased
+
+### Bug Fixes
+
+- Required QuickBEAM 0.11.1 or newer, so SSR runs on a release-optimized NIF instead of the debug build shipped by earlier versions. The debug build allowed only ~57 nested JavaScript calls within the default 8 MB stack instead of ~8,000, which could overflow while server-rendering deeply nested components ([#155](https://github.com/Valian/live_vue/pull/155)).
+
 ## 1.2.2 - 2026-07-19
 
 ### Bug Fixes

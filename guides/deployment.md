@@ -15,7 +15,7 @@ inside the BEAM — **no Node.js required in production**.
 
 1. Standard Phoenix deployment requirements
 2. Build assets before deployment (requires Node.js at **build time** only)
-3. QuickBEAM hex dependency (`{:quickbeam, "~> 0.8"}`)
+3. QuickBEAM hex dependency (`{:quickbeam, "~> 0.11.1"}`)
 
 ## Fly.io Deployment Guide
 
@@ -144,7 +144,7 @@ For bare metal or VM deployments:
    - Inspect network requests
 
 3. **QuickBEAM Errors**
-   - Ensure `{:quickbeam, "~> 0.8"}` is in your dependencies
+   - Ensure `{:quickbeam, "~> 0.11.1"}` is in your dependencies
    - Verify server bundle was built correctly
 
 ## Next Steps

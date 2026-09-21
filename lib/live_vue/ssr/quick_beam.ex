@@ -10,7 +10,7 @@ defmodule LiveVue.SSR.QuickBEAM do
   1. Add `quickbeam` to your dependencies:
 
       ```elixir
-      {:quickbeam, "~> 0.8"}
+      {:quickbeam, "~> 0.11.1"}
       ```
 
   2. Configure production SSR:
@@ -87,7 +87,7 @@ defmodule LiveVue.SSR.QuickBEAM do
       end
     end
   else
-    @quickbeam_missing "QuickBEAM is required for LiveVue.SSR.QuickBEAM. Add {:quickbeam, \"~> 0.8\"} to your dependencies."
+    @quickbeam_missing "QuickBEAM is required for LiveVue.SSR.QuickBEAM. Add {:quickbeam, \"~> 0.11.1\"} to your dependencies."
 
     def child_spec(_opts), do: raise(@quickbeam_missing)
     def start_link(_opts \\ []), do: raise(@quickbeam_missing)

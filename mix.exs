@@ -154,7 +154,7 @@ defmodule LiveVue.MixProject do
       {:igniter, "~> 0.6", optional: true},
       {:phoenix_vite, "~> 0.5"},
       {:lazy_html, ">= 0.1.0", optional: true},
-      {:quickbeam, "~> 0.8", optional: true},
+      {:quickbeam, ">= 0.11.1 and < 1.0.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:phoenix_ecto, "~> 4.0", optional: true},
 
