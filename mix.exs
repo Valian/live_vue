@@ -184,7 +184,7 @@ defmodule LiveVue.MixProject do
       setup: ["deps.get", "cmd npm install"],
       precommit: ["test", "format", "e2e.test", "assets.test"],
       "assets.test": ["cmd npm test"],
-      "e2e.test": ["cmd npm run e2e:build", "cmd MIX_ENV=e2e mix test"],
+      "e2e.test": ["cmd npm run e2e:build", "cmd env MIX_ENV=e2e mix test"],
       "release.patch": ["easy_publish.release patch --branch=main"],
       "release.minor": ["easy_publish.release minor --branch=main"],
       "release.major": ["easy_publish.release major --branch=main"]
