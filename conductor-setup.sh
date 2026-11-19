@@ -28,6 +28,6 @@ npm ci
 
 # Install Playwright browsers for E2E tests
 echo "🎭 Installing Playwright browsers..."
-npm run e2e:install
+MIX_ENV=e2e mix deps.get && MIX_ENV=e2e mix playwright.install chromium
 
 echo "✅ Setup complete! Run 'cd example_project && mix phx.server' to start development."
