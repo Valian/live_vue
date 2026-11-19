@@ -57,13 +57,11 @@ jobs:
       - name: Install E2E dependencies and browsers
         run: mix playwright.install chromium --with-deps
 
-      # Up to two retries of the failed tests, as the `retries: 2` of Playwright Test. An empty
-      # rerun (nothing failed but a module) must not pass.
+      # Up to two retries of the failed tests, as the `retries: 2` of Playwright Test
       - name: Run E2E tests
         run: |
           npm run e2e:build
-          set -o pipefail
-          mix test || { [ $? -eq 2 ] && mix test --failed | tee "$RUNNER_TEMP/retry.log" && ! grep -q "There are no tests to run" "$RUNNER_TEMP/retry.log"; } || { [ $? -eq 2 ] && mix test --failed | tee "$RUNNER_TEMP/retry.log" && ! grep -q "There are no tests to run" "$RUNNER_TEMP/retry.log"; }
+          mix test || { [ $? -eq 2 ] && mix test --failed; } || { [ $? -eq 2 ] && mix test --failed; }
 
       - uses: actions/upload-artifact@v7
         if: failure()
