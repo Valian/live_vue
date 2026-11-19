@@ -1,4 +1,4 @@
-# The server is shared with the ExUnit port in test/e2e_pw.
+# Runs the server standalone (npm run e2e:server). The tests in e2e_pw/ start it themselves.
 Code.require_file("server.exs", __DIR__)
 
 Process.register(self(), :e2e_helper)
