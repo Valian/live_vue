@@ -64,7 +64,7 @@ jobs:
           mix test || { [ $? -eq 2 ] && mix test --failed; } || { [ $? -eq 2 ] && mix test --failed; }
 
       - uses: actions/upload-artifact@v7
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
           name: test-results
           path: test-results
