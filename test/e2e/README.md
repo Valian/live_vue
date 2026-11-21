@@ -1,21 +1,25 @@
 # LiveVue End-to-End Tests
 
-This directory contains end-to-end tests for the LiveVue library using Playwright.
+This directory contains the Phoenix server and the features for the end-to-end tests of the LiveVue
+library. The tests themselves are ExUnit tests in `e2e_pw/`, run with
+[playwright_ex](https://hex.pm/packages/playwright_ex) (needs Elixir 1.18+).
 
 ## Setup
 
 1. Install Playwright browsers:
    ```bash
-   npm run e2e:install
+   MIX_ENV=e2e mix playwright.install chromium
    ```
 
 ## Running Tests
 
 ```bash
-npm run e2e:test           # Run all tests
-npm run e2e:test:headed    # Run with browser UI
-npm run e2e:test:debug     # Debug interactively
+mix e2e.test                                 # Build the assets, run all tests
+MIX_ENV=e2e mix test e2e_pw/form_test.exs    # Run one file (after npm run e2e:build)
 ```
+
+To watch the browser, set `launch_options: [headless: false]` in the `:playwright, :test` config of
+`config/config.exs`. To debug interactively, run with `PWDEBUG=1`.
 
 ## Structure
 
@@ -27,7 +31,6 @@ test/e2e/
 │   ├── basic/              # Basic counter test
 │   │   ├── live.ex         # LiveView module (LiveVue.E2E.TestLive)
 │   │   ├── counter.vue     # Vue component
-│   │   └── basic.spec.js   # Playwright test
 │   ├── form/               # Form validation tests
 │   ├── stream/             # LiveView streams tests
 │   ├── event/              # useLiveEvent tests
@@ -38,11 +41,12 @@ test/e2e/
 │   └── upload/             # File upload tests
 ├── js/
 │   └── app.js              # Vue/LiveSocket bootstrap
-├── test_helper.exs         # Phoenix endpoint, routes, layout
-├── utils.js                # Test utilities
-├── playwright.config.js
+├── server.exs              # Phoenix endpoint, routes, layout
+├── test_helper.exs         # Runs the server standalone (npm run e2e:server)
 └── vite.config.js
 ```
+
+The tests are in `e2e_pw/`, one `*_test.exs` per feature.
 
 ## Adding a New Test Feature
 
@@ -75,31 +79,32 @@ test/e2e/
    </template>
    ```
 
-4. Add route to `test_helper.exs`:
+4. Add route to `server.exs`:
    ```elixir
    live "/my-feature", MyFeatureLive
    ```
 
-5. Add test (`my-feature.spec.js`):
-   ```javascript
-   import { test, expect } from "@playwright/test"
-   import { syncLV } from "../../utils.js"
+5. Add test (`e2e_pw/my_feature_test.exs`):
+   ```elixir
+   defmodule LiveVue.E2E.MyFeatureTest do
+     use LiveVue.E2E.Case, async: true
 
-   test("my feature works", async ({ page }) => {
-     await page.goto("/my-feature")
-     await syncLV(page)
-     await expect(page.getByTestId("output")).toHaveText("hello")
-   })
+     test "my feature works", %{page: page} do
+       Page.goto!(page, "/my-feature")
+       sync_lv(page)
+       Expect.to_have_text!(Page.get_by_test_id(page, "output"), "hello")
+     end
+   end
    ```
 
 ## Test Utilities
 
-- `syncLV(page)` - Wait for LiveView to connect and finish loading
-- `evalLV(page, code)` - Execute Elixir code in LiveView process (returns result)
+- `sync_lv(page)` - Wait for LiveView to connect and finish loading
+- `eval_lv(page, code)` - Execute Elixir code in LiveView process (returns result)
 
 ## Test Server
 
-Runs on http://localhost:4004. Routes are defined in `test_helper.exs`.
+Runs on http://localhost:4004. Routes are defined in `server.exs`.
 
 ## Notes
 

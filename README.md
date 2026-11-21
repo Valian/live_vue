@@ -155,7 +155,7 @@ Ensure you have Node.js installed. Clone the repo and run `mix setup`.
 
 No build step is required for the library itself - Vite handles TypeScript transpilation when consumers bundle their app.
 
-Use `npm run e2e:test` to run the Playwright E2E tests.
+Use `mix e2e.test` to run the Playwright E2E tests (first `MIX_ENV=e2e mix playwright.install chromium`).
 
 ### Testing Local Changes in Another Project
 

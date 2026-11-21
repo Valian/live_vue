@@ -91,8 +91,8 @@ defmodule LiveVue.MixProject do
         }
       ],
       test_coverage: [tool: ExCoveralls],
-      test_paths: ["test"],
-      test_ignore_filters: [~r"/e2e/"]
+      test_paths: test_paths(Mix.env()),
+      test_ignore_filters: [~r"/e2e/", ~r"e2e_pw/support/"]
     ]
   end
 
@@ -136,6 +136,11 @@ defmodule LiveVue.MixProject do
     ]
   end
 
+  # The browser suite lives outside test/ so that `mix test` under Elixir 1.15, which has no
+  # test_load_filters, does not load it.
+  defp test_paths(:e2e), do: ["e2e_pw"]
+  defp test_paths(_), do: ["test"]
+
   defp elixirc_paths(:e2e), do: ["lib", "test/e2e/features"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -168,7 +173,8 @@ defmodule LiveVue.MixProject do
 
       # e2e dependencies
       {:bandit, "~> 1.5", only: :e2e},
-      {:phoenix_live_reload, "~> 1.2", only: :e2e}
+      {:phoenix_live_reload, "~> 1.2", only: :e2e},
+      {:playwright, "~> 1.65.0-rc.3", hex: :playwright_ex, only: :e2e}
     ]
   end
 
@@ -178,7 +184,7 @@ defmodule LiveVue.MixProject do
       setup: ["deps.get", "cmd npm install"],
       precommit: ["test", "format", "e2e.test", "assets.test"],
       "assets.test": ["cmd npm test"],
-      "e2e.test": ["cmd npm run e2e:test"],
+      "e2e.test": ["cmd npm run e2e:build", "cmd env MIX_ENV=e2e mix test"],
       "release.patch": ["easy_publish.release patch --branch=main"],
       "release.minor": ["easy_publish.release minor --branch=main"],
       "release.major": ["easy_publish.release major --branch=main"]
